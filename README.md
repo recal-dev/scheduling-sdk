@@ -1,5 +1,7 @@
 # Scheduling SDK
 
+**Brought to you by [Recal](https://recal.com)** 🚀
+
 A fast, modular TypeScript SDK for finding available time slots with configurable options like padding, duration, splitting, and offset.
 
 ## Features
