@@ -146,3 +146,7 @@ MIT
 ## Contributing
 
 Please read our [Contributing Guide](docs/contributing.md) for development setup and contribution guidelines.
+
+## Credits
+
+Engineering by [@tkoehlerlg](https://github.com/tkoehlerlg)
