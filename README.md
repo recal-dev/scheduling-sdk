@@ -1,19 +1,23 @@
-# Scheduling SDK
+# Scheduling SDK 📆
+
+[![npm version](https://badge.fury.io/js/scheduling-sdk.svg)](https://badge.fury.io/js/scheduling-sdk)
+[![Build Status](https://github.com/recal-dev/scheduling-sdk/workflows/CI/badge.svg)](https://github.com/recal-dev/scheduling-sdk/actions)
+[![Test Coverage](https://codecov.io/gh/recal-dev/scheduling-sdk/branch/main/graph/badge.svg)](https://codecov.io/gh/recal-dev/scheduling-sdk)
 
 **Brought to you by [Recal](https://recal.com)** 🚀
 
 A fast, modular TypeScript SDK for finding available time slots with configurable options like padding, duration, splitting, and offset.
 
-## Features
+## Features ✨
 
-- **Fast Performance**: Optimized algorithms for handling large datasets
-- **Flexible Configuration**: Customizable slot duration, padding, splitting, and offset
-- **Weekly Availability Patterns**: Define recurring weekly schedules with automatic break management
-- **TypeScript Support**: Full type safety and IntelliSense
-- **Modular Architecture**: Clean separation of concerns for maintainability
-- **Comprehensive Testing**: Extensive test coverage with edge case handling
+- **⚡ Fast Performance**: Optimized algorithms for handling large datasets
+- **🔧 Flexible Configuration**: Customizable slot duration, padding, splitting, and offset
+- **📅 Weekly Availability Patterns**: Define recurring weekly schedules with automatic break management
+- **🔒 TypeScript Support**: Full type safety and IntelliSense
+- **🏗️ Modular Architecture**: Clean separation of concerns for maintainability
+- **🧪 Comprehensive Testing**: Extensive test coverage with edge case handling
 
-## Quick Start
+## Quick Start 🚀
 
 ```bash
 # Install dependencies
@@ -62,8 +66,8 @@ const availability = {
     schedules: [
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '12:00' },
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' },
-        { days: ['saturday'], start: '10:00', end: '14:00' }
-    ]
+        { days: ['saturday'], start: '10:00', end: '14:00' },
+    ],
 }
 
 const scheduler = new AvailabilityScheduler(availability)
@@ -71,28 +75,26 @@ const scheduler = new AvailabilityScheduler(availability)
 // Add one-off busy times (meetings, appointments, etc.)
 scheduler.addBusyTime({
     start: new Date('2024-01-15T14:00:00Z'),
-    end: new Date('2024-01-15T15:00:00Z')
+    end: new Date('2024-01-15T15:00:00Z'),
 })
 
 // Find available slots within business hours
-const slots = scheduler.findAvailableSlots(
-    new Date('2024-01-15T08:00:00Z'),
-    new Date('2024-01-15T18:00:00Z'),
-    { slotDuration: 60 }
-)
+const slots = scheduler.findAvailableSlots(new Date('2024-01-15T08:00:00Z'), new Date('2024-01-15T18:00:00Z'), {
+    slotDuration: 60,
+})
 ```
 
-## Documentation
+## Documentation 📚
 
-- **[Getting Started](docs/getting-started.md)** - Installation and basic usage
-- **[API Reference](docs/api-reference.md)** - Complete API documentation
-- **[Core Concepts](docs/core-concepts.md)** - Understanding scheduling concepts
-- **[Availability API](docs/availability-api.md)** - Weekly availability patterns and scheduling
-- **[Examples](docs/examples.md)** - Practical usage examples
-- **[Performance Guide](docs/performance.md)** - Optimization and benchmarks
-- **[Contributing](docs/contributing.md)** - Development and contribution guidelines
+- **📖 [Getting Started](docs/getting-started.md)** - Installation and basic usage
+- **📋 [API Reference](docs/api-reference.md)** - Complete API documentation
+- **🧠 [Core Concepts](docs/core-concepts.md)** - Understanding scheduling concepts
+- **⏰ [Availability API](docs/availability-api.md)** - Weekly availability patterns and scheduling
+- **💡 [Examples](docs/examples.md)** - Practical usage examples
+- **⚡ [Performance Guide](docs/performance.md)** - Optimization and benchmarks
+- **🤝 [Contributing](docs/contributing.md)** - Development and contribution guidelines
 
-## Development
+## Development 💻
 
 ```bash
 # Install dependencies
@@ -111,7 +113,7 @@ bun test
 bun run typecheck
 ```
 
-## Architecture
+## Architecture 🏗️
 
 The SDK is built with a modular architecture:
 
@@ -129,7 +131,7 @@ src/
 └── utils/             # Shared constants and utilities
 ```
 
-## Performance
+## Performance ⚡
 
 Optimized for speed with target performance:
 
@@ -143,10 +145,10 @@ See [Performance Guide](docs/performance.md) for detailed benchmarks.
 
 MIT
 
-## Contributing
+## Contributing 🤝
 
 Please read our [Contributing Guide](docs/contributing.md) for development setup and contribution guidelines.
 
-## Credits
+## Credits 👨‍💻
 
 Engineering by [@tkoehlerlg](https://github.com/tkoehlerlg)

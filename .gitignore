@@ -7,7 +7,7 @@ dist
 *.tgz
 
 # code coverage
-coverage
+coverage/
 *.lcov
 
 # logs
