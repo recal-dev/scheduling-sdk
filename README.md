@@ -1,7 +1,7 @@
 # Scheduling SDK 📆
 
 [![npm version](https://badge.fury.io/js/scheduling-sdk.svg)](https://badge.fury.io/js/scheduling-sdk)
-[![Tests](https://github.com/recal-dev/scheduling-sdk/workflows/CI/badge.svg)](https://github.com/recal-dev/scheduling-sdk/actions)
+[![Tests](https://github.com/recal-dev/scheduling-sdk/workflows/Tests/badge.svg)](https://github.com/recal-dev/scheduling-sdk/actions)
 [![Test Coverage](https://codecov.io/gh/recal-dev/scheduling-sdk/branch/main/graph/badge.svg)](https://codecov.io/gh/recal-dev/scheduling-sdk)
 
 **Brought to you by [Recal](https://recal.com)** 🚀
