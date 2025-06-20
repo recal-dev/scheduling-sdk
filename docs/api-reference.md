@@ -2,7 +2,9 @@
 
 ## Types
 
-### TimeSlot
+### Core Types
+
+#### TimeSlot
 
 Represents a time period that can be booked.
 
@@ -17,7 +19,7 @@ interface TimeSlot {
 - `start`: The start time of the slot
 - `end`: The end time of the slot
 
-### BusyTime
+#### BusyTime
 
 Represents a time period that is already occupied or unavailable.
 
@@ -32,7 +34,7 @@ interface BusyTime {
 - `start`: The start time of the busy period
 - `end`: The end time of the busy period
 
-### SchedulingOptions
+#### SchedulingOptions
 
 Configuration options for slot generation.
 
@@ -50,6 +52,48 @@ interface SchedulingOptions {
 - `slotSplit` (optional): Interval between the start times of consecutive slots in minutes. Defaults to `slotDuration`. Must be positive.
 - `padding` (optional): Buffer time in minutes to add before and after each busy time. Defaults to 0. Must be non-negative.
 - `offset` (optional): Offset from standard time boundaries in minutes. Defaults to 0. Must be non-negative.
+
+### Availability Types
+
+#### DayOfWeek
+
+Represents a day of the week as a lowercase string.
+
+```typescript
+type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
+```
+
+#### DaySchedule
+
+Defines availability schedule for specific days of the week.
+
+```typescript
+interface DaySchedule {
+    days: DayOfWeek[]
+    start: string
+    end: string
+}
+```
+
+**Properties:**
+- `days`: Array of days this schedule applies to. Must contain at least one valid day.
+- `start`: Start time in 24-hour HH:mm format (e.g., "09:00", "14:30")
+- `end`: End time in 24-hour HH:mm format (e.g., "17:00", "23:30"). Must be after start time.
+
+#### WeeklyAvailability
+
+Defines a weekly availability pattern with multiple schedules.
+
+```typescript
+interface WeeklyAvailability {
+    schedules: DaySchedule[]
+    timezone?: string
+}
+```
+
+**Properties:**
+- `schedules`: Array of availability schedules. Must contain at least one schedule.
+- `timezone` (optional): IANA timezone identifier (e.g., 'America/New_York', 'Europe/London')
 
 ## Functions
 
@@ -192,6 +236,209 @@ const busyTimes = scheduler.getBusyTimes()
 console.log(`Scheduler has ${busyTimes.length} busy times`)
 ```
 
+## AvailabilityScheduler Class
+
+Enhanced scheduler that combines weekly availability patterns with traditional busy time management.
+
+### Constructor
+
+```typescript
+constructor(availability?: WeeklyAvailability, existingBusyTimes?: BusyTime[])
+```
+
+**Parameters:**
+- `availability` (optional): Weekly availability pattern defining when slots are available
+- `existingBusyTimes` (optional): Array of existing busy times to include
+
+**Throws:**
+- Error if the availability pattern is invalid
+
+**Example:**
+```typescript
+import { AvailabilityScheduler } from 'scheduling-sdk'
+
+// Create with availability only
+const scheduler = new AvailabilityScheduler({
+    schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
+})
+
+// Create with availability and existing busy times
+const busyTimes = [{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }]
+const scheduler = new AvailabilityScheduler(availability, busyTimes)
+```
+
+### setAvailability
+
+Sets or updates the weekly availability pattern.
+
+```typescript
+setAvailability(availability: WeeklyAvailability): void
+```
+
+**Parameters:**
+- `availability`: The new weekly availability pattern
+
+**Throws:**
+- Error if the availability pattern is invalid
+
+**Example:**
+```typescript
+scheduler.setAvailability({
+    schedules: [
+        { days: ['monday', 'tuesday'], start: '09:00', end: '17:00' }
+    ],
+    timezone: 'America/New_York'
+})
+```
+
+### getAvailability
+
+Returns the current weekly availability pattern.
+
+```typescript
+getAvailability(): WeeklyAvailability | undefined
+```
+
+**Returns:**
+- The current availability pattern, or undefined if none is set
+
+### addBusyTime
+
+Adds a single busy time that will be combined with availability-based restrictions.
+
+```typescript
+addBusyTime(busyTime: BusyTime): void
+```
+
+**Parameters:**
+- `busyTime`: The busy time to add
+
+**Example:**
+```typescript
+// Block out a specific appointment
+scheduler.addBusyTime({
+    start: new Date('2024-01-15T14:00:00Z'),
+    end: new Date('2024-01-15T15:30:00Z')
+})
+```
+
+### addBusyTimes
+
+Adds multiple busy times at once.
+
+```typescript
+addBusyTimes(busyTimes: BusyTime[]): void
+```
+
+**Parameters:**
+- `busyTimes`: Array of busy times to add
+
+### clearBusyTimes
+
+Removes all manually added busy times. Does NOT affect availability-based restrictions.
+
+```typescript
+clearBusyTimes(): void
+```
+
+### getBusyTimes
+
+Returns all manually added busy times. Does NOT include busy times from availability pattern.
+
+```typescript
+getBusyTimes(): BusyTime[]
+```
+
+**Returns:**
+- Array of manually added busy times
+
+### findAvailableSlots
+
+Finds available time slots considering both availability patterns and manually added busy times.
+
+```typescript
+findAvailableSlots(
+    startTime: Date,
+    endTime: Date,
+    options: SchedulingOptions
+): TimeSlot[]
+```
+
+**Parameters:**
+- `startTime`: Start of the search range
+- `endTime`: End of the search range
+- `options`: Slot generation options
+
+**Returns:**
+- Array of available time slots
+
+**Behavior:**
+- If no availability pattern is set, behaves like the standard Scheduler
+- If availability is set, only returns slots within available periods
+
+**Example:**
+```typescript
+const slots = scheduler.findAvailableSlots(
+    new Date('2024-01-15T08:00:00Z'),
+    new Date('2024-01-15T18:00:00Z'),
+    { slotDuration: 60, padding: 15 }
+)
+```
+
+## Availability Functions
+
+### weeklyAvailabilityToBusyTimes
+
+Converts a weekly availability pattern into busy times for a specific week.
+
+```typescript
+function weeklyAvailabilityToBusyTimes(
+    availability: WeeklyAvailability,
+    weekStart: Date
+): BusyTime[]
+```
+
+**Parameters:**
+- `availability`: The weekly availability pattern to convert
+- `weekStart`: The Monday date for the week to process (MUST be a Monday)
+
+**Returns:**
+- Array of busy times representing unavailable periods
+
+**Throws:**
+- Error if weekStart is not a Monday
+- Error if availability contains invalid time formats
+
+**Example:**
+```typescript
+const mondayDate = new Date('2024-01-01T00:00:00Z') // Must be Monday
+const busyTimes = weeklyAvailabilityToBusyTimes(availability, mondayDate)
+```
+
+### validateWeeklyAvailability
+
+Validates a WeeklyAvailability object for correctness.
+
+```typescript
+function validateWeeklyAvailability(availability?: WeeklyAvailability): void
+```
+
+**Parameters:**
+- `availability`: The availability object to validate (can be undefined)
+
+**Throws:**
+- Error with descriptive message if validation fails
+
+**Example:**
+```typescript
+try {
+    validateWeeklyAvailability(userInput)
+    const scheduler = new AvailabilityScheduler(userInput)
+} catch (error) {
+    console.error('Invalid availability:', error.message)
+}
+```
+
 ## Validation
 
 All methods perform input validation and will throw descriptive errors for invalid inputs:
@@ -206,6 +453,15 @@ All methods perform input validation and will throw descriptive errors for inval
 - `padding` must be a non-negative number (if provided)
 - `offset` must be a non-negative number (if provided)
 - All numeric values must be finite
+
+### Availability Validation
+- Availability object must be a valid object (if provided)
+- `schedules` array must contain at least one schedule
+- Day names must be valid (monday, tuesday, etc.)
+- Time format must be HH:mm (24-hour format)
+- Start time must be before end time
+- No overlapping schedules on the same day
+- Timezone must be valid IANA format (if provided)
 
 ## Behavior Details
 
@@ -223,6 +479,13 @@ All methods perform input validation and will throw descriptive errors for inval
 ### Time Alignment
 - When `offset` is 0, slots align to `slotSplit` boundaries (e.g., every 15 minutes for `slotSplit: 15`)
 - When `offset` is specified, slots align to `(boundary + offset)` (e.g., 5, 20, 35, 50 for `slotSplit: 15, offset: 5`)
+
+### Availability Behavior
+- Availability patterns define when slots CAN be generated
+- Available periods become "allowed zones" for slot generation
+- Gaps between schedules on the same day create automatic breaks
+- Days without schedules are completely unavailable
+- Manually added busy times are combined with availability restrictions
 
 ## Error Examples
 

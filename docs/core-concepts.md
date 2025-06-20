@@ -8,6 +8,7 @@ Understanding the fundamental concepts behind the Scheduling SDK will help you m
 - [Time Slots](#time-slots)
 - [Busy Times](#busy-times)
 - [Scheduling Options](#scheduling-options)
+- [Weekly Availability](#weekly-availability)
 - [Algorithm Overview](#algorithm-overview)
 - [Common Patterns](#common-patterns)
 
@@ -162,6 +163,89 @@ The `offset` parameter shifts slot start times from standard boundaries (in minu
 
 **Default:** 0 (align to standard boundaries)
 
+## Weekly Availability
+
+The **weekly availability** system allows you to define recurring weekly patterns that specify when time slots are available for scheduling. This is perfect for businesses, professionals, or services that operate on predictable weekly schedules.
+
+### Key Concepts
+
+#### Availability vs Busy Times
+
+Understanding the relationship between availability and busy times is crucial:
+
+- **Busy Times**: Represent specific periods that are occupied (appointments, meetings, etc.)
+- **Availability**: Defines when slots CAN be scheduled (business hours, operating periods, etc.)
+- **Combined Effect**: Only slots within available periods AND not conflicting with busy times are returned
+
+```typescript
+// Business operates Monday-Friday 9-17 with lunch break 12-13
+const availability = {
+    schedules: [
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '12:00' },
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' }
+    ]
+}
+
+// Plus specific busy times
+const busyTimes = [
+    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }
+]
+
+// Result: Slots only during business hours, excluding lunch break AND the 2-3 PM meeting
+```
+
+#### Implicit Breaks
+
+One of the most powerful features is **implicit break creation**. Instead of explicitly defining breaks, you create them by having gaps between schedules:
+
+```typescript
+// Lunch break is created by the gap between morning and afternoon schedules
+{
+    schedules: [
+        { days: ['monday'], start: '09:00', end: '12:00' },  // Morning
+        { days: ['monday'], start: '13:00', end: '17:00' }   // Afternoon
+        // 12:00-13:00 becomes an automatic break
+    ]
+}
+```
+
+#### Day-by-Day Configuration
+
+Different days can have completely different schedules:
+
+```typescript
+{
+    schedules: [
+        { days: ['monday', 'wednesday', 'friday'], start: '09:00', end: '17:00' },
+        { days: ['tuesday', 'thursday'], start: '10:00', end: '16:00' },
+        { days: ['saturday'], start: '09:00', end: '12:00' }
+        // Sunday has no schedule = completely unavailable
+    ]
+}
+```
+
+### Weekly Processing
+
+The availability system processes one week at a time, starting from Monday:
+
+1. **Week Boundaries**: All processing is done weekly, starting from Monday
+2. **Conversion**: Availability patterns are converted to busy times for unavailable periods
+3. **Combination**: These "availability busy times" are combined with manually added busy times
+4. **Slot Generation**: Standard slot generation then excludes all busy periods
+
+### Timezone Support
+
+You can specify timezone information for your availability patterns:
+
+```typescript
+{
+    schedules: [...],
+    timezone: 'America/New_York'  // IANA timezone identifier
+}
+```
+
+**Note**: Timezone is primarily for documentation and future timezone-aware features. The current implementation processes dates as provided.
+
 ## Algorithm Overview
 
 The scheduling algorithm follows these steps:
@@ -266,6 +350,59 @@ Align appointments to professional boundaries.
     offset: 0,           // Begin at hour boundaries
     padding: 10          // 10-minute buffer between clients
 }
+```
+
+### Business Hours with Availability
+
+Standard business hours with automatic lunch break.
+
+```typescript
+// Using AvailabilityScheduler for business hours
+const availability = {
+    schedules: [
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '12:00' },
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' }
+    ]
+}
+
+const scheduler = new AvailabilityScheduler(availability)
+const options = { slotDuration: 60, padding: 15 }
+```
+
+### Medical Practice Schedule
+
+Different schedules for different days with varying hours.
+
+```typescript
+const availability = {
+    schedules: [
+        { days: ['monday', 'wednesday', 'friday'], start: '08:00', end: '16:00' },
+        { days: ['tuesday', 'thursday'], start: '12:00', end: '20:00' },
+        { days: ['saturday'], start: '09:00', end: '13:00' }
+    ]
+}
+
+const scheduler = new AvailabilityScheduler(availability)
+const options = { slotDuration: 30, padding: 10 }
+```
+
+### Service Business with Multiple Breaks
+
+Complex schedule with multiple breaks throughout the day.
+
+```typescript
+const availability = {
+    schedules: [
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '08:00', end: '10:00' },
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '10:30', end: '12:00' },
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '15:00' },
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '15:30', end: '17:00' }
+    ]
+}
+
+// Creates breaks: 10:00-10:30, 12:00-13:00, 15:00-15:30
+const scheduler = new AvailabilityScheduler(availability)
+const options = { slotDuration: 30, slotSplit: 30 }
 ```
 
 ## Time Boundaries and Alignment

@@ -6,6 +6,7 @@ This document provides practical examples for common scheduling scenarios using 
 
 - [Basic Examples](#basic-examples)
 - [Calendar Scheduling](#calendar-scheduling)
+- [Weekly Availability Scheduling](#weekly-availability-scheduling)
 - [Resource Management](#resource-management)
 - [Meeting Scheduling](#meeting-scheduling)
 - [Advanced Scenarios](#advanced-scenarios)
@@ -284,6 +285,259 @@ const availableEquipment = equipmentScheduler.findAvailableEquipment(
     new Date('2024-01-15T14:00:00Z'),
     new Date('2024-01-15T16:00:00Z'),
     90  // 90-minute event
+)
+```
+
+## Weekly Availability Scheduling
+
+### Business Hours with Lunch Break
+
+```typescript
+import { AvailabilityScheduler } from 'scheduling-sdk'
+
+// Standard business hours: 9 AM to 5 PM with lunch break
+const businessHours = {
+    schedules: [
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '12:00' },
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' }
+    ]
+}
+
+const scheduler = new AvailabilityScheduler(businessHours)
+
+// Add specific appointments
+scheduler.addBusyTime({
+    start: new Date('2024-01-15T10:30:00Z'),
+    end: new Date('2024-01-15T11:30:00Z')
+})
+
+const slots = scheduler.findAvailableSlots(
+    new Date('2024-01-15T08:00:00Z'),
+    new Date('2024-01-15T18:00:00Z'),
+    { slotDuration: 60, padding: 15 }
+)
+
+// Results in slots only during business hours, excluding lunch and the 10:30-11:30 appointment
+```
+
+### Medical Practice Schedule
+
+```typescript
+// Different schedules for different days
+const medicalSchedule = {
+    schedules: [
+        { days: ['monday', 'wednesday', 'friday'], start: '08:00', end: '16:00' },
+        { days: ['tuesday', 'thursday'], start: '12:00', end: '20:00' },
+        { days: ['saturday'], start: '09:00', end: '13:00' }
+        // Sunday is automatically unavailable (no schedule)
+    ],
+    timezone: 'America/New_York'
+}
+
+const doctorScheduler = new AvailabilityScheduler(medicalSchedule)
+
+// Find 30-minute appointment slots with 10-minute buffer
+const appointments = doctorScheduler.findAvailableSlots(
+    new Date('2024-01-15T00:00:00Z'), // Monday
+    new Date('2024-01-21T23:59:59Z'), // Sunday
+    { slotDuration: 30, padding: 10 }
+)
+
+console.log(`Found ${appointments.length} available appointment slots this week`)
+```
+
+### Service Business with Multiple Breaks
+
+```typescript
+// Complex schedule with multiple breaks
+const serviceSchedule = {
+    schedules: [
+        // Morning session
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '08:00', end: '10:00' },
+        // Late morning
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '10:30', end: '12:00' },
+        // Afternoon
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '15:00' },
+        // Late afternoon
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '15:30', end: '17:00' },
+        // Weekend availability
+        { days: ['saturday'], start: '10:00', end: '14:00' }
+    ]
+}
+
+// This creates automatic breaks:
+// 10:00-10:30 (morning break)
+// 12:00-13:00 (lunch break)
+// 15:00-15:30 (afternoon break)
+
+const serviceScheduler = new AvailabilityScheduler(serviceSchedule)
+
+const serviceSlots = serviceScheduler.findAvailableSlots(
+    new Date('2024-01-15T07:00:00Z'),
+    new Date('2024-01-15T19:00:00Z'),
+    { slotDuration: 45, slotSplit: 30 }
+)
+```
+
+### Consultation Scheduling with Flexible Hours
+
+```typescript
+// Consultant with non-standard hours
+const consultantAvailability = {
+    schedules: [
+        { days: ['monday'], start: '14:00', end: '20:00' },        // Late start Monday
+        { days: ['tuesday', 'wednesday'], start: '09:00', end: '17:00' }, // Regular hours
+        { days: ['thursday'], start: '11:00', end: '19:00' },     // Shifted Thursday
+        { days: ['friday'], start: '09:00', end: '15:00' },       // Early finish Friday
+        { days: ['saturday'], start: '10:00', end: '16:00' }      // Weekend availability
+    ]
+}
+
+const consultantScheduler = new AvailabilityScheduler(consultantAvailability)
+
+// Generate overlapping consultation slots for flexibility
+const consultationSlots = consultantScheduler.findAvailableSlots(
+    new Date('2024-01-15T08:00:00Z'),
+    new Date('2024-01-20T18:00:00Z'),
+    {
+        slotDuration: 90,    // 90-minute consultations
+        slotSplit: 45,       // New slot every 45 minutes (overlapping)
+        padding: 15          // 15-minute buffer
+    }
+)
+
+// Group slots by day for easier viewing
+const slotsByDay = consultationSlots.reduce((acc, slot) => {
+    const day = slot.start.toDateString()
+    if (!acc[day]) acc[day] = []
+    acc[day].push(slot)
+    return acc
+}, {})
+```
+
+### Multi-Location Service Provider
+
+```typescript
+class MultiLocationScheduler {
+    private locationSchedulers = new Map()
+    
+    constructor(locations: { name: string, availability: WeeklyAvailability }[]) {
+        locations.forEach(location => {
+            this.locationSchedulers.set(location.name, new AvailabilityScheduler(location.availability))
+        })
+    }
+    
+    addBooking(locationName: string, booking: BusyTime) {
+        const scheduler = this.locationSchedulers.get(locationName)
+        if (scheduler) {
+            scheduler.addBusyTime(booking)
+        }
+    }
+    
+    findAvailableSlotsByLocation(startTime: Date, endTime: Date, options: SchedulingOptions) {
+        const results = new Map()
+        
+        for (const [locationName, scheduler] of this.locationSchedulers) {
+            const slots = scheduler.findAvailableSlots(startTime, endTime, options)
+            if (slots.length > 0) {
+                results.set(locationName, slots)
+            }
+        }
+        
+        return results
+    }
+    
+    findEarliestAvailableSlot(startTime: Date, endTime: Date, options: SchedulingOptions) {
+        let earliestSlot = null
+        let bestLocation = null
+        
+        for (const [locationName, scheduler] of this.locationSchedulers) {
+            const slots = scheduler.findAvailableSlots(startTime, endTime, options)
+            if (slots.length > 0) {
+                const firstSlot = slots[0]
+                if (!earliestSlot || firstSlot.start < earliestSlot.start) {
+                    earliestSlot = firstSlot
+                    bestLocation = locationName
+                }
+            }
+        }
+        
+        return { location: bestLocation, slot: earliestSlot }
+    }
+}
+
+// Usage
+const multiLocationService = new MultiLocationScheduler([
+    {
+        name: 'Downtown Office',
+        availability: {
+            schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }]
+        }
+    },
+    {
+        name: 'Suburban Branch',
+        availability: {
+            schedules: [{ days: ['thursday', 'friday', 'saturday'], start: '10:00', end: '18:00' }]
+        }
+    }
+])
+
+const earliestSlot = multiLocationService.findEarliestAvailableSlot(
+    new Date('2024-01-15T00:00:00Z'),
+    new Date('2024-01-21T23:59:59Z'),
+    { slotDuration: 60 }
+)
+
+console.log(`Earliest available: ${earliestSlot.location} at ${earliestSlot.slot?.start}`)
+```
+
+### Dynamic Availability Updates
+
+```typescript
+class DynamicAvailabilityScheduler {
+    private scheduler: AvailabilityScheduler
+    
+    constructor(initialAvailability: WeeklyAvailability) {
+        this.scheduler = new AvailabilityScheduler(initialAvailability)
+    }
+    
+    updateHours(newAvailability: WeeklyAvailability) {
+        // Clear existing busy times and update availability
+        this.scheduler.clearBusyTimes()
+        this.scheduler.setAvailability(newAvailability)
+    }
+    
+    addTemporaryBlock(startTime: Date, endTime: Date, reason: string) {
+        this.scheduler.addBusyTime({ start: startTime, end: endTime })
+        console.log(`Added temporary block: ${reason}`)
+    }
+    
+    findAvailabilityForWeek(weekStart: Date) {
+        const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)
+        
+        return this.scheduler.findAvailableSlots(weekStart, weekEnd, {
+            slotDuration: 60,
+            slotSplit: 60,
+            padding: 10
+        })
+    }
+}
+
+// Usage
+const dynamicScheduler = new DynamicAvailabilityScheduler({
+    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }]
+})
+
+// Update for holiday hours
+dynamicScheduler.updateHours({
+    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '10:00', end: '15:00' }]
+})
+
+// Add temporary blocks
+dynamicScheduler.addTemporaryBlock(
+    new Date('2024-01-15T12:00:00Z'),
+    new Date('2024-01-15T13:00:00Z'),
+    'Team meeting'
 )
 ```
 
