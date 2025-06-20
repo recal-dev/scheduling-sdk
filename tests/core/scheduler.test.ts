@@ -44,6 +44,22 @@ describe('Scheduler', () => {
         })
     })
 
+    describe('addBusyTime', () => {
+        it('should add a single busy time', () => {
+            const busyTime: BusyTime = { start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }
+            scheduler.addBusyTime(busyTime)
+            expect(scheduler.getBusyTimes()).toEqual([busyTime])
+        })
+
+        it('should maintain sorted order after adding a busy time', () => {
+            scheduler.addBusyTime({ start: new Date('2024-01-01T14:00:00Z'), end: new Date('2024-01-01T15:00:00Z') })
+            scheduler.addBusyTime({ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') })
+            
+            const busyTimes = scheduler.getBusyTimes()
+            expect(busyTimes[0].start.getTime()).toBeLessThan(busyTimes[1].start.getTime())
+        })
+    })
+
     describe('addBusyTimes', () => {
         it('should add new busy times', () => {
             const busyTimes: BusyTime[] = [

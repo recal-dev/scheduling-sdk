@@ -6,33 +6,35 @@
 
 **Brought to you by [Recal](https://recal.com)** 🚀
 
-A fast, modular TypeScript SDK for finding available time slots with configurable options like padding, duration, splitting, and offset.
+A fast, modular TypeScript SDK for finding available time slots with **exceptional developer experience** - intuitive APIs, comprehensive TypeScript support, and extensive documentation.
 
 ## Features ✨
 
-- **⚡ Fast Performance**: Optimized algorithms for handling large datasets
+- **🎯 Developer-First Design**: Intuitive APIs that feel natural to use
+- **🔒 Full TypeScript Support**: Complete type safety with excellent IntelliSense
+- **📖 Extensive Documentation**: In-depth guides, examples, and API references
+- **⚡ Blazing Fast Performance**: Optimized algorithms for handling large datasets
 - **🔧 Flexible Configuration**: Customizable slot duration, padding, splitting, and offset
 - **📅 Weekly Availability Patterns**: Define recurring weekly schedules with automatic break management
-- **🔒 TypeScript Support**: Full type safety and IntelliSense
 - **🏗️ Modular Architecture**: Clean separation of concerns for maintainability
-- **🧪 Comprehensive Testing**: Extensive test coverage with edge case handling
+- **🧪 98%+ Test Coverage**: Comprehensive testing with edge case handling
 
 ## Quick Start 🚀
 
 ```bash
-# Install dependencies
-bun install
-
-# Build the SDK
-bun run build
-
-# Run tests
-bun test
+# Install the SDK
+npm install scheduling-sdk
+# or
+bun add scheduling-sdk
 ```
+
+**Zero configuration required** - start scheduling in seconds with **full TypeScript intellisense**! 🎉
 
 ## Basic Usage
 
 ### Standard Scheduling
+
+**Simple, clean API with complete type safety** ✨
 
 ```typescript
 import { createScheduler } from 'scheduling-sdk'
@@ -56,7 +58,43 @@ const availableSlots = scheduler.findAvailableSlots(
 )
 ```
 
+### Managing Busy Times
+
+**Flexible, type-safe methods for every use case** 🔧
+
+```typescript
+import { createScheduler } from 'scheduling-sdk'
+
+const scheduler = createScheduler()
+
+// Add a single busy time
+scheduler.addBusyTime({
+    start: new Date('2024-01-15T14:00:00Z'),
+    end: new Date('2024-01-15T15:00:00Z')
+})
+
+// Add multiple busy times at once
+scheduler.addBusyTimes([
+    {
+        start: new Date('2024-01-15T10:00:00Z'),
+        end: new Date('2024-01-15T11:00:00Z')
+    },
+    {
+        start: new Date('2024-01-15T16:00:00Z'),
+        end: new Date('2024-01-15T17:00:00Z')
+    }
+])
+
+// Clear all busy times
+scheduler.clearBusyTimes()
+
+// Get current busy times
+const currentBusyTimes = scheduler.getBusyTimes()
+```
+
 ### Weekly Availability Scheduling
+
+**Business hours made easy** 📅
 
 ```typescript
 import { AvailabilityScheduler } from 'scheduling-sdk'
@@ -72,11 +110,17 @@ const availability = {
 
 const scheduler = new AvailabilityScheduler(availability)
 
-// Add one-off busy times (meetings, appointments, etc.)
-scheduler.addBusyTime({
-    start: new Date('2024-01-15T14:00:00Z'),
-    end: new Date('2024-01-15T15:00:00Z'),
-})
+// Add multiple busy times (meetings, appointments, etc.)
+scheduler.addBusyTimes([
+    {
+        start: new Date('2024-01-15T14:00:00Z'),
+        end: new Date('2024-01-15T15:00:00Z')
+    },
+    {
+        start: new Date('2024-01-16T10:00:00Z'),
+        end: new Date('2024-01-16T11:00:00Z')
+    }
+])
 
 // Find available slots within business hours
 const slots = scheduler.findAvailableSlots(new Date('2024-01-15T08:00:00Z'), new Date('2024-01-15T18:00:00Z'), {

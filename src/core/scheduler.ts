@@ -35,6 +35,11 @@ export class Scheduler {
         return filterAvailableSlots(slots, mergedBusyTimes)
     }
 
+    addBusyTime(busyTime: BusyTime): void {
+        this.busyTimes.push(busyTime)
+        this.busyTimes.sort((a, b) => a.start.getTime() - b.start.getTime())
+    }
+
     addBusyTimes(busyTimes: BusyTime[]): void {
         this.busyTimes.push(...busyTimes)
         this.busyTimes.sort((a, b) => a.start.getTime() - b.start.getTime())
