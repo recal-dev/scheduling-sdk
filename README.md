@@ -19,6 +19,9 @@ A fast, modular TypeScript SDK for finding available time slots with **exception
 - **🏗️ Modular Architecture**: Clean separation of concerns for maintainability
 - **🧪 98%+ Test Coverage**: Comprehensive testing with edge case handling
 
+> **Note**
+> The SDK is fully written in TypeScript (see GitHub => 100% TypeScript) and uses Bun as the build and test tool. It requires TypeScript 5.0 or later as a peer dependency. While we use Bun for development, the compiled SDK is compatible with any JavaScript runtime, including Node.js, Deno, and modern browsers with ESM support.
+
 ## Quick Start 🚀
 
 ```bash
