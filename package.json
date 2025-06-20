@@ -1,5 +1,7 @@
 {
     "name": "scheduling-sdk",
+    "version": "0.1.1",
+    "author": "Recal",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -13,14 +15,22 @@
         "dist"
     ],
     "scripts": {
-        "build": "bun build src/index.ts --outdir dist --target node",
+        "build": "NODE_ENV=production bun build src/index.ts --outdir dist --target node",
         "dev": "bun --watch src/index.ts",
         "test": "bun test",
         "typecheck": "tsc --noEmit",
         "lint": "eslint src tests",
         "prettier": "prettier --write .",
-        "prepublishOnly": "bun run build && bun run test"
+        "prepublishOnly": "NODE_ENV=production bun run build && bun run test"
     },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/recal-dev/scheduling-sdk.git"
+    },
+    "bugs": {
+        "url": "https://github.com/recal-dev/scheduling-sdk/issues"
+    },
+    "homepage": "https://github.com/recal-dev/scheduling-sdk#readme",
     "devDependencies": {
         "@types/bun": "latest",
         "@typescript-eslint/eslint-plugin": "^8.34.1",
