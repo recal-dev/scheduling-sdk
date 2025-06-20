@@ -1,0 +1,6 @@
+[install]
+peer = true
+optional = true
+
+# [test]
+# preload = []

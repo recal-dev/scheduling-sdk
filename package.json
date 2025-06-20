@@ -1,0 +1,34 @@
+{
+    "name": "scheduling-sdk",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "bun build src/index.ts --outdir dist --target node",
+        "dev": "bun --watch src/index.ts",
+        "test": "bun test",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint src tests",
+        "prettier": "prettier --write .",
+        "prepublishOnly": "bun run build && bun run test"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@typescript-eslint/eslint-plugin": "^8.34.1",
+        "@typescript-eslint/parser": "^8.34.1",
+        "eslint": "^9.29.0",
+        "prettier": "^3.5.3"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    }
+}
