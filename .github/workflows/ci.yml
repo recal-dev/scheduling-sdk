@@ -28,12 +28,13 @@ jobs:
       - name: Run linter
         run: bun run lint
 
+      - name: Build package
+        run: bun run build
+
       - name: Run tests with coverage
         run: bun run test:coverage
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
-          fail_ci_if_error: true
