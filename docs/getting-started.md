@@ -28,7 +28,7 @@ const scheduler = createScheduler([
     {
         start: new Date('2024-01-15T14:00:00Z'),
         end: new Date('2024-01-15T15:30:00Z'),
-    }
+    },
 ])
 
 // Find available 30-minute slots
@@ -37,9 +37,9 @@ const availableSlots = scheduler.findAvailableSlots(
     new Date('2024-01-15T17:00:00Z'), // End time
     {
         slotDuration: 30, // 30-minute slots
-        padding: 0,       // No padding around busy times
-        slotSplit: 30,    // Non-overlapping slots
-        offset: 0         // No offset from hour boundaries
+        padding: 0, // No padding around busy times
+        slotSplit: 30, // Non-overlapping slots
+        offset: 0, // No offset from hour boundaries
     }
 )
 
@@ -58,6 +58,7 @@ console.log(availableSlots)
 ## Core Concepts
 
 ### Time Slots
+
 A time slot represents a potential booking period with a start and end time:
 
 ```typescript
@@ -68,6 +69,7 @@ interface TimeSlot {
 ```
 
 ### Busy Times
+
 Busy times represent periods that are already occupied:
 
 ```typescript
@@ -78,14 +80,15 @@ interface BusyTime {
 ```
 
 ### Scheduling Options
+
 Configure how slots are generated:
 
 ```typescript
 interface SchedulingOptions {
-    slotDuration: number     // Duration of each slot in minutes
-    slotSplit?: number       // Interval between slot starts (default: same as duration)
-    padding?: number         // Buffer time around busy periods in minutes
-    offset?: number          // Offset from hour boundaries in minutes
+    slotDuration: number // Duration of each slot in minutes
+    slotSplit?: number // Interval between slot starts (default: same as duration)
+    padding?: number // Buffer time around busy periods in minutes
+    offset?: number // Offset from hour boundaries in minutes
 }
 ```
 
@@ -101,58 +104,44 @@ const scheduler = createScheduler()
 // Add existing appointments
 scheduler.addBusyTimes([
     { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
-    { start: new Date('2024-01-15T14:30:00Z'), end: new Date('2024-01-15T15:30:00Z') }
+    { start: new Date('2024-01-15T14:30:00Z'), end: new Date('2024-01-15T15:30:00Z') },
 ])
 
 // Find 60-minute slots
-const slots = scheduler.findAvailableSlots(
-    new Date('2024-01-15T09:00:00Z'),
-    new Date('2024-01-15T17:00:00Z'),
-    { slotDuration: 60 }
-)
+const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
+    slotDuration: 60,
+})
 ```
 
 ### 2. Meeting Room Scheduling with Padding
 
 ```typescript
 // Add 15-minute padding for room setup/cleanup
-const slots = scheduler.findAvailableSlots(
-    new Date('2024-01-15T09:00:00Z'),
-    new Date('2024-01-15T17:00:00Z'),
-    { 
-        slotDuration: 60,
-        padding: 15  // 15 minutes buffer around busy times
-    }
-)
+const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
+    slotDuration: 60,
+    padding: 15, // 15 minutes buffer around busy times
+})
 ```
 
 ### 3. Overlapping Time Slots
 
 ```typescript
 // Generate 60-minute slots every 30 minutes (overlapping)
-const slots = scheduler.findAvailableSlots(
-    new Date('2024-01-15T09:00:00Z'),
-    new Date('2024-01-15T17:00:00Z'),
-    { 
-        slotDuration: 60,
-        slotSplit: 30  // New slot every 30 minutes
-    }
-)
+const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
+    slotDuration: 60,
+    slotSplit: 30, // New slot every 30 minutes
+})
 ```
 
 ### 4. Aligned Scheduling
 
 ```typescript
 // Align slots to quarter-hours (15-minute boundaries)
-const slots = scheduler.findAvailableSlots(
-    new Date('2024-01-15T09:00:00Z'),
-    new Date('2024-01-15T17:00:00Z'),
-    { 
-        slotDuration: 30,
-        slotSplit: 15,  // Align to 15-minute intervals
-        offset: 0       // Start on the hour
-    }
-)
+const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
+    slotDuration: 30,
+    slotSplit: 15, // Align to 15-minute intervals
+    offset: 0, // Start on the hour
+})
 ```
 
 ## Working with Multiple Schedulers

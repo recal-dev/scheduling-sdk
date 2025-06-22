@@ -28,7 +28,7 @@ export class Scheduler {
         const slots = generateSlots(startTime, endTime, {
             slotDurationMinutes: slotDuration,
             slotSplitMinutes: slotSplit,
-            offsetMinutes: offset
+            offsetMinutes: offset,
         })
 
         // Filter available slots

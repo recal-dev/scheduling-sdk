@@ -1,7 +1,7 @@
 /**
  * Represents a day of the week as a lowercase string.
  * Used for specifying which days availability schedules apply to.
- * 
+ *
  * @example
  * ```typescript
  * const workDays: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
@@ -13,7 +13,7 @@ export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'frida
 /**
  * Defines availability schedule for specific days of the week.
  * Multiple schedules can be used for the same day to create breaks.
- * 
+ *
  * @example
  * ```typescript
  * // Regular work schedule
@@ -22,7 +22,7 @@ export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'frida
  *   start: '09:00',
  *   end: '17:00'
  * }
- * 
+ *
  * // Schedule with lunch break (implicit break 12:00-13:00)
  * const morningSchedule: DaySchedule = { days: ['monday'], start: '09:00', end: '12:00' }
  * const afternoonSchedule: DaySchedule = { days: ['monday'], start: '13:00', end: '17:00' }
@@ -31,7 +31,7 @@ export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'frida
 export interface DaySchedule {
     /** Array of days this schedule applies to. Must contain at least one valid day. */
     days: DayOfWeek[]
-    /** Start time in 24-hour HH:mm format (e.g., "09:00", "14:30") */
+    /** Start time in 24-hour HH:mm format (e.g., "09:00", "14:30"). */
     start: string
     /** End time in 24-hour HH:mm format (e.g., "17:00", "23:30"). Must be after start time. */
     end: string
@@ -40,7 +40,7 @@ export interface DaySchedule {
 /**
  * Defines a weekly availability pattern with multiple schedules.
  * Represents when time slots are available for scheduling.
- * 
+ *
  * @example
  * ```typescript
  * // Business hours with different weekend schedule
@@ -51,7 +51,7 @@ export interface DaySchedule {
  *   ],
  *   timezone: 'America/New_York'
  * }
- * 
+ *
  * // Doctor schedule with lunch breaks
  * const doctorAvailability: WeeklyAvailability = {
  *   schedules: [

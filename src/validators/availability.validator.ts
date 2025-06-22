@@ -4,10 +4,10 @@ const VALID_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', '
 
 /**
  * Checks if a time string matches the required HH:mm format.
- * 
+ *
  * @param time - Time string to validate
  * @returns True if the format is valid (HH:mm with valid hours and minutes)
- * 
+ *
  * @internal
  */
 function isValidTimeFormat(time: string): boolean {
@@ -17,10 +17,10 @@ function isValidTimeFormat(time: string): boolean {
 
 /**
  * Converts a time string to total minutes from midnight.
- * 
+ *
  * @param time - Time string in HH:mm format
  * @returns Total minutes from midnight (e.g., "14:30" returns 870)
- * 
+ *
  * @internal
  */
 function parseTime(time: string): number {
@@ -32,7 +32,7 @@ function parseTime(time: string): number {
 
 /**
  * Validates a WeeklyAvailability object for correctness and consistency.
- * 
+ *
  * Performs comprehensive validation including:
  * - Object structure validation
  * - Schedule array validation
@@ -41,11 +41,11 @@ function parseTime(time: string): number {
  * - Time range validation (start < end)
  * - Overlap detection between schedules on the same day
  * - Optional timezone format validation
- * 
+ *
  * @param availability - The availability object to validate (can be undefined)
- * 
+ *
  * @throws {Error} With descriptive message if validation fails
- * 
+ *
  * @example
  * ```typescript
  * // Valid availability passes without error
@@ -56,7 +56,7 @@ function parseTime(time: string): number {
  *   timezone: 'America/New_York'
  * }
  * validateWeeklyAvailability(validAvailability) // No error
- * 
+ *
  * // Invalid availability throws descriptive error
  * const invalidAvailability = {
  *   schedules: [
@@ -66,7 +66,7 @@ function parseTime(time: string): number {
  * validateWeeklyAvailability(invalidAvailability)
  * // Throws: "Schedule at index 0: start time (17:00) must be before end time (09:00)"
  * ```
- * 
+ *
  * @example
  * ```typescript
  * // Use in error handling
@@ -79,13 +79,13 @@ function parseTime(time: string): number {
  *   showError(`Availability configuration error: ${error.message}`)
  * }
  * ```
- * 
+ *
  * @example
  * ```typescript
  * // Undefined availability is valid (optional parameter)
  * validateWeeklyAvailability(undefined) // No error
  * validateWeeklyAvailability() // No error
- * 
+ *
  * // Null or other types are invalid
  * validateWeeklyAvailability(null) // Throws error
  * validateWeeklyAvailability("invalid") // Throws error
@@ -112,7 +112,7 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
         if (typeof availability.timezone !== 'string' || availability.timezone.trim() === '') {
             throw new Error('Availability.timezone must be a non-empty string')
         }
-        
+
         // Basic timezone format validation (not exhaustive)
         if (!/^[A-Za-z_]+\/[A-Za-z_]+$/.test(availability.timezone)) {
             throw new Error('Availability.timezone must be a valid IANA timezone identifier (e.g., "America/New_York")')
@@ -122,7 +122,7 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
     // Validate each schedule
     for (let i = 0; i < availability.schedules.length; i++) {
         const schedule = availability.schedules[i]!
-        
+
         if (!schedule || typeof schedule !== 'object') {
             throw new Error(`Schedule at index ${i} must be an object`)
         }
@@ -163,32 +163,36 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
         const endMinutes = parseTime(schedule.end)
 
         if (startMinutes >= endMinutes) {
-            throw new Error(`Schedule at index ${i}: start time (${schedule.start}) must be before end time (${schedule.end})`)
+            throw new Error(
+                `Schedule at index ${i}: start time (${schedule.start}) must be before end time (${schedule.end})`
+            )
         }
     }
 
     // Check for overlapping schedules on the same day
     const daySchedules = new Map<DayOfWeek, Array<{ start: number; end: number; index: number }>>()
-    
+
     for (let i = 0; i < availability.schedules.length; i++) {
         const schedule = availability.schedules[i]!
         const startMinutes = parseTime(schedule.start)
         const endMinutes = parseTime(schedule.end)
-        
+
         for (const day of schedule.days) {
             if (!daySchedules.has(day)) {
                 daySchedules.set(day, [])
             }
-            
+
             const existing = daySchedules.get(day)!
-            
+
             // Check for overlaps with existing schedules for this day
             for (const existingSchedule of existing) {
                 if (startMinutes < existingSchedule.end && existingSchedule.start < endMinutes) {
-                    throw new Error(`Overlapping schedules found for ${day}: schedule ${i} (${schedule.start}-${schedule.end}) overlaps with schedule ${existingSchedule.index}`)
+                    throw new Error(
+                        `Overlapping schedules found for ${day}: schedule ${i} (${schedule.start}-${schedule.end}) overlaps with schedule ${existingSchedule.index}`
+                    )
                 }
             }
-            
+
             existing.push({ start: startMinutes, end: endMinutes, index: i })
         }
     }

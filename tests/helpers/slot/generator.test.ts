@@ -44,7 +44,11 @@ describe('Slot Generator Helper', () => {
         })
 
         test('should handle zero offset', () => {
-            const slots = generateSlots(startTime, endTime, { slotDurationMinutes: 60, slotSplitMinutes: 60, offsetMinutes: 0 })
+            const slots = generateSlots(startTime, endTime, {
+                slotDurationMinutes: 60,
+                slotSplitMinutes: 60,
+                offsetMinutes: 0,
+            })
 
             expect(slots[0]!.start.getTime()).toBe(startTime.getTime())
             expect(slots[0]!.end.getTime()).toBe(new Date('2024-01-15T10:00:00Z').getTime())

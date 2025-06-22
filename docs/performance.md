@@ -6,32 +6,36 @@ This guide provides detailed information about the Scheduling SDK's performance 
 
 The Scheduling SDK is optimized for real-world scheduling scenarios with the following performance targets:
 
-| Busy Times | Target Response Time | Use Case |
-|------------|---------------------|----------|
-| 1-100      | < 1ms              | Individual calendars, small teams |
-| 100-1,000  | < 10ms             | Department scheduling, medium teams |
-| 1,000-10,000 | < 100ms          | Enterprise calendars, large organizations |
-| 10,000+    | < 1s               | Multi-tenant systems, massive datasets |
+| Busy Times   | Target Response Time | Use Case                                  |
+| ------------ | -------------------- | ----------------------------------------- |
+| 1-100        | < 1ms                | Individual calendars, small teams         |
+| 100-1,000    | < 10ms               | Department scheduling, medium teams       |
+| 1,000-10,000 | < 100ms              | Enterprise calendars, large organizations |
+| 10,000+      | < 1s                 | Multi-tenant systems, massive datasets    |
 
 ## Algorithmic Complexity
 
 ### Time Complexity
+
 - **Busy Time Processing**: O(n log n) - dominated by sorting and merging operations
 - **Slot Generation**: O(s) - where s is the number of potential slots
 - **Slot Filtering**: O(s × n) - checking each slot against busy times
 - **Overall**: O(n log n + s × n) in worst case
 
 ### Space Complexity
+
 - **Memory Usage**: O(n + s) - storing busy times and generated slots
 - **Additional Overhead**: Minimal - efficient in-place operations where possible
 
 ### Where:
+
 - `n` = number of busy times
 - `s` = number of generated slots
 
 ## Performance Benchmarks
 
 ### Hardware Specs (Reference)
+
 - **CPU**: Apple M1 Pro (2021)
 - **Memory**: 16GB DDR4
 - **Node.js**: v20.x
@@ -47,7 +51,7 @@ Average: 0.8ms
 95th percentile: 1.2ms
 99th percentile: 2.1ms
 
-// 1,000 busy times across 1 week  
+// 1,000 busy times across 1 week
 Average: 8.4ms
 95th percentile: 12.1ms
 99th percentile: 18.7ms
@@ -64,7 +68,7 @@ Average: 92.3ms
 // 30-minute slots over 8 hours (16 slots)
 Average: 0.1ms
 
-// 15-minute slots over 8 hours (32 slots)  
+// 15-minute slots over 8 hours (32 slots)
 Average: 0.2ms
 
 // 5-minute slots over 24 hours (288 slots)
@@ -79,20 +83,12 @@ Average: 15.2ms
 ```typescript
 // Typical office day scenario
 // 10 meetings, 8-hour day, 30-minute slots
-const benchmark = scheduler.findAvailableSlots(
-    workDayStart,
-    workDayEnd,
-    { slotDuration: 30, padding: 15 }
-)
+const benchmark = scheduler.findAvailableSlots(workDayStart, workDayEnd, { slotDuration: 30, padding: 15 })
 // Average: 1.1ms
 
-// Enterprise calendar scenario  
+// Enterprise calendar scenario
 // 500 busy periods, 1-week range, 60-minute slots
-const enterprise = scheduler.findAvailableSlots(
-    weekStart,
-    weekEnd,
-    { slotDuration: 60, padding: 10 }
-)
+const enterprise = scheduler.findAvailableSlots(weekStart, weekEnd, { slotDuration: 60, padding: 10 })
 // Average: 45.2ms
 ```
 
@@ -137,11 +133,17 @@ function findSlots(busyTimes, start, end, options) {
 
 ```typescript
 // ❌ Too granular for most use cases
-{ slotDuration: 1 }  // 1-minute slots
+{
+    slotDuration: 1
+} // 1-minute slots
 
 // ✅ Reasonable granularity
-{ slotDuration: 15 }  // 15-minute slots
-{ slotDuration: 30 }  // 30-minute slots
+{
+    slotDuration: 15
+} // 15-minute slots
+{
+    slotDuration: 30
+} // 30-minute slots
 ```
 
 **Minimize Overlapping Slots:**
@@ -189,7 +191,7 @@ class PerformantScheduler {
 
     addBusyTimes(busyTimes: BusyTime[]) {
         this.scheduler.addBusyTimes(busyTimes)
-        
+
         // Periodically clean up old busy times
         if (this.scheduler.getBusyTimes().length > this.maxBusyTimes) {
             this.cleanupOldBusyTimes()
@@ -198,9 +200,10 @@ class PerformantScheduler {
 
     private cleanupOldBusyTimes() {
         const now = new Date()
-        const recent = this.scheduler.getBusyTimes()
+        const recent = this.scheduler
+            .getBusyTimes()
             .filter(bt => bt.end.getTime() > now.getTime() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-        
+
         this.scheduler.clearBusyTimes()
         this.scheduler.addBusyTimes(recent)
     }
@@ -216,7 +219,7 @@ function profileScheduling(name: string, fn: () => any) {
     const start = performance.now()
     const result = fn()
     const end = performance.now()
-    
+
     console.log(`${name}: ${(end - start).toFixed(2)}ms`)
     return result
 }
@@ -249,30 +252,29 @@ import { performance } from 'perf_hooks'
 
 function benchmarkScheduling() {
     const scheduler = createScheduler()
-    
+
     // Generate test data
     const busyTimes = generateRandomBusyTimes(1000)
     scheduler.addBusyTimes(busyTimes)
-    
+
     const iterations = 100
     const times: number[] = []
-    
+
     for (let i = 0; i < iterations; i++) {
         const start = performance.now()
-        
-        scheduler.findAvailableSlots(
-            new Date('2024-01-01T09:00:00Z'),
-            new Date('2024-01-01T17:00:00Z'),
-            { slotDuration: 30, padding: 15 }
-        )
-        
+
+        scheduler.findAvailableSlots(new Date('2024-01-01T09:00:00Z'), new Date('2024-01-01T17:00:00Z'), {
+            slotDuration: 30,
+            padding: 15,
+        })
+
         const end = performance.now()
         times.push(end - start)
     }
-    
+
     const avg = times.reduce((a, b) => a + b) / times.length
     const p95 = times.sort()[Math.floor(times.length * 0.95)]
-    
+
     console.log(`Average: ${avg.toFixed(2)}ms`)
     console.log(`95th percentile: ${p95.toFixed(2)}ms`)
 }
@@ -295,28 +297,28 @@ class PartitionedScheduler {
 
     addBusyTime(busyTime: BusyTime) {
         const key = this.getPartitionKey(busyTime.start)
-        
+
         if (!this.schedulers.has(key)) {
             this.schedulers.set(key, createScheduler())
         }
-        
+
         this.schedulers.get(key)!.addBusyTimes([busyTime])
     }
 
     findAvailableSlots(start: Date, end: Date, options: SchedulingOptions) {
         const allSlots = []
-        
+
         // Find relevant partitions
         const startKey = this.getPartitionKey(start)
         const endKey = this.getPartitionKey(end)
-        
+
         for (const [key, scheduler] of this.schedulers) {
             if (key >= startKey && key <= endKey) {
                 const slots = scheduler.findAvailableSlots(start, end, options)
                 allSlots.push(...slots)
             }
         }
-        
+
         return allSlots.sort((a, b) => a.start.getTime() - b.start.getTime())
     }
 }
@@ -331,14 +333,14 @@ class CachedScheduler {
 
     findAvailableSlots(start: Date, end: Date, options: SchedulingOptions) {
         const cacheKey = this.getCacheKey(start, end, options)
-        
+
         if (this.cache.has(cacheKey)) {
             return this.cache.get(cacheKey)!
         }
-        
+
         const slots = this.scheduler.findAvailableSlots(start, end, options)
         this.cache.set(cacheKey, slots)
-        
+
         return slots
     }
 
@@ -382,18 +384,10 @@ const scheduler = createScheduler(meetings)
 
 ```typescript
 // ❌ Searching entire year
-const slots = scheduler.findAvailableSlots(
-    new Date('2024-01-01'),
-    new Date('2024-12-31'),
-    options
-)
+const slots = scheduler.findAvailableSlots(new Date('2024-01-01'), new Date('2024-12-31'), options)
 
 // ✅ Focused search
-const slots = scheduler.findAvailableSlots(
-    startOfWeek,
-    endOfWeek,
-    options
-)
+const slots = scheduler.findAvailableSlots(startOfWeek, endOfWeek, options)
 ```
 
 ## Best Practices Summary

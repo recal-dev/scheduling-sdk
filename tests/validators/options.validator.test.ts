@@ -4,7 +4,7 @@ import {
     validateDuration,
     validateSplit,
     validateOffset,
-    validatePadding
+    validatePadding,
 } from '../../src/validators/options.validator.ts'
 import type { SchedulingOptions } from '../../src/types/scheduling.types.ts'
 
@@ -15,52 +15,52 @@ describe('Options Validator', () => {
                 slotDuration: 60,
                 slotSplit: 30,
                 padding: 15,
-                offset: 10
+                offset: 10,
             }
-            
+
             expect(() => validateOptions(validOptions)).not.toThrow()
         })
 
         it('should validate minimal valid options', () => {
             const minimalOptions: SchedulingOptions = {
-                slotDuration: 30
+                slotDuration: 30,
             }
-            
+
             expect(() => validateOptions(minimalOptions)).not.toThrow()
         })
 
         it('should throw for invalid slot duration', () => {
             const invalidOptions: SchedulingOptions = {
-                slotDuration: -30
+                slotDuration: -30,
             }
-            
+
             expect(() => validateOptions(invalidOptions)).toThrow('Slot duration must be a positive number')
         })
 
         it('should throw for invalid padding', () => {
             const invalidOptions: SchedulingOptions = {
                 slotDuration: 60,
-                padding: -10
+                padding: -10,
             }
-            
+
             expect(() => validateOptions(invalidOptions)).toThrow('Padding must be a non-negative number')
         })
 
         it('should throw for invalid slot split', () => {
             const invalidOptions: SchedulingOptions = {
                 slotDuration: 60,
-                slotSplit: 0
+                slotSplit: 0,
             }
-            
+
             expect(() => validateOptions(invalidOptions)).toThrow('Slot split must be a positive number')
         })
 
         it('should throw for invalid offset', () => {
             const invalidOptions: SchedulingOptions = {
                 slotDuration: 60,
-                offset: -5
+                offset: -5,
             }
-            
+
             expect(() => validateOptions(invalidOptions)).toThrow('Offset must be a non-negative number')
         })
 
@@ -69,9 +69,9 @@ describe('Options Validator', () => {
                 slotDuration: 60,
                 slotSplit: undefined,
                 padding: undefined,
-                offset: undefined
+                offset: undefined,
             }
-            
+
             expect(() => validateOptions(optionsWithUndefined)).not.toThrow()
         })
     })
@@ -228,9 +228,9 @@ describe('Options Validator', () => {
                 slotDuration: 90,
                 slotSplit: 30,
                 padding: 10,
-                offset: 15
+                offset: 15,
             }
-            
+
             expect(() => validateOptions(complexOptions)).not.toThrow()
         })
 
@@ -239,9 +239,9 @@ describe('Options Validator', () => {
                 slotDuration: 60,
                 slotSplit: 30,
                 padding: 0,
-                offset: 0
+                offset: 0,
             }
-            
+
             expect(() => validateOptions(zeroOptions)).not.toThrow()
         })
 
@@ -250,9 +250,9 @@ describe('Options Validator', () => {
                 slotDuration: 45,
                 slotSplit: 15,
                 padding: undefined,
-                offset: 20
+                offset: 20,
             }
-            
+
             expect(() => validateOptions(mixedOptions)).not.toThrow()
         })
     })
