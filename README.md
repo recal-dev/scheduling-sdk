@@ -4,7 +4,7 @@
 [![Tests](https://github.com/recal-dev/scheduling-sdk/workflows/Tests/badge.svg)](https://github.com/recal-dev/scheduling-sdk/actions)
 [![Test Coverage](https://codecov.io/gh/recal-dev/scheduling-sdk/branch/main/graph/badge.svg)](https://codecov.io/gh/recal-dev/scheduling-sdk)
 
-**Brought to you by [Recal](https://recal.com)** 🚀
+**Brought to you by [Recal](https://recal.dev)** 🚀
 
 A fast, modular TypeScript SDK for finding available time slots with **exceptional developer experience** - intuitive APIs, comprehensive TypeScript support, and extensive documentation.
 
@@ -73,19 +73,19 @@ const scheduler = createScheduler()
 // Add a single busy time
 scheduler.addBusyTime({
     start: new Date('2024-01-15T14:00:00Z'),
-    end: new Date('2024-01-15T15:00:00Z')
+    end: new Date('2024-01-15T15:00:00Z'),
 })
 
 // Add multiple busy times at once
 scheduler.addBusyTimes([
     {
         start: new Date('2024-01-15T10:00:00Z'),
-        end: new Date('2024-01-15T11:00:00Z')
+        end: new Date('2024-01-15T11:00:00Z'),
     },
     {
         start: new Date('2024-01-15T16:00:00Z'),
-        end: new Date('2024-01-15T17:00:00Z')
-    }
+        end: new Date('2024-01-15T17:00:00Z'),
+    },
 ])
 
 // Clear all busy times
@@ -117,12 +117,12 @@ const scheduler = new AvailabilityScheduler(availability)
 scheduler.addBusyTimes([
     {
         start: new Date('2024-01-15T14:00:00Z'),
-        end: new Date('2024-01-15T15:00:00Z')
+        end: new Date('2024-01-15T15:00:00Z'),
     },
     {
         start: new Date('2024-01-16T10:00:00Z'),
-        end: new Date('2024-01-16T11:00:00Z')
-    }
+        end: new Date('2024-01-16T11:00:00Z'),
+    },
 ])
 
 // Find available slots within business hours
