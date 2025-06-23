@@ -5,7 +5,7 @@ export function hasOverlap(slot: TimeSlot, busyTime: BusyTime): boolean {
     if (busyTime.start.getTime() === busyTime.end.getTime()) {
         return false
     }
-    
+
     return slot.start.getTime() < busyTime.end.getTime() && busyTime.start.getTime() < slot.end.getTime()
 }
 
@@ -22,8 +22,11 @@ export function isSlotAvailable(slot: TimeSlot, busyTimes: BusyTime[]): boolean 
         }
 
         // Check for overlap (skip zero-duration busy times)
-        if (busyTime.start.getTime() !== busyTime.end.getTime() && 
-            slotStart < busyTime.end.getTime() && busyTime.start.getTime() < slotEnd) {
+        if (
+            busyTime.start.getTime() !== busyTime.end.getTime() &&
+            slotStart < busyTime.end.getTime() &&
+            busyTime.start.getTime() < slotEnd
+        ) {
             return false
         }
     }

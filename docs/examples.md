@@ -22,7 +22,7 @@ import { createScheduler } from 'scheduling-sdk'
 // Create scheduler with existing appointments
 const appointmentScheduler = createScheduler([
     { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
-    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }
+    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') },
 ])
 
 // Find 60-minute appointment slots
@@ -42,17 +42,13 @@ console.log(`Found ${availableSlots.length} available appointment slots`)
 // Medical appointments need cleanup/prep time between patients
 const doctorScheduler = createScheduler([
     { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T10:30:00Z') },
-    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }
+    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') },
 ])
 
-const slots = doctorScheduler.findAvailableSlots(
-    new Date('2024-01-15T09:00:00Z'),
-    new Date('2024-01-15T17:00:00Z'),
-    {
-        slotDuration: 30,  // 30-minute appointments
-        padding: 10        // 10-minute buffer for cleaning/prep
-    }
-)
+const slots = doctorScheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
+    slotDuration: 30, // 30-minute appointments
+    padding: 10, // 10-minute buffer for cleaning/prep
+})
 
 // Slots will have 10-minute gaps around existing appointments
 ```
@@ -67,8 +63,8 @@ const flexibleSlots = consultationScheduler.findAvailableSlots(
     new Date('2024-01-15T09:00:00Z'),
     new Date('2024-01-15T17:00:00Z'),
     {
-        slotDuration: 60,  // 1-hour consultations
-        slotSplit: 30      // New slot every 30 minutes (overlapping)
+        slotDuration: 60, // 1-hour consultations
+        slotSplit: 30, // New slot every 30 minutes (overlapping)
     }
 )
 
@@ -84,34 +80,26 @@ import { createScheduler } from 'scheduling-sdk'
 
 function createBusinessHoursScheduler() {
     const scheduler = createScheduler()
-    
+
     // Add non-business hours as busy times
     const today = new Date('2024-01-15T00:00:00Z')
-    
+
     // Block out before 9 AM
-    scheduler.addBusyTimes([
-        { start: new Date('2024-01-15T00:00:00Z'), end: new Date('2024-01-15T09:00:00Z') }
-    ])
-    
+    scheduler.addBusyTimes([{ start: new Date('2024-01-15T00:00:00Z'), end: new Date('2024-01-15T09:00:00Z') }])
+
     // Block out lunch (12-1 PM)
-    scheduler.addBusyTimes([
-        { start: new Date('2024-01-15T12:00:00Z'), end: new Date('2024-01-15T13:00:00Z') }
-    ])
-    
+    scheduler.addBusyTimes([{ start: new Date('2024-01-15T12:00:00Z'), end: new Date('2024-01-15T13:00:00Z') }])
+
     // Block out after 5 PM
-    scheduler.addBusyTimes([
-        { start: new Date('2024-01-15T17:00:00Z'), end: new Date('2024-01-15T23:59:59Z') }
-    ])
-    
+    scheduler.addBusyTimes([{ start: new Date('2024-01-15T17:00:00Z'), end: new Date('2024-01-15T23:59:59Z') }])
+
     return scheduler
 }
 
 const businessScheduler = createBusinessHoursScheduler()
 
 // Add actual meetings
-businessScheduler.addBusyTimes([
-    { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') }
-])
+businessScheduler.addBusyTimes([{ start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') }])
 
 const meetingSlots = businessScheduler.findAvailableSlots(
     new Date('2024-01-15T00:00:00Z'),
@@ -128,29 +116,31 @@ const meetingSlots = businessScheduler.findAvailableSlots(
 function findSlotsAcrossWeek(existingMeetings, slotDuration = 60) {
     const scheduler = createScheduler(existingMeetings)
     const allSlots = []
-    
+
     // Schedule across work week
     for (let day = 0; day < 5; day++) {
         const dayStart = new Date(`2024-01-${15 + day}T09:00:00Z`)
         const dayEnd = new Date(`2024-01-${15 + day}T17:00:00Z`)
-        
+
         const daySlots = scheduler.findAvailableSlots(dayStart, dayEnd, {
             slotDuration,
-            padding: 15  // 15-minute buffer between meetings
+            padding: 15, // 15-minute buffer between meetings
         })
-        
-        allSlots.push(...daySlots.map(slot => ({
-            ...slot,
-            day: dayStart.toDateString()
-        })))
+
+        allSlots.push(
+            ...daySlots.map(slot => ({
+                ...slot,
+                day: dayStart.toDateString(),
+            }))
+        )
     }
-    
+
     return allSlots
 }
 
 const weeklySlots = findSlotsAcrossWeek([
     { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
-    { start: new Date('2024-01-16T14:00:00Z'), end: new Date('2024-01-16T15:30:00Z') }
+    { start: new Date('2024-01-16T14:00:00Z'), end: new Date('2024-01-16T15:30:00Z') },
 ])
 ```
 
@@ -161,45 +151,45 @@ const weeklySlots = findSlotsAcrossWeek([
 ```typescript
 class MeetingRoomScheduler {
     private rooms = new Map()
-    
+
     constructor(roomNames: string[]) {
         roomNames.forEach(name => {
             this.rooms.set(name, createScheduler())
         })
     }
-    
+
     bookRoom(roomName: string, booking: BusyTime) {
         const scheduler = this.rooms.get(roomName)
         if (scheduler) {
             scheduler.addBusyTimes([booking])
         }
     }
-    
+
     findAvailableRooms(startTime: Date, endTime: Date, duration: number) {
         const availableRooms = []
-        
+
         for (const [roomName, scheduler] of this.rooms) {
             const slots = scheduler.findAvailableSlots(startTime, endTime, {
                 slotDuration: duration,
-                padding: 15  // Setup/cleanup time
+                padding: 15, // Setup/cleanup time
             })
-            
+
             if (slots.length > 0) {
                 availableRooms.push({
                     room: roomName,
-                    availableSlots: slots
+                    availableSlots: slots,
                 })
             }
         }
-        
+
         return availableRooms
     }
-    
+
     findBestRoomSlot(startTime: Date, endTime: Date, duration: number) {
         const available = this.findAvailableRooms(startTime, endTime, duration)
-        
+
         if (available.length === 0) return null
-        
+
         // Return room with earliest available slot
         return available.reduce((best, current) => {
             const bestFirstSlot = best.availableSlots[0].start
@@ -215,14 +205,14 @@ const roomScheduler = new MeetingRoomScheduler(['Conference A', 'Conference B', 
 // Book some rooms
 roomScheduler.bookRoom('Conference A', {
     start: new Date('2024-01-15T10:00:00Z'),
-    end: new Date('2024-01-15T11:00:00Z')
+    end: new Date('2024-01-15T11:00:00Z'),
 })
 
 // Find available rooms for 2-hour meeting
 const bestRoom = roomScheduler.findBestRoomSlot(
     new Date('2024-01-15T09:00:00Z'),
     new Date('2024-01-15T17:00:00Z'),
-    120  // 2 hours
+    120 // 2 hours
 )
 
 console.log(`Best room: ${bestRoom?.room}, First slot: ${bestRoom?.availableSlots[0].start}`)
@@ -233,43 +223,43 @@ console.log(`Best room: ${bestRoom?.room}, First slot: ${bestRoom?.availableSlot
 ```typescript
 class EquipmentScheduler {
     private equipmentSchedulers = new Map()
-    
-    constructor(equipment: { id: string, name: string, setupTime: number }[]) {
+
+    constructor(equipment: { id: string; name: string; setupTime: number }[]) {
         equipment.forEach(item => {
             this.equipmentSchedulers.set(item.id, {
                 scheduler: createScheduler(),
                 setupTime: item.setupTime,
-                name: item.name
+                name: item.name,
             })
         })
     }
-    
+
     reserveEquipment(equipmentId: string, reservation: BusyTime) {
         const equipment = this.equipmentSchedulers.get(equipmentId)
         if (equipment) {
             equipment.scheduler.addBusyTimes([reservation])
         }
     }
-    
+
     findAvailableEquipment(startTime: Date, endTime: Date, duration: number) {
         const results = []
-        
+
         for (const [id, equipment] of this.equipmentSchedulers) {
             const slots = equipment.scheduler.findAvailableSlots(startTime, endTime, {
                 slotDuration: duration,
-                padding: equipment.setupTime  // Account for setup/breakdown
+                padding: equipment.setupTime, // Account for setup/breakdown
             })
-            
+
             if (slots.length > 0) {
                 results.push({
                     equipmentId: id,
                     name: equipment.name,
                     availableSlots: slots,
-                    setupTime: equipment.setupTime
+                    setupTime: equipment.setupTime,
                 })
             }
         }
-        
+
         return results
     }
 }
@@ -278,13 +268,13 @@ class EquipmentScheduler {
 const equipmentScheduler = new EquipmentScheduler([
     { id: 'projector-1', name: 'Conference Projector', setupTime: 10 },
     { id: 'camera-1', name: 'Video Camera', setupTime: 20 },
-    { id: 'sound-1', name: 'Sound System', setupTime: 30 }
+    { id: 'sound-1', name: 'Sound System', setupTime: 30 },
 ])
 
 const availableEquipment = equipmentScheduler.findAvailableEquipment(
     new Date('2024-01-15T14:00:00Z'),
     new Date('2024-01-15T16:00:00Z'),
-    90  // 90-minute event
+    90 // 90-minute event
 )
 ```
 
@@ -299,8 +289,8 @@ import { AvailabilityScheduler } from 'scheduling-sdk'
 const businessHours = {
     schedules: [
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '12:00' },
-        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' }
-    ]
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' },
+    ],
 }
 
 const scheduler = new AvailabilityScheduler(businessHours)
@@ -308,14 +298,13 @@ const scheduler = new AvailabilityScheduler(businessHours)
 // Add specific appointments
 scheduler.addBusyTime({
     start: new Date('2024-01-15T10:30:00Z'),
-    end: new Date('2024-01-15T11:30:00Z')
+    end: new Date('2024-01-15T11:30:00Z'),
 })
 
-const slots = scheduler.findAvailableSlots(
-    new Date('2024-01-15T08:00:00Z'),
-    new Date('2024-01-15T18:00:00Z'),
-    { slotDuration: 60, padding: 15 }
-)
+const slots = scheduler.findAvailableSlots(new Date('2024-01-15T08:00:00Z'), new Date('2024-01-15T18:00:00Z'), {
+    slotDuration: 60,
+    padding: 15,
+})
 
 // Results in slots only during business hours, excluding lunch and the 10:30-11:30 appointment
 ```
@@ -328,10 +317,10 @@ const medicalSchedule = {
     schedules: [
         { days: ['monday', 'wednesday', 'friday'], start: '08:00', end: '16:00' },
         { days: ['tuesday', 'thursday'], start: '12:00', end: '20:00' },
-        { days: ['saturday'], start: '09:00', end: '13:00' }
+        { days: ['saturday'], start: '09:00', end: '13:00' },
         // Sunday is automatically unavailable (no schedule)
     ],
-    timezone: 'America/New_York'
+    timezone: 'America/New_York',
 }
 
 const doctorScheduler = new AvailabilityScheduler(medicalSchedule)
@@ -361,8 +350,8 @@ const serviceSchedule = {
         // Late afternoon
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '15:30', end: '17:00' },
         // Weekend availability
-        { days: ['saturday'], start: '10:00', end: '14:00' }
-    ]
+        { days: ['saturday'], start: '10:00', end: '14:00' },
+    ],
 }
 
 // This creates automatic breaks:
@@ -385,12 +374,12 @@ const serviceSlots = serviceScheduler.findAvailableSlots(
 // Consultant with non-standard hours
 const consultantAvailability = {
     schedules: [
-        { days: ['monday'], start: '14:00', end: '20:00' },        // Late start Monday
+        { days: ['monday'], start: '14:00', end: '20:00' }, // Late start Monday
         { days: ['tuesday', 'wednesday'], start: '09:00', end: '17:00' }, // Regular hours
-        { days: ['thursday'], start: '11:00', end: '19:00' },     // Shifted Thursday
-        { days: ['friday'], start: '09:00', end: '15:00' },       // Early finish Friday
-        { days: ['saturday'], start: '10:00', end: '16:00' }      // Weekend availability
-    ]
+        { days: ['thursday'], start: '11:00', end: '19:00' }, // Shifted Thursday
+        { days: ['friday'], start: '09:00', end: '15:00' }, // Early finish Friday
+        { days: ['saturday'], start: '10:00', end: '16:00' }, // Weekend availability
+    ],
 }
 
 const consultantScheduler = new AvailabilityScheduler(consultantAvailability)
@@ -400,9 +389,9 @@ const consultationSlots = consultantScheduler.findAvailableSlots(
     new Date('2024-01-15T08:00:00Z'),
     new Date('2024-01-20T18:00:00Z'),
     {
-        slotDuration: 90,    // 90-minute consultations
-        slotSplit: 45,       // New slot every 45 minutes (overlapping)
-        padding: 15          // 15-minute buffer
+        slotDuration: 90, // 90-minute consultations
+        slotSplit: 45, // New slot every 45 minutes (overlapping)
+        padding: 15, // 15-minute buffer
     }
 )
 
@@ -420,37 +409,37 @@ const slotsByDay = consultationSlots.reduce((acc, slot) => {
 ```typescript
 class MultiLocationScheduler {
     private locationSchedulers = new Map()
-    
-    constructor(locations: { name: string, availability: WeeklyAvailability }[]) {
+
+    constructor(locations: { name: string; availability: WeeklyAvailability }[]) {
         locations.forEach(location => {
             this.locationSchedulers.set(location.name, new AvailabilityScheduler(location.availability))
         })
     }
-    
+
     addBooking(locationName: string, booking: BusyTime) {
         const scheduler = this.locationSchedulers.get(locationName)
         if (scheduler) {
             scheduler.addBusyTime(booking)
         }
     }
-    
+
     findAvailableSlotsByLocation(startTime: Date, endTime: Date, options: SchedulingOptions) {
         const results = new Map()
-        
+
         for (const [locationName, scheduler] of this.locationSchedulers) {
             const slots = scheduler.findAvailableSlots(startTime, endTime, options)
             if (slots.length > 0) {
                 results.set(locationName, slots)
             }
         }
-        
+
         return results
     }
-    
+
     findEarliestAvailableSlot(startTime: Date, endTime: Date, options: SchedulingOptions) {
         let earliestSlot = null
         let bestLocation = null
-        
+
         for (const [locationName, scheduler] of this.locationSchedulers) {
             const slots = scheduler.findAvailableSlots(startTime, endTime, options)
             if (slots.length > 0) {
@@ -461,7 +450,7 @@ class MultiLocationScheduler {
                 }
             }
         }
-        
+
         return { location: bestLocation, slot: earliestSlot }
     }
 }
@@ -471,15 +460,15 @@ const multiLocationService = new MultiLocationScheduler([
     {
         name: 'Downtown Office',
         availability: {
-            schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }]
-        }
+            schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }],
+        },
     },
     {
         name: 'Suburban Branch',
         availability: {
-            schedules: [{ days: ['thursday', 'friday', 'saturday'], start: '10:00', end: '18:00' }]
-        }
-    }
+            schedules: [{ days: ['thursday', 'friday', 'saturday'], start: '10:00', end: '18:00' }],
+        },
+    },
 ])
 
 const earliestSlot = multiLocationService.findEarliestAvailableSlot(
@@ -496,49 +485,45 @@ console.log(`Earliest available: ${earliestSlot.location} at ${earliestSlot.slot
 ```typescript
 class DynamicAvailabilityScheduler {
     private scheduler: AvailabilityScheduler
-    
+
     constructor(initialAvailability: WeeklyAvailability) {
         this.scheduler = new AvailabilityScheduler(initialAvailability)
     }
-    
+
     updateHours(newAvailability: WeeklyAvailability) {
         // Clear existing busy times and update availability
         this.scheduler.clearBusyTimes()
         this.scheduler.setAvailability(newAvailability)
     }
-    
+
     addTemporaryBlock(startTime: Date, endTime: Date, reason: string) {
         this.scheduler.addBusyTime({ start: startTime, end: endTime })
         console.log(`Added temporary block: ${reason}`)
     }
-    
+
     findAvailabilityForWeek(weekStart: Date) {
         const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)
-        
+
         return this.scheduler.findAvailableSlots(weekStart, weekEnd, {
             slotDuration: 60,
             slotSplit: 60,
-            padding: 10
+            padding: 10,
         })
     }
 }
 
 // Usage
 const dynamicScheduler = new DynamicAvailabilityScheduler({
-    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }]
+    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }],
 })
 
 // Update for holiday hours
 dynamicScheduler.updateHours({
-    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '10:00', end: '15:00' }]
+    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '10:00', end: '15:00' }],
 })
 
 // Add temporary blocks
-dynamicScheduler.addTemporaryBlock(
-    new Date('2024-01-15T12:00:00Z'),
-    new Date('2024-01-15T13:00:00Z'),
-    'Team meeting'
-)
+dynamicScheduler.addTemporaryBlock(new Date('2024-01-15T12:00:00Z'), new Date('2024-01-15T13:00:00Z'), 'Team meeting')
 ```
 
 ## Meeting Scheduling
@@ -548,52 +533,51 @@ dynamicScheduler.addTemporaryBlock(
 ```typescript
 class TeamMeetingScheduler {
     private teamMembers = new Map()
-    
+
     addTeamMember(name: string, busyTimes: BusyTime[] = []) {
         this.teamMembers.set(name, createScheduler(busyTimes))
     }
-    
+
     addMemberBusyTime(name: string, busyTime: BusyTime) {
         const scheduler = this.teamMembers.get(name)
         if (scheduler) {
             scheduler.addBusyTimes([busyTime])
         }
     }
-    
+
     findTeamMeetingSlots(startTime: Date, endTime: Date, duration: number) {
         if (this.teamMembers.size === 0) return []
-        
+
         // Get available slots for first member
         const firstMember = this.teamMembers.values().next().value
         let commonSlots = firstMember.findAvailableSlots(startTime, endTime, {
-            slotDuration: duration
+            slotDuration: duration,
         })
-        
+
         // Find intersection with all other members
         for (const scheduler of this.teamMembers.values()) {
             const memberSlots = scheduler.findAvailableSlots(startTime, endTime, {
-                slotDuration: duration
+                slotDuration: duration,
             })
-            
+
             commonSlots = this.findSlotIntersection(commonSlots, memberSlots)
         }
-        
+
         return commonSlots
     }
-    
+
     private findSlotIntersection(slots1: TimeSlot[], slots2: TimeSlot[]): TimeSlot[] {
         const intersection = []
-        
+
         for (const slot1 of slots1) {
             for (const slot2 of slots2) {
-                if (slot1.start.getTime() === slot2.start.getTime() &&
-                    slot1.end.getTime() === slot2.end.getTime()) {
+                if (slot1.start.getTime() === slot2.start.getTime() && slot1.end.getTime() === slot2.end.getTime()) {
                     intersection.push(slot1)
                     break
                 }
             }
         }
-        
+
         return intersection
     }
 }
@@ -603,13 +587,11 @@ const teamScheduler = new TeamMeetingScheduler()
 
 // Add team members with their busy times
 teamScheduler.addTeamMember('Alice', [
-    { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') }
+    { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
 ])
-teamScheduler.addTeamMember('Bob', [
-    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }
-])
+teamScheduler.addTeamMember('Bob', [{ start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }])
 teamScheduler.addTeamMember('Charlie', [
-    { start: new Date('2024-01-15T09:00:00Z'), end: new Date('2024-01-15T10:00:00Z') }
+    { start: new Date('2024-01-15T09:00:00Z'), end: new Date('2024-01-15T10:00:00Z') },
 ])
 
 // Find 90-minute team meeting slots
@@ -630,35 +612,32 @@ console.log(`Found ${teamSlots.length} slots where all team members are availabl
 class PriorityScheduler {
     private highPriorityScheduler = createScheduler()
     private normalScheduler = createScheduler()
-    
+
     addHighPriorityBusyTime(busyTime: BusyTime) {
         this.highPriorityScheduler.addBusyTimes([busyTime])
         this.normalScheduler.addBusyTimes([busyTime])
     }
-    
+
     addNormalBusyTime(busyTime: BusyTime) {
         this.normalScheduler.addBusyTimes([busyTime])
     }
-    
+
     findHighPrioritySlots(startTime: Date, endTime: Date, options: SchedulingOptions) {
         return this.highPriorityScheduler.findAvailableSlots(startTime, endTime, options)
     }
-    
+
     findNormalSlots(startTime: Date, endTime: Date, options: SchedulingOptions) {
         return this.normalScheduler.findAvailableSlots(startTime, endTime, options)
     }
-    
+
     canScheduleHighPriority(startTime: Date, endTime: Date): boolean {
         const slot = { start: startTime, end: endTime }
-        const highPrioritySlots = this.findHighPrioritySlots(
-            startTime,
-            endTime,
-            { slotDuration: (endTime.getTime() - startTime.getTime()) / (1000 * 60) }
-        )
-        
-        return highPrioritySlots.some(s => 
-            s.start.getTime() <= startTime.getTime() && 
-            s.end.getTime() >= endTime.getTime()
+        const highPrioritySlots = this.findHighPrioritySlots(startTime, endTime, {
+            slotDuration: (endTime.getTime() - startTime.getTime()) / (1000 * 60),
+        })
+
+        return highPrioritySlots.some(
+            s => s.start.getTime() <= startTime.getTime() && s.end.getTime() >= endTime.getTime()
         )
     }
 }
@@ -669,19 +648,14 @@ class PriorityScheduler {
 ```typescript
 class RecurringScheduler {
     private scheduler = createScheduler()
-    
-    addRecurringBusyTime(
-        startTime: Date,
-        endTime: Date,
-        pattern: 'daily' | 'weekly' | 'monthly',
-        occurrences: number
-    ) {
+
+    addRecurringBusyTime(startTime: Date, endTime: Date, pattern: 'daily' | 'weekly' | 'monthly', occurrences: number) {
         const busyTimes = []
         const duration = endTime.getTime() - startTime.getTime()
-        
+
         for (let i = 0; i < occurrences; i++) {
             let nextStart: Date
-            
+
             switch (pattern) {
                 case 'daily':
                     nextStart = new Date(startTime.getTime() + i * 24 * 60 * 60 * 1000)
@@ -694,16 +668,16 @@ class RecurringScheduler {
                     nextStart.setMonth(nextStart.getMonth() + i)
                     break
             }
-            
+
             busyTimes.push({
                 start: nextStart,
-                end: new Date(nextStart.getTime() + duration)
+                end: new Date(nextStart.getTime() + duration),
             })
         }
-        
+
         this.scheduler.addBusyTimes(busyTimes)
     }
-    
+
     findAvailableSlots(startTime: Date, endTime: Date, options: SchedulingOptions) {
         return this.scheduler.findAvailableSlots(startTime, endTime, options)
     }
@@ -736,34 +710,30 @@ const slots = recurringScheduler.findAvailableSlots(
 // Example integration with a calendar API
 class CalendarIntegration {
     private scheduler = createScheduler()
-    
+
     async syncWithCalendar(calendarApi: any, startDate: Date, endDate: Date) {
         // Fetch events from calendar API
         const events = await calendarApi.getEvents(startDate, endDate)
-        
+
         // Convert to busy times
         const busyTimes = events.map(event => ({
             start: new Date(event.start),
-            end: new Date(event.end)
+            end: new Date(event.end),
         }))
-        
+
         // Clear and update scheduler
         this.scheduler.clearBusyTimes()
         this.scheduler.addBusyTimes(busyTimes)
     }
-    
-    async findAvailableMeetingTimes(
-        startDate: Date,
-        endDate: Date,
-        duration: number
-    ) {
+
+    async findAvailableMeetingTimes(startDate: Date, endDate: Date, duration: number) {
         // Sync with calendar first
         await this.syncWithCalendar(calendarApi, startDate, endDate)
-        
+
         // Find available slots
         return this.scheduler.findAvailableSlots(startDate, endDate, {
             slotDuration: duration,
-            padding: 15  // 15-minute buffer
+            padding: 15, // 15-minute buffer
         })
     }
 }
@@ -776,36 +746,39 @@ class CalendarIntegration {
 class PersistentScheduler {
     private scheduler = createScheduler()
     private db: any // Your database connection
-    
+
     async loadBusyTimes(resourceId: string) {
-        const busyTimes = await this.db.query(`
+        const busyTimes = await this.db.query(
+            `
             SELECT start_time, end_time 
             FROM busy_times 
             WHERE resource_id = ?
-        `, [resourceId])
-        
+        `,
+            [resourceId]
+        )
+
         this.scheduler.clearBusyTimes()
-        this.scheduler.addBusyTimes(busyTimes.map(row => ({
-            start: new Date(row.start_time),
-            end: new Date(row.end_time)
-        })))
+        this.scheduler.addBusyTimes(
+            busyTimes.map(row => ({
+                start: new Date(row.start_time),
+                end: new Date(row.end_time),
+            }))
+        )
     }
-    
+
     async saveBusyTime(resourceId: string, busyTime: BusyTime) {
-        await this.db.query(`
+        await this.db.query(
+            `
             INSERT INTO busy_times (resource_id, start_time, end_time) 
             VALUES (?, ?, ?)
-        `, [resourceId, busyTime.start, busyTime.end])
-        
+        `,
+            [resourceId, busyTime.start, busyTime.end]
+        )
+
         this.scheduler.addBusyTimes([busyTime])
     }
-    
-    async findAvailableSlots(
-        resourceId: string,
-        startTime: Date,
-        endTime: Date,
-        options: SchedulingOptions
-    ) {
+
+    async findAvailableSlots(resourceId: string, startTime: Date, endTime: Date, options: SchedulingOptions) {
         await this.loadBusyTimes(resourceId)
         return this.scheduler.findAvailableSlots(startTime, endTime, options)
     }

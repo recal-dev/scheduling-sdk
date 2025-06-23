@@ -27,7 +27,7 @@ export function findNextSlotBoundary(date: Date, intervalMinutes: number, offset
     const offsetMs = offsetMinutes * MS_PER_MINUTE
 
     // Calculate remainder using proper positive modulo
-    const remainder = ((msFromEpoch - offsetMs) % intervalMs + intervalMs) % intervalMs
+    const remainder = (((msFromEpoch - offsetMs) % intervalMs) + intervalMs) % intervalMs
 
     if (remainder === 0) {
         return new Date(date)
@@ -41,12 +41,12 @@ export function findNextSlotBoundary(date: Date, intervalMinutes: number, offset
 export function findStrictNextSlotBoundary(date: Date, intervalMinutes: number, offsetMinutes: number = 0): Date {
     // Always return the next boundary, even if already aligned
     const aligned = findNextSlotBoundary(date, intervalMinutes, offsetMinutes)
-    
+
     if (aligned.getTime() === date.getTime()) {
         // If already aligned, move to next boundary
         return new Date(aligned.getTime() + intervalMinutes * MS_PER_MINUTE)
     }
-    
+
     return aligned
 }
 
