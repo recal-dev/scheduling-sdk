@@ -1,6 +1,6 @@
 {
     "name": "scheduling-sdk",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "Brought to you by Recal - A TypeScript SDK for scheduling functionality",
     "author": "Recal",
     "license": "MIT",
@@ -47,5 +47,22 @@
     },
     "peerDependencies": {
         "typescript": "^5"
-    }
+    },
+    "keywords": [
+        "scheduling",
+        "calendar",
+        "appointment",
+        "booking",
+        "availability",
+        "time-slots",
+        "timezone",
+        "recal",
+        "sdk",
+        "typescript",
+        "schedule",
+        "time-management",
+        "date-time",
+        "slots",
+        "busy-time"
+    ]
 }
