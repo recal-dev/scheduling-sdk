@@ -10,6 +10,15 @@ yarn add scheduling-sdk
 bun add scheduling-sdk
 ```
 
+## Key Concepts
+
+Before diving in, let's clarify the main concepts:
+
+- **Busy Time**: A period when you're NOT available (existing meetings, appointments, breaks)
+- **Available Slot**: A time period when you CAN be scheduled (no conflicts with busy times)
+- **Time Range**: The window (start and end dates) where you want to find available slots
+- **Padding**: Extra buffer time added around busy times to prevent back-to-back scheduling
+
 ## Quick Start
 
 The Scheduling SDK provides a simple interface for finding available time slots while considering busy periods and various scheduling constraints.
@@ -19,15 +28,15 @@ The Scheduling SDK provides a simple interface for finding available time slots 
 ```typescript
 import { createScheduler } from 'scheduling-sdk'
 
-// Create a scheduler with some busy times
+// Create a scheduler with busy times (periods when NOT available)
 const scheduler = createScheduler([
     {
-        start: new Date('2024-01-15T09:00:00Z'),
-        end: new Date('2024-01-15T10:00:00Z'),
+        start: new Date('2024-01-15T09:00:00Z'),  // 9:00 AM meeting
+        end: new Date('2024-01-15T10:00:00Z'),    // ends at 10:00 AM
     },
     {
-        start: new Date('2024-01-15T14:00:00Z'),
-        end: new Date('2024-01-15T15:30:00Z'),
+        start: new Date('2024-01-15T14:00:00Z'),  // 2:00 PM appointment
+        end: new Date('2024-01-15T15:30:00Z'),    // ends at 3:30 PM
     },
 ])
 
@@ -44,7 +53,10 @@ const availableSlots = scheduler.findAvailableSlots(
 )
 
 console.log(availableSlots)
-// Output: Array of time slots between 8:00-9:00, 10:00-14:00, and 15:30-17:00
+// Output: Array of available time slots that avoid the busy periods:
+// - 8:00-8:30, 8:30-9:00 (before first meeting)
+// - 10:00-10:30, 10:30-11:00... up to 14:00 (between meetings)
+// - 15:30-16:00, 16:00-16:30, 16:30-17:00 (after last appointment)
 ```
 
 ### Step-by-Step Breakdown
@@ -70,7 +82,7 @@ interface TimeSlot {
 
 ### Busy Times
 
-Busy times represent periods that are already occupied:
+Busy times represent periods when you are **NOT available** for scheduling - think of them as blocked time on your calendar:
 
 ```typescript
 interface BusyTime {

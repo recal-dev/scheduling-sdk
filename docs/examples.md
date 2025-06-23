@@ -19,10 +19,10 @@ This document provides practical examples for common scheduling scenarios using 
 ```typescript
 import { createScheduler } from 'scheduling-sdk'
 
-// Create scheduler with existing appointments
+// Create scheduler with busy times (when you're NOT available)
 const appointmentScheduler = createScheduler([
-    { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
-    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') },
+    { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') }, // Morning meeting
+    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }, // Afternoon call
 ])
 
 // Find 60-minute appointment slots

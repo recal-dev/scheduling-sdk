@@ -45,29 +45,37 @@ const slot: TimeSlot = {
 
 ## Busy Times
 
-A **busy time** represents a period that is already occupied or unavailable for scheduling.
+A **busy time** represents a period when you are **NOT available** for scheduling. Think of busy times as blocked periods on your calendar - any existing meetings, appointments, breaks, or other commitments that prevent new bookings.
 
 ```typescript
 interface BusyTime {
-    start: Date
-    end: Date
+    start: Date  // Inclusive - the busy period starts at this exact time
+    end: Date    // Exclusive - the busy period ends just before this time
 }
 ```
+
+### Key Concept
+
+Busy times are the **inverse** of availability:
+- **Busy Times** = When you CANNOT be scheduled
+- **Available Slots** = When you CAN be scheduled (no busy time conflicts)
 
 ### Behavior
 
 - **Automatic Merging**: Overlapping or adjacent busy times are automatically merged
-- **Padding Application**: Padding is applied to busy times before slot filtering
-- **Conflict Detection**: Slots that overlap with busy times (including padding) are excluded
+- **Padding Application**: Padding extends busy times on both sides, creating a larger unavailable period
+- **Conflict Detection**: Any slot that would overlap with a busy time (including padding) is excluded from results
 
 ### Example
 
 ```typescript
-// Existing appointment
+// Existing appointment blocks this time from new bookings
 const busyTime: BusyTime = {
-    start: new Date('2024-01-15T14:00:00Z'),
-    end: new Date('2024-01-15T15:30:00Z'),
+    start: new Date('2024-01-15T14:00:00Z'), // 2:00 PM
+    end: new Date('2024-01-15T15:30:00Z'),   // 3:30 PM
 }
+
+// With 15-minute padding, this effectively blocks 1:45 PM - 3:45 PM
 ```
 
 ## Scheduling Options
@@ -183,9 +191,13 @@ The **weekly availability** system allows you to define recurring weekly pattern
 
 Understanding the relationship between availability and busy times is crucial:
 
-- **Busy Times**: Represent specific periods that are occupied (appointments, meetings, etc.)
-- **Availability**: Defines when slots CAN be scheduled (business hours, operating periods, etc.)
-- **Combined Effect**: Only slots within available periods AND not conflicting with busy times are returned
+- **Availability**: Defines your general working hours - when you're theoretically open for scheduling
+- **Busy Times**: Specific periods within your availability when you're NOT available (existing bookings)
+- **Available Slots**: The intersection - times that are BOTH within availability AND outside busy times
+
+Think of it as a two-layer filter:
+1. First layer: "Am I generally available?" (defined by availability schedules)
+2. Second layer: "Am I actually free?" (not blocked by busy times)
 
 ```typescript
 // Business operates Monday-Friday 9-17 with lunch break 12-13
