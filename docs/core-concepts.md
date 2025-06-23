@@ -39,7 +39,7 @@ interface TimeSlot {
 // A 30-minute time slot
 const slot: TimeSlot = {
     start: new Date('2024-01-15T10:00:00Z'),
-    end: new Date('2024-01-15T10:30:00Z')
+    end: new Date('2024-01-15T10:30:00Z'),
 }
 ```
 
@@ -66,7 +66,7 @@ interface BusyTime {
 // Existing appointment
 const busyTime: BusyTime = {
     start: new Date('2024-01-15T14:00:00Z'),
-    end: new Date('2024-01-15T15:30:00Z')
+    end: new Date('2024-01-15T15:30:00Z'),
 }
 ```
 
@@ -76,10 +76,10 @@ The `SchedulingOptions` interface provides fine-grained control over how slots a
 
 ```typescript
 interface SchedulingOptions {
-    slotDuration: number     // Required
-    slotSplit?: number       // Optional
-    padding?: number         // Optional
-    offset?: number          // Optional
+    slotDuration: number // Required
+    slotSplit?: number // Optional
+    padding?: number // Optional
+    offset?: number // Optional
 }
 ```
 
@@ -89,16 +89,23 @@ The `slotDuration` parameter determines how long each generated slot will be (in
 
 ```typescript
 // Generate 60-minute slots
-{ slotDuration: 60 }
+{
+    slotDuration: 60
+}
 
 // Generate 30-minute slots
-{ slotDuration: 30 }
+{
+    slotDuration: 30
+}
 
 // Generate 90-minute slots
-{ slotDuration: 90 }
+{
+    slotDuration: 90
+}
 ```
 
 **Key Points:**
+
 - Must be a positive number
 - All returned slots have exactly this duration
 - Can be fractional (e.g., 7.5 for 7 minutes 30 seconds)
@@ -131,11 +138,14 @@ The `padding` parameter adds buffer time before and after each busy time (in min
 // Original busy time: 2:00 PM - 3:00 PM
 // With padding: 15 minutes
 
-{ padding: 15 }
+{
+    padding: 15
+}
 // Effective busy time becomes: 1:45 PM - 3:15 PM
 ```
 
 **Use Cases:**
+
 - Setup/cleanup time for meeting rooms
 - Travel time between appointments
 - Buffer time for equipment preparation
@@ -182,14 +192,12 @@ Understanding the relationship between availability and busy times is crucial:
 const availability = {
     schedules: [
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '12:00' },
-        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' }
-    ]
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' },
+    ],
 }
 
 // Plus specific busy times
-const busyTimes = [
-    { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }
-]
+const busyTimes = [{ start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }]
 
 // Result: Slots only during business hours, excluding lunch break AND the 2-3 PM meeting
 ```
@@ -202,8 +210,8 @@ One of the most powerful features is **implicit break creation**. Instead of exp
 // Lunch break is created by the gap between morning and afternoon schedules
 {
     schedules: [
-        { days: ['monday'], start: '09:00', end: '12:00' },  // Morning
-        { days: ['monday'], start: '13:00', end: '17:00' }   // Afternoon
+        { days: ['monday'], start: '09:00', end: '12:00' }, // Morning
+        { days: ['monday'], start: '13:00', end: '17:00' }, // Afternoon
         // 12:00-13:00 becomes an automatic break
     ]
 }
@@ -218,7 +226,7 @@ Different days can have completely different schedules:
     schedules: [
         { days: ['monday', 'wednesday', 'friday'], start: '09:00', end: '17:00' },
         { days: ['tuesday', 'thursday'], start: '10:00', end: '16:00' },
-        { days: ['saturday'], start: '09:00', end: '12:00' }
+        { days: ['saturday'], start: '09:00', end: '12:00' },
         // Sunday has no schedule = completely unavailable
     ]
 }
@@ -251,41 +259,41 @@ You can specify timezone information for your availability patterns:
 The scheduling algorithm follows these steps:
 
 ### 1. Input Validation
+
 - Validate time range (start before end)
 - Validate all scheduling options
 - Ensure all dates are valid
 
 ### 2. Busy Time Processing
+
 ```
 Original Busy Times → Apply Padding → Merge Overlapping → Final Busy Times
 ```
 
 **Example:**
+
 ```typescript
 // Original busy times
-[
+;[
     { start: '10:00', end: '11:00' },
-    { start: '10:30', end: '11:30' }  // Overlapping
-]
-
-// After 15-minute padding
-[
-    { start: '09:45', end: '11:15' },
-    { start: '10:15', end: '11:45' }  // Still overlapping
-]
-
-// After merging
-[
-    { start: '09:45', end: '11:45' }  // Single merged period
+    { start: '10:30', end: '11:30' }, // Overlapping
+][
+    // After 15-minute padding
+    ({ start: '09:45', end: '11:15' }, { start: '10:15', end: '11:45' }) // Still overlapping
+][
+    // After merging
+    { start: '09:45', end: '11:45' } // Single merged period
 ]
 ```
 
 ### 3. Slot Generation
+
 1. **Find First Slot Start**: Calculate the first aligned slot start time after the requested start time
 2. **Generate Slots**: Create slots at regular intervals until the end time
 3. **Apply Duration**: Each slot has exactly the specified duration
 
 ### 4. Slot Filtering
+
 - Remove slots that overlap with any busy time
 - Return remaining slots in chronological order
 
@@ -361,8 +369,8 @@ Standard business hours with automatic lunch break.
 const availability = {
     schedules: [
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '12:00' },
-        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' }
-    ]
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '17:00' },
+    ],
 }
 
 const scheduler = new AvailabilityScheduler(availability)
@@ -378,8 +386,8 @@ const availability = {
     schedules: [
         { days: ['monday', 'wednesday', 'friday'], start: '08:00', end: '16:00' },
         { days: ['tuesday', 'thursday'], start: '12:00', end: '20:00' },
-        { days: ['saturday'], start: '09:00', end: '13:00' }
-    ]
+        { days: ['saturday'], start: '09:00', end: '13:00' },
+    ],
 }
 
 const scheduler = new AvailabilityScheduler(availability)
@@ -396,8 +404,8 @@ const availability = {
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '08:00', end: '10:00' },
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '10:30', end: '12:00' },
         { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '13:00', end: '15:00' },
-        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '15:30', end: '17:00' }
-    ]
+        { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '15:30', end: '17:00' },
+    ],
 }
 
 // Creates breaks: 10:00-10:30, 12:00-13:00, 15:00-15:30
@@ -425,6 +433,7 @@ With a non-zero `offset`, boundaries shift:
 - `slotSplit: 30, offset: 10` → 9:10, 9:40, 10:10, 10:40
 
 The `offset` is particularly useful for:
+
 - Synchronizing with existing scheduling systems
 - Creating predictable appointment times
 - Aligning with specific business processes
@@ -435,9 +444,9 @@ The SDK is optimized for common scheduling scenarios:
 
 - **Time Complexity**: O(n log n) where n is the number of busy times
 - **Space Complexity**: O(n) for storing and processing busy times
-- **Optimizations**: 
-  - Busy time merging reduces conflict checking
-  - Efficient slot generation avoids unnecessary calculations
-  - Early termination when no more slots can fit
+- **Optimizations**:
+    - Busy time merging reduces conflict checking
+    - Efficient slot generation avoids unnecessary calculations
+    - Early termination when no more slots can fit
 
 Understanding these concepts will help you configure the SDK effectively for your specific scheduling needs. For practical examples, see the [Examples](examples.md) documentation.

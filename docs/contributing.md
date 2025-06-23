@@ -24,23 +24,25 @@ Thank you for your interest in contributing to the Scheduling SDK! This guide wi
 ### Installation
 
 1. **Fork and Clone**
-   ```bash
-   git clone https://github.com/your-username/scheduling-sdk.git
-   cd scheduling-sdk
-   ```
+
+    ```bash
+    git clone https://github.com/your-username/scheduling-sdk.git
+    cd scheduling-sdk
+    ```
 
 2. **Install Dependencies**
-   ```bash
-   bun install
-   ```
+
+    ```bash
+    bun install
+    ```
 
 3. **Verify Setup**
-   ```bash
-   bun run build
-   bun test
-   bun run typecheck
-   bun run lint
-   ```
+    ```bash
+    bun run build
+    bun test
+    bun run typecheck
+    bun run lint
+    ```
 
 ### Development Commands
 
@@ -103,44 +105,50 @@ scheduling-sdk/
 ### 1. Feature Development
 
 1. **Create Feature Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
 
 2. **Implement Feature**
-   - Write code following existing patterns
-   - Add/update types as needed
-   - Include input validation
+
+    - Write code following existing patterns
+    - Add/update types as needed
+    - Include input validation
 
 3. **Write Tests**
-   - Unit tests for new functions
-   - Integration tests for complex features
-   - Edge case testing
+
+    - Unit tests for new functions
+    - Integration tests for complex features
+    - Edge case testing
 
 4. **Update Documentation**
-   - API documentation for new public methods
-   - Usage examples for new features
-   - Update README if needed
+    - API documentation for new public methods
+    - Usage examples for new features
+    - Update README if needed
 
 ### 2. Bug Fixes
 
 1. **Create Bug Fix Branch**
-   ```bash
-   git checkout -b fix/bug-description
-   ```
+
+    ```bash
+    git checkout -b fix/bug-description
+    ```
 
 2. **Reproduce Bug**
-   - Create failing test case
-   - Understand root cause
+
+    - Create failing test case
+    - Understand root cause
 
 3. **Implement Fix**
-   - Fix the issue
-   - Ensure tests pass
-   - Verify no regression
+
+    - Fix the issue
+    - Ensure tests pass
+    - Verify no regression
 
 4. **Add Regression Test**
-   - Ensure bug won't reoccur
-   - Test edge cases
+    - Ensure bug won't reoccur
+    - Test edge cases
 
 ## Testing Guidelines
 
@@ -154,10 +162,10 @@ describe('Feature Name', () => {
         it('should handle basic case', () => {
             // Arrange
             const input = setupTestData()
-            
+
             // Act
             const result = methodUnderTest(input)
-            
+
             // Assert
             expect(result).toEqual(expectedOutput)
         })
@@ -176,16 +184,19 @@ describe('Feature Name', () => {
 ### Test Categories
 
 #### Unit Tests
+
 - Test individual functions in isolation
 - Mock dependencies where appropriate
 - Focus on edge cases and error conditions
 
 #### Integration Tests
+
 - Test feature workflows end-to-end
 - Use real dependencies
 - Verify complex interactions
 
 #### Performance Tests
+
 - Benchmark critical paths
 - Ensure performance targets are met
 - Test with realistic data sizes
@@ -205,7 +216,7 @@ const basicOptions = {
     slotDuration: 60,
     slotSplit: 60,
     padding: 0,
-    offset: 0
+    offset: 0,
 }
 ```
 
@@ -216,6 +227,7 @@ const basicOptions = {
 - **Function Coverage**: 100%
 
 Run coverage with:
+
 ```bash
 bun test --coverage
 ```
@@ -337,20 +349,24 @@ Use this template:
 
 ```markdown
 ## Description
+
 Brief description of the change and why it's needed.
 
 ## Type of Change
+
 - [ ] Bug fix (non-breaking change that fixes an issue)
 - [ ] New feature (non-breaking change that adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] New tests added for new functionality
 - [ ] All existing tests pass
 - [ ] Edge cases covered
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -377,12 +393,13 @@ Brief description of the change and why it's needed.
 
 Use the bug report template:
 
-```markdown
+````markdown
 **Describe the bug**
 A clear description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Create scheduler with '...'
 2. Call method '...'
 3. See error
@@ -391,16 +408,20 @@ Steps to reproduce the behavior:
 What you expected to happen.
 
 **Code example**
+
 ```typescript
 // Minimal reproduction case
 ```
+````
 
 **Environment:**
+
 - Bun version: [e.g. 1.0.15]
 - Node version: [e.g. 18.17.0]
 - OS: [e.g. macOS 13.4]
 - SDK version: [e.g. 1.2.3]
-```
+
+````
 
 ### Feature Requests
 
@@ -422,8 +443,9 @@ Any other context about the feature request.
 **Code example**
 ```typescript
 // Example of how the feature might be used
-```
-```
+````
+
+````
 
 ### Security Issues
 
@@ -446,7 +468,7 @@ console.log('Debug: slot count', slots.length)
 console.time('Performance check')
 // ... code to measure
 console.timeEnd('Performance check')
-```
+````
 
 ### Testing New Features
 
