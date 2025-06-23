@@ -47,5 +47,22 @@
     },
     "peerDependencies": {
         "typescript": "^5"
-    }
+    },
+    "keywords": [
+        "scheduling",
+        "calendar",
+        "appointment",
+        "booking",
+        "availability",
+        "time-slots",
+        "timezone",
+        "recal",
+        "sdk",
+        "typescript",
+        "schedule",
+        "time-management",
+        "date-time",
+        "slots",
+        "busy-time"
+    ]
 }
