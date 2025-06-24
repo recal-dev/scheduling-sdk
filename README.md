@@ -4,7 +4,7 @@
 [![Tests](https://github.com/recal-dev/scheduling-sdk/workflows/Tests/badge.svg)](https://github.com/recal-dev/scheduling-sdk/actions)
 [![Test Coverage](https://codecov.io/gh/recal-dev/scheduling-sdk/branch/main/graph/badge.svg)](https://codecov.io/gh/recal-dev/scheduling-sdk)
 
-**Brought to you by [Recal](https://recal.dev)** 🚀
+**Brought to you by [Recal](https://recal.dev)** - Your unified calendar API 🚀
 
 A fast, modular TypeScript SDK for finding available time slots with **exceptional developer experience** - intuitive APIs, comprehensive TypeScript support, and extensive documentation.
 
