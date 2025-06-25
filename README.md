@@ -83,7 +83,7 @@ const availableSlots = scheduler.findAvailableSlots(
 
 ### Managing Busy Times
 
-**Flexible, type-safe methods for every use case!** 🔧
+**Flexible, type-safe methods for every use case** 🔧
 
 ```typescript
 import { createScheduler } from 'scheduling-sdk'
