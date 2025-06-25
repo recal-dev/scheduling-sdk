@@ -1,6 +1,6 @@
 {
     "name": "scheduling-sdk",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "description": "Brought to you by Recal - A TypeScript SDK for scheduling functionality",
     "author": "Recal",
     "license": "MIT",
@@ -20,7 +20,7 @@
         "dist"
     ],
     "scripts": {
-        "build": "NODE_ENV=production bun build src/index.ts --outdir dist --target node",
+        "build": "tsc --declaration --emitDeclarationOnly --outDir dist && NODE_ENV=production bun build src/index.ts --outdir dist --target node",
         "dev": "bun --watch src/index.ts",
         "test": "bun test",
         "test:coverage": "bun test --coverage --coverage-reporter=lcov --coverage-reporter=text",
