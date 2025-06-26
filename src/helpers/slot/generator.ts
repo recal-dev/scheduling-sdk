@@ -1,6 +1,6 @@
-import type { TimeSlot } from '../../types/scheduling.types.ts'
-import { MS_PER_MINUTE } from '../../utils/constants.ts'
-import { findNextSlotBoundary } from '../time/alignment.ts'
+import type { TimeSlot } from '../../types/scheduling.types'
+import { MS_PER_MINUTE } from '../../utils/constants'
+import { findNextSlotBoundary } from '../time/alignment'
 
 export interface SlotGenerationOptions {
     slotDurationMinutes: number

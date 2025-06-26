@@ -1,5 +1,5 @@
-import type { TimeSlot, BusyTime } from '../../types/scheduling.types.ts'
-import { isSlotAvailable } from '../busy-time/overlap.ts'
+import type { TimeSlot, BusyTime } from '../../types/scheduling.types'
+import { isSlotAvailable } from '../busy-time/overlap'
 
 export function filterAvailableSlots(slots: TimeSlot[], busyTimes: BusyTime[]): TimeSlot[] {
     if (busyTimes.length === 0) {

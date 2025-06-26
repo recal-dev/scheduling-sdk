@@ -1,4 +1,4 @@
-import { MS_PER_MINUTE, MINUTES_PER_HOUR } from '../../utils/constants.ts'
+import { MS_PER_MINUTE, MINUTES_PER_HOUR } from '../../utils/constants'
 
 export function calculateMinutesFromHour(date: Date): number {
     return date.getMinutes() + date.getSeconds() / 60 + date.getMilliseconds() / 60000

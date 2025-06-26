@@ -1,4 +1,4 @@
-import { MS_PER_MINUTE } from '../../utils/constants.ts'
+import { MS_PER_MINUTE } from '../../utils/constants'
 
 export function addMinutes(date: Date, minutes: number): Date {
     return new Date(date.getTime() + minutes * MS_PER_MINUTE)

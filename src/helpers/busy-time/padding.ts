@@ -1,5 +1,5 @@
-import type { BusyTime } from '../../types/scheduling.types.ts'
-import { MS_PER_MINUTE } from '../../utils/constants.ts'
+import type { BusyTime } from '../../types/scheduling.types'
+import { MS_PER_MINUTE } from '../../utils/constants'
 
 export function applyPadding(busyTimes: BusyTime[], paddingMinutes: number): BusyTime[] {
     if (paddingMinutes === 0 || busyTimes.length === 0) {

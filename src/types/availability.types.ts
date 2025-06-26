@@ -10,6 +10,10 @@
  */
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'
 
+export const workDays: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
+
+export const weekendDays: DayOfWeek[] = ['saturday', 'sunday']
+
 /**
  * Defines availability schedule for specific days of the week.
  * Multiple schedules can be used for the same day to create breaks.

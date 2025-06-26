@@ -1,6 +1,6 @@
-import type { WeeklyAvailability, DayOfWeek } from '../../types/availability.types.ts'
-import type { BusyTime } from '../../types/scheduling.types.ts'
-import { startOfDay, endOfDay } from '../time/date-math.ts'
+import type { WeeklyAvailability, DayOfWeek } from '../../types/availability.types'
+import type { BusyTime } from '../../types/scheduling.types'
+import { startOfDay, endOfDay } from '../time/date-math'
 
 const DAY_MAP: Record<DayOfWeek, number> = {
     sunday: 0,

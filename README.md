@@ -6,23 +6,23 @@
 
 **Brought to you by [Recal](https://recal.dev)** - Your unified calendar API 🚀
 
-A fast, modular TypeScript SDK for finding available time slots with **exceptional developer experience** - intuitive APIs, comprehensive TypeScript support, and extensive documentation.
+A fast TypeScript Scheduling SDK for finding available time slots with **exceptional developer experience**!
 
-## Features ✨
+## Features
 
-- **🎯 Developer-First Design**: Intuitive APIs that feel natural to use
+- **🎯 DX First**: Intuitive APIs that feel intuitive to use
 - **🔒 Full TypeScript Support**: Complete type safety with excellent IntelliSense
-- **📖 Extensive Documentation**: In-depth guides, examples, and API references
+- **📖 Extensive Documentation**: In-depth guides, examples, and API references (With help by Claude)
 - **⚡ Blazing Fast Performance**: Optimized algorithms for handling large datasets
 - **🔧 Flexible Configuration**: Customizable slot duration, padding, splitting, and offset
 - **📅 Weekly Availability Patterns**: Define recurring weekly schedules with automatic break management
-- **🏗️ Modular Architecture**: Clean separation of concerns for maintainability
-- **🧪 98%+ Test Coverage**: Comprehensive testing with edge case handling
+- **🏗️ Modular Architecture**: Clean separation of concerns for maintainability and testing
+- **🧪 98%+ Test Coverage**: Comprehensive testing with edge case handling (Supported by the [CODE's](https://code.berlin) Automated Testing LU)
 
 > **Note**
-> The SDK is fully written in TypeScript (see GitHub => 100% TypeScript) and uses Bun as the build and test tool. It requires TypeScript 5.0 or later as a peer dependency. While we use Bun for development, the compiled SDK is compatible with any JavaScript runtime, including Node.js, Deno, and modern browsers with ESM support.
+> The SDK is fully written in TypeScript and uses Bun as the build and test tool. It requires TypeScript 5.0 or later as a peer dependency. While we use Bun for development, the compiled SDK is compatible with any JavaScript runtime, including Node.js, Deno, and modern browsers with ESM support.
 
-## Quick Start 🚀
+## Quick Start 💨
 
 ```bash
 # Install the SDK
@@ -31,7 +31,7 @@ npm install scheduling-sdk
 bun add scheduling-sdk
 ```
 
-**Zero configuration required** - start scheduling in seconds with **full TypeScript intellisense**! 🎉
+**Zero configuration required** - start scheduling in seconds! 🚀
 
 ## Core Concepts
 
@@ -43,8 +43,6 @@ bun add scheduling-sdk
 ## Basic Usage
 
 ### Standard Scheduling
-
-**Simple, clean API with complete type safety** ✨
 
 ```typescript
 import { createScheduler } from 'scheduling-sdk'
@@ -73,17 +71,15 @@ const availableSlots = scheduler.findAvailableSlots(
 
 // Result: availableSlots will contain time slots like:
 // [
-//   { start: '08:00', end: '08:30' },
-//   { start: '08:15', end: '08:45' },
-//   { start: '10:15', end: '10:45' }, // Note: starts at 10:15 due to 15-min padding
-//   { start: '10:30', end: '11:00' },
+//   { start: "2024-01-15T08:00:00Z", end: "2024-01-15T08:30:00Z" },
+//   { start: "2024-01-15T08:15:00Z", end: "2024-01-15T08:45:00Z" },
+//   { start: "2024-01-15T10:15:00Z", end: "2024-01-15T10:45:00Z" }, // Note: starts at 10:15 due to 15-min padding
+//   { start: "2024-01-15T10:30:00Z", end: "2024-01-15T11:00:00Z" },
 //   ...
 // ]
 ```
 
 ### Managing Busy Times
-
-**Flexible, type-safe methods for every use case** 🔧
 
 ```typescript
 import { createScheduler } from 'scheduling-sdk'
@@ -114,15 +110,15 @@ scheduler.clearBusyTimes()
 // Get current busy times (returns a sorted array)
 const currentBusyTimes = scheduler.getBusyTimes()
 // Returns: [
-//   { start: Date, end: Date },
-//   { start: Date, end: Date },
+//   { start: "2024-01-15T10:00:00Z", end: "2024-01-15T11:00:00Z" },
+//   { start: "2024-01-15T14:00:00Z", end: "2024-01-15T15:00:00Z" },
 //   ...
 // ]
 ```
 
 ### Weekly Availability Scheduling
 
-**Business hours made easy** 📅
+**Business hours made easy ;)**
 
 ```typescript
 import { AvailabilityScheduler } from 'scheduling-sdk'
@@ -164,6 +160,13 @@ const slots = scheduler.findAvailableSlots(
     }
 )
 // Result: Only returns slots during business hours (9-12, 1-5) excluding busy times
+// [
+//   { start: "2024-01-15T09:00:00Z", end: "2024-01-15T10:00:00Z" },
+//   { start: "2024-01-15T13:00:00Z", end: "2024-01-15T14:00:00Z" },
+//   { start: "2024-01-15T15:00:00Z", end: "2024-01-15T16:00:00Z" },
+//   { start: "2024-01-15T16:00:00Z", end: "2024-01-15T17:00:00Z" },
+//   ...
+// ]
 ```
 
 ## Documentation 📚

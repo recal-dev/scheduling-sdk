@@ -1,9 +1,9 @@
-import type { WeeklyAvailability } from '../types/availability.types.ts'
-import type { BusyTime, TimeSlot, SchedulingOptions } from '../types/scheduling.types.ts'
-import { Scheduler } from '../core/scheduler.ts'
-import { weeklyAvailabilityToBusyTimes } from '../helpers/availability/converter.ts'
-import { validateWeeklyAvailability } from '../validators/availability.validator.ts'
-import { startOfDay } from '../helpers/time/date-math.ts'
+import type { WeeklyAvailability } from '../types/availability.types'
+import type { BusyTime, TimeSlot, SchedulingOptions } from '../types/scheduling.types'
+import { Scheduler } from '../core/scheduler'
+import { weeklyAvailabilityToBusyTimes } from '../helpers/availability/converter'
+import { validateWeeklyAvailability } from '../validators/availability.validator'
+import { startOfDay } from '../helpers/time/date-math'
 
 /**
  * Enhanced scheduler that combines weekly availability patterns with traditional busy time management.

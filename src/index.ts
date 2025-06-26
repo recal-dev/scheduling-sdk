@@ -1,32 +1,26 @@
 // Export types
-export type { TimeSlot, BusyTime, SchedulingOptions } from './types/scheduling.types.ts'
-export type { WeeklyAvailability, DaySchedule, DayOfWeek } from './types/availability.types.ts'
+export type { TimeSlot, BusyTime, SchedulingOptions } from './types/scheduling.types'
+export type { WeeklyAvailability, DaySchedule, DayOfWeek } from './types/availability.types'
+export { workDays, weekendDays } from './types/availability.types'
 
 // Export main classes
-export { Scheduler } from './core/scheduler.ts'
-export { AvailabilityScheduler } from './availability/scheduler.ts'
+export { Scheduler } from './core/scheduler'
+export { AvailabilityScheduler } from './availability/scheduler'
 
 // Export helper functions - Date Math
-export {
-    addMinutes,
-    subtractMinutes,
-    minutesBetween,
-    isSameDay,
-    startOfDay,
-    endOfDay,
-} from './helpers/time/date-math.ts'
+export { addMinutes, subtractMinutes, minutesBetween, isSameDay, startOfDay, endOfDay } from './helpers/time/date-math'
 
 // Export helper functions - Busy Time Management
-export { mergeBusyTimes, isOverlapping } from './helpers/busy-time/merge.ts'
+export { mergeBusyTimes, isOverlapping } from './helpers/busy-time/merge'
 
-export { hasOverlap, isSlotAvailable } from './helpers/busy-time/overlap.ts'
+export { hasOverlap, isSlotAvailable } from './helpers/busy-time/overlap'
 
-export { applyPadding } from './helpers/busy-time/padding.ts'
+export { applyPadding } from './helpers/busy-time/padding'
 
 // Export helper functions - Slot Management
-export { generateSlots, calculateFirstSlotStart, type SlotGenerationOptions } from './helpers/slot/generator.ts'
+export { generateSlots, calculateFirstSlotStart, type SlotGenerationOptions } from './helpers/slot/generator'
 
-export { filterAvailableSlots } from './helpers/slot/filter.ts'
+export { filterAvailableSlots } from './helpers/slot/filter'
 
 // Export helper functions - Time Alignment
 export {
@@ -34,10 +28,10 @@ export {
     alignToInterval,
     findNextSlotBoundary,
     getTimeWithinDay,
-} from './helpers/time/alignment.ts'
+} from './helpers/time/alignment'
 
 // Export validators
-export { validateTimeRange } from './validators/time-range.validator.ts'
+export { validateTimeRange } from './validators/time-range.validator'
 
 export {
     validateOptions,
@@ -45,19 +39,19 @@ export {
     validateSplit,
     validateOffset,
     validatePadding,
-} from './validators/options.validator.ts'
+} from './validators/options.validator'
 
-export { validateWeeklyAvailability } from './validators/availability.validator.ts'
+export { validateWeeklyAvailability } from './validators/availability.validator'
 
 // Export availability helpers
-export { weeklyAvailabilityToBusyTimes } from './helpers/availability/converter.ts'
+export { weeklyAvailabilityToBusyTimes } from './helpers/availability/converter'
 
 // Export constants
-export { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY, MINUTES_PER_HOUR, HOURS_PER_DAY } from './utils/constants.ts'
+export { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY, MINUTES_PER_HOUR, HOURS_PER_DAY } from './utils/constants'
 
 // Export convenience function
-import type { BusyTime } from './types/scheduling.types.ts'
-import { Scheduler } from './core/scheduler.ts'
+import type { BusyTime } from './types/scheduling.types'
+import { Scheduler } from './core/scheduler'
 
 export function createScheduler(busyTimes: BusyTime[] = []): Scheduler {
     return new Scheduler(busyTimes)

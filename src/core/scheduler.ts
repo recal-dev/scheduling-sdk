@@ -1,10 +1,10 @@
-import type { TimeSlot, BusyTime, SchedulingOptions } from '../types/scheduling.types.ts'
-import { validateTimeRange } from '../validators/time-range.validator.ts'
-import { validateOptions } from '../validators/options.validator.ts'
-import { applyPadding } from '../helpers/busy-time/padding.ts'
-import { mergeBusyTimes } from '../helpers/busy-time/merge.ts'
-import { generateSlots } from '../helpers/slot/generator.ts'
-import { filterAvailableSlots } from '../helpers/slot/filter.ts'
+import type { TimeSlot, BusyTime, SchedulingOptions } from '../types/scheduling.types'
+import { validateTimeRange } from '../validators/time-range.validator'
+import { validateOptions } from '../validators/options.validator'
+import { applyPadding } from '../helpers/busy-time/padding'
+import { mergeBusyTimes } from '../helpers/busy-time/merge'
+import { generateSlots } from '../helpers/slot/generator'
+import { filterAvailableSlots } from '../helpers/slot/filter'
 
 export class Scheduler {
     private busyTimes: BusyTime[]
