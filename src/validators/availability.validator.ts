@@ -23,7 +23,8 @@ function isValidTimeFormat(time: string): boolean {
  *
  * @internal
  */
-function parseTime(time: string): number {
+function parseTime(time: string | number): number {
+	if (typeof time === 'number') return time
 	const parts = time.split(':').map(Number)
 	const hours = parts[0] ?? 0
 	const minutes = parts[1] ?? 0
@@ -106,8 +107,6 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
 	if (availability.schedules.length === 0) {
 		throw new Error('Availability.schedules cannot be empty')
 	}
-
-	// Note: Timezone validation has been moved to AvailabilityScheduler constructor
 
 	// Validate each schedule
 	for (let i = 0; i < availability.schedules.length; i++) {

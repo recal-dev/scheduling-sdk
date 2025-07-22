@@ -21,13 +21,16 @@ const DAY_MAP: Record<DayOfWeek, number> = {
  *
  * @internal
  */
-function parseTimeString(timeStr: string): { hours: number; minutes: number } {
-	const [hoursStr, minutesStr] = timeStr.split(':')
+function parseTime(time: string | number): { hours: number; minutes: number } {
+	if (typeof time === 'number') {
+		return { hours: time / 60, minutes: time % 60 }
+	}
+	const [hoursStr, minutesStr] = time.split(':')
 	const hours = parseInt(hoursStr!, 10)
 	const minutes = parseInt(minutesStr!, 10)
 
 	if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-		throw new Error(`Invalid time format: ${timeStr}. Expected HH:mm format (e.g., "09:00")`)
+		throw new Error(`Invalid time format: ${time}. Expected HH:mm or number of minutes (e.g., "09:00" or 540)`)
 	}
 
 	return { hours, minutes }
@@ -67,8 +70,8 @@ function generateBusyTimesInNativeTimezone(
 		const daySchedules: Array<{ start: Date; end: Date }> = []
 
 		for (const schedule of availability.schedules) {
-			const startTime = parseTimeString(schedule.start)
-			const endTime = parseTimeString(schedule.end)
+			const startTime = parseTime(schedule.start)
+			const endTime = parseTime(schedule.end)
 
 			if (
 				startTime.hours > endTime.hours ||
