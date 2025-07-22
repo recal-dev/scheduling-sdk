@@ -40,9 +40,6 @@
 	"homepage": "https://github.com/recal-dev/scheduling-sdk#readme",
 	"devDependencies": {
 		"@types/bun": "latest",
-		"@typescript-eslint/eslint-plugin": "^8.34.1",
-		"@typescript-eslint/parser": "^8.34.1",
-		"eslint": "^9.29.0",
 		"jiti": "^2.4.2"
 	},
 	"peerDependencies": {
