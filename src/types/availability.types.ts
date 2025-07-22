@@ -33,12 +33,12 @@ export const weekendDays: DayOfWeek[] = ['saturday', 'sunday']
  * ```
  */
 export interface DaySchedule {
-    /** Array of days this schedule applies to. Must contain at least one valid day. */
-    days: DayOfWeek[]
-    /** Start time in 24-hour HH:mm format (e.g., "09:00", "14:30"). */
-    start: string
-    /** End time in 24-hour HH:mm format (e.g., "17:00", "23:30"). Must be after start time. */
-    end: string
+	/** Array of days this schedule applies to. Must contain at least one valid day. */
+	days: DayOfWeek[]
+	/** Start time in 24-hour HH:mm format (e.g., "09:00", "14:30"). */
+	start: string
+	/** End time in 24-hour HH:mm format (e.g., "17:00", "23:30"). Must be after start time. */
+	end: string
 }
 
 /**
@@ -67,8 +67,8 @@ export interface DaySchedule {
  * ```
  */
 export interface WeeklyAvailability {
-    /** Array of availability schedules. Must contain at least one schedule. */
-    schedules: DaySchedule[]
-    /** Optional IANA timezone identifier (e.g., 'America/New_York', 'Europe/London') */
-    timezone?: string
+	/** Array of availability schedules. Must contain at least one schedule. */
+	schedules: DaySchedule[]
+	/** Optional IANA timezone identifier (e.g., 'America/New_York', 'Europe/London') */
+	timezone?: string
 }

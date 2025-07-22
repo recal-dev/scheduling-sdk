@@ -1,4 +1,4 @@
-import type { WeeklyAvailability, DayOfWeek } from '../types/availability.types.ts'
+import type { DayOfWeek, WeeklyAvailability } from '../types/availability.types.ts'
 
 const VALID_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
@@ -11,8 +11,8 @@ const VALID_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', '
  * @internal
  */
 function isValidTimeFormat(time: string): boolean {
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
-    return timeRegex.test(time)
+	const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+	return timeRegex.test(time)
 }
 
 /**
@@ -24,10 +24,10 @@ function isValidTimeFormat(time: string): boolean {
  * @internal
  */
 function parseTime(time: string): number {
-    const parts = time.split(':').map(Number)
-    const hours = parts[0] ?? 0
-    const minutes = parts[1] ?? 0
-    return hours * 60 + minutes
+	const parts = time.split(':').map(Number)
+	const hours = parts[0] ?? 0
+	const minutes = parts[1] ?? 0
+	return hours * 60 + minutes
 }
 
 /**
@@ -92,108 +92,108 @@ function parseTime(time: string): number {
  * ```
  */
 export function validateWeeklyAvailability(availability?: WeeklyAvailability): void {
-    if (availability === undefined) {
-        return
-    }
-    if (typeof availability !== 'object' || availability === null) {
-        throw new Error('Availability must be an object')
-    }
+	if (availability === undefined) {
+		return
+	}
+	if (typeof availability !== 'object' || availability === null) {
+		throw new Error('Availability must be an object')
+	}
 
-    if (!Array.isArray(availability.schedules)) {
-        throw new Error('Availability.schedules must be an array')
-    }
+	if (!Array.isArray(availability.schedules)) {
+		throw new Error('Availability.schedules must be an array')
+	}
 
-    if (availability.schedules.length === 0) {
-        throw new Error('Availability.schedules cannot be empty')
-    }
+	if (availability.schedules.length === 0) {
+		throw new Error('Availability.schedules cannot be empty')
+	}
 
-    // Validate timezone if provided
-    if (availability.timezone !== undefined) {
-        if (typeof availability.timezone !== 'string' || availability.timezone.trim() === '') {
-            throw new Error('Availability.timezone must be a non-empty string')
-        }
+	// Validate timezone if provided
+	if (availability.timezone !== undefined) {
+		if (typeof availability.timezone !== 'string' || availability.timezone.trim() === '') {
+			throw new Error('Availability.timezone must be a non-empty string')
+		}
 
-        // Basic timezone format validation (not exhaustive)
-        if (!/^[A-Za-z_]+\/[A-Za-z_]+$/.test(availability.timezone)) {
-            throw new Error('Availability.timezone must be a valid IANA timezone identifier (e.g., "America/New_York")')
-        }
-    }
+		// Basic timezone format validation (not exhaustive)
+		if (!/^[A-Za-z_]+\/[A-Za-z_]+$/.test(availability.timezone)) {
+			throw new Error('Availability.timezone must be a valid IANA timezone identifier (e.g., "America/New_York")')
+		}
+	}
 
-    // Validate each schedule
-    for (let i = 0; i < availability.schedules.length; i++) {
-        const schedule = availability.schedules[i]!
+	// Validate each schedule
+	for (let i = 0; i < availability.schedules.length; i++) {
+		const schedule = availability.schedules[i]!
 
-        if (!schedule || typeof schedule !== 'object') {
-            throw new Error(`Schedule at index ${i} must be an object`)
-        }
+		if (!schedule || typeof schedule !== 'object') {
+			throw new Error(`Schedule at index ${i} must be an object`)
+		}
 
-        // Validate days array
-        if (!Array.isArray(schedule.days)) {
-            throw new Error(`Schedule at index ${i}: days must be an array`)
-        }
+		// Validate days array
+		if (!Array.isArray(schedule.days)) {
+			throw new Error(`Schedule at index ${i}: days must be an array`)
+		}
 
-        if (schedule.days.length === 0) {
-            throw new Error(`Schedule at index ${i}: days array cannot be empty`)
-        }
+		if (schedule.days.length === 0) {
+			throw new Error(`Schedule at index ${i}: days array cannot be empty`)
+		}
 
-        for (const day of schedule.days) {
-            if (!VALID_DAYS.includes(day)) {
-                throw new Error(`Schedule at index ${i}: invalid day "${day}". Valid days: ${VALID_DAYS.join(', ')}`)
-            }
-        }
+		for (const day of schedule.days) {
+			if (!VALID_DAYS.includes(day)) {
+				throw new Error(`Schedule at index ${i}: invalid day "${day}". Valid days: ${VALID_DAYS.join(', ')}`)
+			}
+		}
 
-        // Check for duplicate days within the same schedule
-        const uniqueDays = new Set(schedule.days)
-        if (uniqueDays.size !== schedule.days.length) {
-            throw new Error(`Schedule at index ${i}: duplicate days found`)
-        }
+		// Check for duplicate days within the same schedule
+		const uniqueDays = new Set(schedule.days)
+		if (uniqueDays.size !== schedule.days.length) {
+			throw new Error(`Schedule at index ${i}: duplicate days found`)
+		}
 
-        // Validate start time format
-        if (typeof schedule.start !== 'string' || !isValidTimeFormat(schedule.start)) {
-            throw new Error(`Schedule at index ${i}: start must be in HH:mm format (e.g., "09:00")`)
-        }
+		// Validate start time format
+		if (typeof schedule.start !== 'string' || !isValidTimeFormat(schedule.start)) {
+			throw new Error(`Schedule at index ${i}: start must be in HH:mm format (e.g., "09:00")`)
+		}
 
-        // Validate end time format
-        if (typeof schedule.end !== 'string' || !isValidTimeFormat(schedule.end)) {
-            throw new Error(`Schedule at index ${i}: end must be in HH:mm format (e.g., "17:00")`)
-        }
+		// Validate end time format
+		if (typeof schedule.end !== 'string' || !isValidTimeFormat(schedule.end)) {
+			throw new Error(`Schedule at index ${i}: end must be in HH:mm format (e.g., "17:00")`)
+		}
 
-        // Validate time range
-        const startMinutes = parseTime(schedule.start)
-        const endMinutes = parseTime(schedule.end)
+		// Validate time range
+		const startMinutes = parseTime(schedule.start)
+		const endMinutes = parseTime(schedule.end)
 
-        if (startMinutes >= endMinutes) {
-            throw new Error(
-                `Schedule at index ${i}: start time (${schedule.start}) must be before end time (${schedule.end})`
-            )
-        }
-    }
+		if (startMinutes >= endMinutes) {
+			throw new Error(
+				`Schedule at index ${i}: start time (${schedule.start}) must be before end time (${schedule.end})`
+			)
+		}
+	}
 
-    // Check for overlapping schedules on the same day
-    const daySchedules = new Map<DayOfWeek, Array<{ start: number; end: number; index: number }>>()
+	// Check for overlapping schedules on the same day
+	const daySchedules = new Map<DayOfWeek, Array<{ start: number; end: number; index: number }>>()
 
-    for (let i = 0; i < availability.schedules.length; i++) {
-        const schedule = availability.schedules[i]!
-        const startMinutes = parseTime(schedule.start)
-        const endMinutes = parseTime(schedule.end)
+	for (let i = 0; i < availability.schedules.length; i++) {
+		const schedule = availability.schedules[i]!
+		const startMinutes = parseTime(schedule.start)
+		const endMinutes = parseTime(schedule.end)
 
-        for (const day of schedule.days) {
-            if (!daySchedules.has(day)) {
-                daySchedules.set(day, [])
-            }
+		for (const day of schedule.days) {
+			if (!daySchedules.has(day)) {
+				daySchedules.set(day, [])
+			}
 
-            const existing = daySchedules.get(day)!
+			const existing = daySchedules.get(day)!
 
-            // Check for overlaps with existing schedules for this day
-            for (const existingSchedule of existing) {
-                if (startMinutes < existingSchedule.end && existingSchedule.start < endMinutes) {
-                    throw new Error(
-                        `Overlapping schedules found for ${day}: schedule ${i} (${schedule.start}-${schedule.end}) overlaps with schedule ${existingSchedule.index}`
-                    )
-                }
-            }
+			// Check for overlaps with existing schedules for this day
+			for (const existingSchedule of existing) {
+				if (startMinutes < existingSchedule.end && existingSchedule.start < endMinutes) {
+					throw new Error(
+						`Overlapping schedules found for ${day}: schedule ${i} (${schedule.start}-${schedule.end}) overlaps with schedule ${existingSchedule.index}`
+					)
+				}
+			}
 
-            existing.push({ start: startMinutes, end: endMinutes, index: i })
-        }
-    }
+			existing.push({ start: startMinutes, end: endMinutes, index: i })
+		}
+	}
 }

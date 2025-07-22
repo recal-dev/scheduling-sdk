@@ -1,15 +1,15 @@
-import type { WeeklyAvailability, DayOfWeek } from '../../types/availability.types'
+import type { DayOfWeek, WeeklyAvailability } from '../../types/availability.types'
 import type { BusyTime } from '../../types/scheduling.types'
-import { startOfDay, endOfDay } from '../time/date-math'
+import { endOfDay, startOfDay } from '../time/date-math'
 
 const DAY_MAP: Record<DayOfWeek, number> = {
-    sunday: 0,
-    monday: 1,
-    tuesday: 2,
-    wednesday: 3,
-    thursday: 4,
-    friday: 5,
-    saturday: 6,
+	sunday: 0,
+	monday: 1,
+	tuesday: 2,
+	wednesday: 3,
+	thursday: 4,
+	friday: 5,
+	saturday: 6,
 }
 
 /**
@@ -22,15 +22,15 @@ const DAY_MAP: Record<DayOfWeek, number> = {
  * @internal
  */
 function parseTimeString(timeStr: string): { hours: number; minutes: number } {
-    const [hoursStr, minutesStr] = timeStr.split(':')
-    const hours = parseInt(hoursStr!, 10)
-    const minutes = parseInt(minutesStr!, 10)
+	const [hoursStr, minutesStr] = timeStr.split(':')
+	const hours = parseInt(hoursStr!, 10)
+	const minutes = parseInt(minutesStr!, 10)
 
-    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-        throw new Error(`Invalid time format: ${timeStr}. Expected HH:mm format (e.g., "09:00")`)
-    }
+	if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+		throw new Error(`Invalid time format: ${timeStr}. Expected HH:mm format (e.g., "09:00")`)
+	}
 
-    return { hours, minutes }
+	return { hours, minutes }
 }
 
 /**
@@ -102,83 +102,83 @@ function parseTimeString(timeStr: string): { hours: number; minutes: number } {
  * ```
  */
 export function weeklyAvailabilityToBusyTimes(availability: WeeklyAvailability, weekStart: Date): BusyTime[] {
-    if (weekStart.getDay() !== 1) {
-        throw new Error('weekStart must be a Monday (getDay() === 1)')
-    }
+	if (weekStart.getDay() !== 1) {
+		throw new Error('weekStart must be a Monday (getDay() === 1)')
+	}
 
-    const busyTimes: BusyTime[] = []
+	const busyTimes: BusyTime[] = []
 
-    // For each day of the week, build busy times
-    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-        const currentDay = new Date(weekStart)
-        currentDay.setDate(weekStart.getDate() + dayOffset)
-        const dayOfWeek = currentDay.getDay()
+	// For each day of the week, build busy times
+	for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+		const currentDay = new Date(weekStart)
+		currentDay.setDate(weekStart.getDate() + dayOffset)
+		const dayOfWeek = currentDay.getDay()
 
-        // Find all availability schedules for this day
-        const daySchedules: Array<{ start: number; end: number }> = []
+		// Find all availability schedules for this day
+		const daySchedules: Array<{ start: number; end: number }> = []
 
-        for (const schedule of availability.schedules) {
-            const startTime = parseTimeString(schedule.start)
-            const endTime = parseTimeString(schedule.end)
+		for (const schedule of availability.schedules) {
+			const startTime = parseTimeString(schedule.start)
+			const endTime = parseTimeString(schedule.end)
 
-            if (
-                startTime.hours > endTime.hours ||
-                (startTime.hours === endTime.hours && startTime.minutes >= endTime.minutes)
-            ) {
-                throw new Error(`Invalid time range: ${schedule.start} to ${schedule.end}. Start must be before end.`)
-            }
+			if (
+				startTime.hours > endTime.hours ||
+				(startTime.hours === endTime.hours && startTime.minutes >= endTime.minutes)
+			) {
+				throw new Error(`Invalid time range: ${schedule.start} to ${schedule.end}. Start must be before end.`)
+			}
 
-            for (const dayName of schedule.days) {
-                if (DAY_MAP[dayName] === dayOfWeek) {
-                    daySchedules.push({
-                        start: startTime.hours * 60 + startTime.minutes,
-                        end: endTime.hours * 60 + endTime.minutes,
-                    })
-                }
-            }
-        }
+			for (const dayName of schedule.days) {
+				if (DAY_MAP[dayName] === dayOfWeek) {
+					daySchedules.push({
+						start: startTime.hours * 60 + startTime.minutes,
+						end: endTime.hours * 60 + endTime.minutes,
+					})
+				}
+			}
+		}
 
-        // Sort schedules by start time
-        daySchedules.sort((a, b) => a.start - b.start)
+		// Sort schedules by start time
+		daySchedules.sort((a, b) => a.start - b.start)
 
-        const dayStart = startOfDay(currentDay)
-        const dayEnd = endOfDay(currentDay)
+		const dayStart = startOfDay(currentDay)
+		const dayEnd = endOfDay(currentDay)
 
-        if (daySchedules.length === 0) {
-            // No availability, entire day is busy
-            busyTimes.push({ start: dayStart, end: dayEnd })
-            continue
-        }
+		if (daySchedules.length === 0) {
+			// No availability, entire day is busy
+			busyTimes.push({ start: dayStart, end: dayEnd })
+			continue
+		}
 
-        // Add busy time from start of day to first available period
-        if (daySchedules[0]!.start > 0) {
-            const busyEnd = new Date(dayStart)
-            busyEnd.setMinutes(daySchedules[0]!.start)
-            busyTimes.push({ start: dayStart, end: busyEnd })
-        }
+		// Add busy time from start of day to first available period
+		if (daySchedules[0]!.start > 0) {
+			const busyEnd = new Date(dayStart)
+			busyEnd.setMinutes(daySchedules[0]!.start)
+			busyTimes.push({ start: dayStart, end: busyEnd })
+		}
 
-        // Add busy times between available periods
-        for (let i = 0; i < daySchedules.length - 1; i++) {
-            const currentEnd = daySchedules[i]!.end
-            const nextStart = daySchedules[i + 1]!.start
+		// Add busy times between available periods
+		for (let i = 0; i < daySchedules.length - 1; i++) {
+			const currentEnd = daySchedules[i]!.end
+			const nextStart = daySchedules[i + 1]!.start
 
-            if (currentEnd < nextStart) {
-                const busyStart = new Date(dayStart)
-                busyStart.setMinutes(currentEnd)
-                const busyEnd = new Date(dayStart)
-                busyEnd.setMinutes(nextStart)
-                busyTimes.push({ start: busyStart, end: busyEnd })
-            }
-        }
+			if (currentEnd < nextStart) {
+				const busyStart = new Date(dayStart)
+				busyStart.setMinutes(currentEnd)
+				const busyEnd = new Date(dayStart)
+				busyEnd.setMinutes(nextStart)
+				busyTimes.push({ start: busyStart, end: busyEnd })
+			}
+		}
 
-        // Add busy time from last available period to end of day
-        const lastSchedule = daySchedules[daySchedules.length - 1]!
-        if (lastSchedule.end < 24 * 60) {
-            const busyStart = new Date(dayStart)
-            busyStart.setMinutes(lastSchedule.end)
-            busyTimes.push({ start: busyStart, end: dayEnd })
-        }
-    }
+		// Add busy time from last available period to end of day
+		const lastSchedule = daySchedules[daySchedules.length - 1]!
+		if (lastSchedule.end < 24 * 60) {
+			const busyStart = new Date(dayStart)
+			busyStart.setMinutes(lastSchedule.end)
+			busyTimes.push({ start: busyStart, end: dayEnd })
+		}
+	}
 
-    return busyTimes
+	return busyTimes
 }
