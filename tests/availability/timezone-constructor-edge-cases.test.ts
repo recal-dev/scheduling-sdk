@@ -54,10 +54,10 @@ describe('AvailabilityScheduler - Timezone Constructor Edge Cases', () => {
 			
 			expect(() => new AvailabilityScheduler(availability, 'Invalid/Zone')).toThrow('Invalid timezone')
 			expect(() => new AvailabilityScheduler(availability, 'NotReal/Timezone')).toThrow('Invalid timezone')
-			expect(() => new AvailabilityScheduler(availability, 'GMT+5')).toThrow('Invalid timezone')
 			expect(() => new AvailabilityScheduler(availability, '')).toThrow('Invalid timezone')
 			
-			// Note: EST is actually accepted by Intl.DateTimeFormat as a legacy timezone
+			// Note: GMT+5 format is actually invalid in Intl.DateTimeFormat - use Etc/GMT+5 instead
+			expect(() => new AvailabilityScheduler(availability, 'GMT+5')).toThrow('Invalid timezone')
 		})
 
 		test('should accept all common IANA timezones', () => {
@@ -124,13 +124,15 @@ describe('AvailabilityScheduler - Timezone Constructor Edge Cases', () => {
 				schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
 			}
 			
-			// IANA identifiers are case sensitive
-			expect(() => new AvailabilityScheduler(availability, 'america/new_york')).toThrow()
-			expect(() => new AvailabilityScheduler(availability, 'AMERICA/NEW_YORK')).toThrow()
-			expect(() => new AvailabilityScheduler(availability, 'America/new_york')).toThrow()
-			
-			// But the correct case should work
+			// JavaScript's Intl.DateTimeFormat is actually case-insensitive for many timezones
+			// All of these work in practice
+			expect(() => new AvailabilityScheduler(availability, 'america/new_york')).not.toThrow()
+			expect(() => new AvailabilityScheduler(availability, 'AMERICA/NEW_YORK')).not.toThrow()
+			expect(() => new AvailabilityScheduler(availability, 'America/new_york')).not.toThrow()
 			expect(() => new AvailabilityScheduler(availability, 'America/New_York')).not.toThrow()
+			
+			// Test some genuinely invalid formats that should fail
+			expect(() => new AvailabilityScheduler(availability, 'Invalid_Format_Here')).toThrow()
 		})
 	})
 
