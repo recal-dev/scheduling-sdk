@@ -45,6 +45,8 @@ export interface DaySchedule {
  * Defines a weekly availability pattern with multiple schedules.
  * Represents when time slots are available for scheduling.
  *
+ * Note: Timezone is now specified at the scheduler level, not here.
+ *
  * @example
  * ```typescript
  * // Business hours with different weekend schedule
@@ -52,8 +54,7 @@ export interface DaySchedule {
  *   schedules: [
  *     { days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '17:00' },
  *     { days: ['saturday'], start: '10:00', end: '14:00' }
- *   ],
- *   timezone: 'America/New_York'
+ *   ]
  * }
  *
  * // Doctor schedule with lunch breaks
@@ -69,6 +70,4 @@ export interface DaySchedule {
 export interface WeeklyAvailability {
 	/** Array of availability schedules. Must contain at least one schedule. */
 	schedules: DaySchedule[]
-	/** Optional IANA timezone identifier (e.g., 'America/New_York', 'Europe/London') */
-	timezone?: string
 }

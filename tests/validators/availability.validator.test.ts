@@ -51,23 +51,8 @@ describe('validateWeeklyAvailability', () => {
 		expect(() => validateWeeklyAvailability({ schedules: [] })).toThrow('Availability.schedules cannot be empty')
 	})
 
-	test('throws for invalid timezone', () => {
-		const availability = {
-			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
-			timezone: '',
-		}
-		expect(() => validateWeeklyAvailability(availability as unknown as WeeklyAvailability)).toThrow(
-			'Availability.timezone must be a non-empty string'
-		)
-
-		const availability2 = {
-			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
-			timezone: 'invalid-timezone',
-		}
-		expect(() => validateWeeklyAvailability(availability2 as unknown as WeeklyAvailability)).toThrow(
-			'Availability.timezone must be a valid IANA timezone identifier'
-		)
-	})
+	// Note: Timezone validation has been moved to AvailabilityScheduler constructor
+	// The validator no longer validates timezone since it's handled at construction time
 
 	test('throws for non-object schedule', () => {
 		const availability = {
@@ -87,13 +72,12 @@ describe('validateWeeklyAvailability', () => {
 		)
 	})
 
-	test('throws for empty days array', () => {
+	test('allows empty days array (results in no availability)', () => {
 		const availability = {
 			schedules: [{ days: [], start: '09:00', end: '17:00' }],
 		}
-		expect(() => validateWeeklyAvailability(availability as unknown as WeeklyAvailability)).toThrow(
-			'Schedule at index 0: days array cannot be empty'
-		)
+		// Should not throw - empty days arrays are allowed
+		expect(() => validateWeeklyAvailability(availability as unknown as WeeklyAvailability)).not.toThrow()
 	})
 
 	test('throws for invalid day names', () => {

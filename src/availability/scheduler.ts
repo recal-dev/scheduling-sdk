@@ -1,6 +1,5 @@
 import { Scheduler } from '../core/scheduler'
 import { weeklyAvailabilityToBusyTimes } from '../helpers/availability/converter'
-import { startOfDay } from '../helpers/time/date-math'
 import type { WeeklyAvailability } from '../types/availability.types'
 import type { BusyTime, SchedulingOptions, TimeSlot } from '../types/scheduling.types'
 import { validateWeeklyAvailability } from '../validators/availability.validator'
@@ -32,33 +31,36 @@ import { validateWeeklyAvailability } from '../validators/availability.validator
 export class AvailabilityScheduler {
 	private scheduler: Scheduler
 	private availability?: WeeklyAvailability
+	private timezone: string
 
 	/**
 	 * Creates a new AvailabilityScheduler with optional weekly availability pattern and existing busy times.
 	 *
 	 * @param availability - Optional weekly availability pattern defining when slots are available
+	 * @param timezone - IANA timezone identifier (e.g., "America/New_York"). Defaults to UTC.
 	 * @param existingBusyTimes - Optional array of existing busy times to include
 	 *
-	 * @throws {Error} If the availability pattern is invalid
+	 * @throws {Error} If the availability pattern or timezone is invalid
 	 *
 	 * @example
 	 * ```typescript
-	 * // Create with availability only
+	 * // Create with availability and timezone
 	 * const scheduler = new AvailabilityScheduler({
 	 *   schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
-	 * })
+	 * }, 'America/New_York')
 	 *
-	 * // Create with availability and existing busy times
+	 * // Create with availability, timezone, and existing busy times
 	 * const busyTimes = [{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }]
-	 * const scheduler = new AvailabilityScheduler(availability, busyTimes)
+	 * const scheduler = new AvailabilityScheduler(availability, 'Europe/London', busyTimes)
 	 *
 	 * // Create empty scheduler (behaves like standard Scheduler)
 	 * const scheduler = new AvailabilityScheduler()
 	 * ```
 	 */
-	constructor(availability?: WeeklyAvailability, existingBusyTimes: BusyTime[] = []) {
+	constructor(availability?: WeeklyAvailability, timezone?: string, existingBusyTimes: BusyTime[] = []) {
 		validateWeeklyAvailability(availability)
 		this.availability = availability
+		this.timezone = this.resolveAndValidateTimezone(timezone)
 		this.scheduler = new Scheduler(existingBusyTimes)
 	}
 
@@ -83,8 +85,7 @@ export class AvailabilityScheduler {
 	 * scheduler.setAvailability({
 	 *   schedules: [
 	 *     { days: ['monday', 'tuesday', 'wednesday'], start: '08:00', end: '16:00' }
-	 *   ],
-	 *   timezone: 'America/New_York'
+	 *   ]
 	 * })
 	 * ```
 	 */
@@ -103,9 +104,6 @@ export class AvailabilityScheduler {
 	 * const currentAvailability = scheduler.getAvailability()
 	 * if (currentAvailability) {
 	 *   console.log(`Found ${currentAvailability.schedules.length} schedules`)
-	 *   if (currentAvailability.timezone) {
-	 *     console.log(`Timezone: ${currentAvailability.timezone}`)
-	 *   }
 	 * } else {
 	 *   console.log('No availability pattern set')
 	 * }
@@ -251,14 +249,95 @@ export class AvailabilityScheduler {
 			return this.scheduler.findAvailableSlots(startTime, endTime, options)
 		}
 
-		// Find the Monday of the week containing startTime
-		const weekStart = this.getMonday(startTime)
-		const availabilityBusyTimes = weeklyAvailabilityToBusyTimes(this.availability, weekStart)
-
-		// Create a temporary scheduler with both availability and existing busy times
-		const tempScheduler = new Scheduler([...this.scheduler.getBusyTimes(), ...availabilityBusyTimes])
+		const availabilityBusyTimes = this.generateAvailabilityBusyTimes(startTime, endTime)
+		const allBusyTimes = [...this.scheduler.getBusyTimes(), ...availabilityBusyTimes]
+		const tempScheduler = new Scheduler(allBusyTimes)
 
 		return tempScheduler.findAvailableSlots(startTime, endTime, options)
+	}
+
+	/**
+	 * Resolves and validates the timezone using fallback logic.
+	 * Priority: provided timezone > environment variable > UTC
+	 *
+	 * @param timezone - Optional timezone to validate
+	 * @returns Validated timezone string
+	 * @throws {Error} If timezone is invalid
+	 * @private
+	 */
+	private resolveAndValidateTimezone(timezone?: string): string {
+		if (timezone !== undefined) {
+			return this.validateTimezone(timezone)
+		}
+
+		const fallbackTimezone = process.env.SCHEDULING_TIMEZONE || 'UTC'
+		return fallbackTimezone === 'UTC' ? fallbackTimezone : this.validateTimezone(fallbackTimezone)
+	}
+
+	/**
+	 * Validates a timezone string using Intl.DateTimeFormat.
+	 *
+	 * @param timezone - Timezone to validate
+	 * @returns The validated timezone
+	 * @throws {Error} If timezone is invalid
+	 * @private
+	 */
+	private validateTimezone(timezone: string): string {
+		if (timezone === '') {
+			throw new Error(`Invalid timezone: ${timezone}. Must be a valid IANA timezone identifier.`)
+		}
+
+		try {
+			new Intl.DateTimeFormat('en-US', { timeZone: timezone })
+			return timezone
+		} catch {
+			throw new Error(`Invalid timezone: ${timezone}. Must be a valid IANA timezone identifier.`)
+		}
+	}
+
+	/**
+	 * Generates busy times from availability patterns for the given time range.
+	 *
+	 * @param startTime - Start of the search range
+	 * @param endTime - End of the search range
+	 * @returns Array of busy times representing unavailable periods
+	 * @private
+	 */
+	private generateAvailabilityBusyTimes(startTime: Date, endTime: Date): BusyTime[] {
+		const firstWeekStart = this.getMonday(startTime)
+		const lastWeekStart = this.getMonday(endTime)
+		const allBusyTimes: BusyTime[] = []
+
+		for (
+			let weekStart = new Date(firstWeekStart);
+			weekStart <= lastWeekStart;
+			weekStart.setDate(weekStart.getDate() + 7)
+		) {
+			const weekBusyTimes = weeklyAvailabilityToBusyTimes(this.availability!, new Date(weekStart), this.timezone)
+
+			const filteredBusyTimes = this.filterBusyTimesToRange(weekBusyTimes, startTime, endTime)
+			allBusyTimes.push(...filteredBusyTimes)
+		}
+
+		return allBusyTimes
+	}
+
+	/**
+	 * Filters busy times to only include portions that intersect with the given range.
+	 *
+	 * @param busyTimes - Busy times to filter
+	 * @param startTime - Start of the range
+	 * @param endTime - End of the range
+	 * @returns Filtered busy times clipped to the range
+	 * @private
+	 */
+	private filterBusyTimesToRange(busyTimes: BusyTime[], startTime: Date, endTime: Date): BusyTime[] {
+		return busyTimes
+			.filter(busyTime => busyTime.start < endTime && busyTime.end > startTime)
+			.map(busyTime => ({
+				start: new Date(Math.max(busyTime.start.getTime(), startTime.getTime())),
+				end: new Date(Math.min(busyTime.end.getTime(), endTime.getTime())),
+			}))
 	}
 
 	/**
@@ -267,14 +346,14 @@ export class AvailabilityScheduler {
 	 *
 	 * @param date - Any date within the week
 	 * @returns The Monday (start of day) for that week
-	 *
 	 * @private
 	 */
 	private getMonday(date: Date): Date {
-		const day = date.getDay()
+		const day = date.getUTCDay()
 		const diff = day === 0 ? -6 : 1 - day // Sunday = 0, Monday = 1
 		const monday = new Date(date)
-		monday.setDate(date.getDate() + diff)
-		return startOfDay(monday)
+		monday.setUTCDate(date.getUTCDate() + diff)
+		monday.setUTCHours(0, 0, 0, 0)
+		return monday
 	}
 }

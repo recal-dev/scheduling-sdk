@@ -15,6 +15,7 @@ describe('weeklyAvailabilityToBusyTimes', () => {
 		// Should have busy times for:
 		// - Monday 00:00-09:00 and 17:00-24:00
 		// - Tuesday-Sunday all day
+		// (No previous day spillover for UTC timezone)
 		expect(busyTimes).toHaveLength(8) // 2 for Monday + 6 full days
 
 		// Check Monday busy times
@@ -36,6 +37,7 @@ describe('weeklyAvailabilityToBusyTimes', () => {
 		const busyTimes = weeklyAvailabilityToBusyTimes(availability, mondayStart)
 
 		// Should have busy times for start/end of available days + full busy days
+		// (No previous day spillover for UTC timezone)
 		expect(busyTimes).toHaveLength(10) // 6 partial busy periods + 4 full days
 	})
 
@@ -68,6 +70,7 @@ describe('weeklyAvailabilityToBusyTimes', () => {
 		const busyTimes = weeklyAvailabilityToBusyTimes(availability, mondayStart)
 
 		// Should have busy times for Tuesday-Sunday (6 days) + 1 minute at end of Monday
+		// (No previous day spillover for UTC timezone)
 		expect(busyTimes).toHaveLength(7)
 
 		// One tiny busy time for Monday (23:59-24:00)
@@ -83,7 +86,7 @@ describe('weeklyAvailabilityToBusyTimes', () => {
 		}
 
 		const busyTimes = weeklyAvailabilityToBusyTimes(availability, mondayStart)
-		expect(busyTimes).toHaveLength(7) // All 7 days busy
+		expect(busyTimes).toHaveLength(7) // All 7 days busy (no prev day for UTC)
 	})
 
 	test('throws error for non-Monday start date', () => {
@@ -119,6 +122,7 @@ describe('weeklyAvailabilityToBusyTimes', () => {
 		const busyTimes = weeklyAvailabilityToBusyTimes(availability, mondayStart)
 
 		// Should have busy times for Monday-Friday (full) + Saturday-Sunday (partial)
+		// (No previous day spillover for UTC timezone)
 		expect(busyTimes).toHaveLength(9) // 5 full days + 4 partial periods for weekend
 
 		const saturdayBusy = busyTimes.filter(bt => bt.start.getDay() === 6)

@@ -107,17 +107,7 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
 		throw new Error('Availability.schedules cannot be empty')
 	}
 
-	// Validate timezone if provided
-	if (availability.timezone !== undefined) {
-		if (typeof availability.timezone !== 'string' || availability.timezone.trim() === '') {
-			throw new Error('Availability.timezone must be a non-empty string')
-		}
-
-		// Basic timezone format validation (not exhaustive)
-		if (!/^[A-Za-z_]+\/[A-Za-z_]+$/.test(availability.timezone)) {
-			throw new Error('Availability.timezone must be a valid IANA timezone identifier (e.g., "America/New_York")')
-		}
-	}
+	// Note: Timezone validation has been moved to AvailabilityScheduler constructor
 
 	// Validate each schedule
 	for (let i = 0; i < availability.schedules.length; i++) {
@@ -132,9 +122,7 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
 			throw new Error(`Schedule at index ${i}: days must be an array`)
 		}
 
-		if (schedule.days.length === 0) {
-			throw new Error(`Schedule at index ${i}: days array cannot be empty`)
-		}
+		// Allow empty days array - it results in no availability (all time busy)
 
 		for (const day of schedule.days) {
 			if (!VALID_DAYS.includes(day)) {

@@ -25,7 +25,7 @@ describe('AvailabilityScheduler', () => {
 		const busyTimes: BusyTime[] = [
 			{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
 		]
-		const scheduler = new AvailabilityScheduler(undefined, busyTimes)
+		const scheduler = new AvailabilityScheduler(undefined, undefined, busyTimes)
 		expect(scheduler.getBusyTimes()).toEqual(busyTimes)
 	})
 
@@ -176,5 +176,44 @@ describe('AvailabilityScheduler', () => {
 				],
 			})
 		}).toThrow()
+	})
+
+	test('respects timezone in availability', () => {
+		const availability: WeeklyAvailability = {
+			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
+		}
+
+		const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
+
+		// Monday, Jan 15, 2024 (EST = UTC-5)
+		const startTime = new Date('2024-01-15T00:00:00Z')
+		const endTime = new Date('2024-01-15T23:59:59Z')
+
+		const slots = scheduler.findAvailableSlots(startTime, endTime, {
+			slotDuration: 60,
+		})
+
+		// Should have slots from 14:00-22:00 UTC (9 AM-5 PM EST)
+		expect(slots.length).toBeGreaterThan(0)
+		expect(slots[0]?.start.getUTCHours()).toBe(14)
+	})
+
+	test('timezone set at construction determines behavior', () => {
+		const availability: WeeklyAvailability = {
+			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
+		}
+
+		const scheduler = new AvailabilityScheduler(availability, 'Europe/London')
+
+		const startTime = new Date('2024-01-15T00:00:00Z')
+		const endTime = new Date('2024-01-15T23:59:59Z')
+
+		const slots = scheduler.findAvailableSlots(startTime, endTime, {
+			slotDuration: 60,
+		})
+
+		// Should have slots from 09:00-17:00 UTC (9 AM-5 PM GMT)
+		expect(slots.length).toBeGreaterThan(0)
+		expect(slots[0]?.start.getUTCHours()).toBe(9)
 	})
 })
