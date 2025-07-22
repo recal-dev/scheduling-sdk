@@ -5,7 +5,7 @@ import type { WeeklyAvailability } from '../../src/types/availability.types'
 describe('AvailabilityScheduler - Timezone Integration', () => {
 	test('schedules correctly with New York timezone in availability', () => {
 		const availability: WeeklyAvailability = {
-			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
+			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
 		}
 
 		const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
@@ -48,7 +48,7 @@ describe('AvailabilityScheduler - Timezone Integration', () => {
 
 	test('handles DST transitions correctly', () => {
 		const availability: WeeklyAvailability = {
-			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
+			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
 		}
 
 		const scheduler = new AvailabilityScheduler(availability, 'America/New_York')

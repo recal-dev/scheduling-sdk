@@ -44,7 +44,7 @@ export interface DaySchedule {
 /**
  * Defines a weekly availability pattern with multiple schedules.
  * Represents when time slots are available for scheduling.
- * 
+ *
  * Note: Timezone is now specified at the scheduler level, not here.
  *
  * @example

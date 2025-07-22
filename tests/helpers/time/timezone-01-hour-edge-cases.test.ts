@@ -56,7 +56,7 @@ describe('Timezone 01:00 Hour Edge Cases', () => {
 		test('01:00-02:00 availability in Tokyo should work correctly', () => {
 			// Monday 1-2 AM Tokyo should be available when converted to UTC
 			const availability: WeeklyAvailability = {
-				schedules: [{ days: ['monday'], start: '01:00', end: '02:00' }]
+				schedules: [{ days: ['monday'], start: '01:00', end: '02:00' }],
 			}
 
 			const scheduler = new AvailabilityScheduler(availability, 'Asia/Tokyo')
@@ -82,7 +82,7 @@ describe('Timezone 01:00 Hour Edge Cases', () => {
 
 		test('01:00-02:00 availability in New York stays within same UTC day', () => {
 			const availability: WeeklyAvailability = {
-				schedules: [{ days: ['monday'], start: '01:00', end: '02:00' }]
+				schedules: [{ days: ['monday'], start: '01:00', end: '02:00' }],
 			}
 
 			const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
@@ -103,7 +103,7 @@ describe('Timezone 01:00 Hour Edge Cases', () => {
 		test('01:00 availability should handle week boundaries correctly', () => {
 			// Sunday 01:00 in Tokyo should work properly
 			const availability: WeeklyAvailability = {
-				schedules: [{ days: ['sunday'], start: '01:00', end: '02:00' }]
+				schedules: [{ days: ['sunday'], start: '01:00', end: '02:00' }],
 			}
 
 			const scheduler = new AvailabilityScheduler(availability, 'Asia/Tokyo')

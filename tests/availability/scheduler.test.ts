@@ -180,7 +180,7 @@ describe('AvailabilityScheduler', () => {
 
 	test('respects timezone in availability', () => {
 		const availability: WeeklyAvailability = {
-			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
+			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
 		}
 
 		const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
@@ -200,7 +200,7 @@ describe('AvailabilityScheduler', () => {
 
 	test('timezone set at construction determines behavior', () => {
 		const availability: WeeklyAvailability = {
-			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
+			schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
 		}
 
 		const scheduler = new AvailabilityScheduler(availability, 'Europe/London')
@@ -209,7 +209,7 @@ describe('AvailabilityScheduler', () => {
 		const endTime = new Date('2024-01-15T23:59:59Z')
 
 		const slots = scheduler.findAvailableSlots(startTime, endTime, {
-			slotDuration: 60
+			slotDuration: 60,
 		})
 
 		// Should have slots from 09:00-17:00 UTC (9 AM-5 PM GMT)

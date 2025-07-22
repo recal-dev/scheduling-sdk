@@ -313,11 +313,7 @@ export class AvailabilityScheduler {
 			weekStart <= lastWeekStart;
 			weekStart.setDate(weekStart.getDate() + 7)
 		) {
-			const weekBusyTimes = weeklyAvailabilityToBusyTimes(
-				this.availability!,
-				new Date(weekStart),
-				this.timezone
-			)
+			const weekBusyTimes = weeklyAvailabilityToBusyTimes(this.availability!, new Date(weekStart), this.timezone)
 
 			const filteredBusyTimes = this.filterBusyTimesToRange(weekBusyTimes, startTime, endTime)
 			allBusyTimes.push(...filteredBusyTimes)

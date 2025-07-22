@@ -33,12 +33,11 @@ function parseTimeString(timeStr: string): { hours: number; minutes: number } {
 	return { hours, minutes }
 }
 
-
 /**
  * Generates busy times in the availability's native timezone without any conversions.
  * This avoids cross-day boundary issues since all processing stays in the same timezone.
  *
- * @param availability - The weekly availability pattern  
+ * @param availability - The weekly availability pattern
  * @param weekStartInTimezone - Monday of week in the availability timezone
  * @returns Array of busy times in the availability timezone
  *
@@ -55,11 +54,13 @@ function generateBusyTimesInNativeTimezone(
 	// Include the day before ONLY if needed for timezone spillover into Monday
 	const startOffset = timezone !== 'UTC' ? -1 : 0 // Only include previous day for non-UTC timezones
 	for (let dayOffset = startOffset; dayOffset < 7; dayOffset++) {
-		const currentDay = new Date(Date.UTC(
-			weekStartInTimezone.getFullYear(),
-			weekStartInTimezone.getMonth(),
-			weekStartInTimezone.getDate() + dayOffset
-		))
+		const currentDay = new Date(
+			Date.UTC(
+				weekStartInTimezone.getFullYear(),
+				weekStartInTimezone.getMonth(),
+				weekStartInTimezone.getDate() + dayOffset
+			)
+		)
 		const dayOfWeek = currentDay.getUTCDay()
 
 		// Find all availability schedules for this day
@@ -79,21 +80,25 @@ function generateBusyTimesInNativeTimezone(
 			for (const dayName of schedule.days) {
 				if (DAY_MAP[dayName] === dayOfWeek) {
 					// Create dates in the native timezone (no conversion!)
-					const startDate = new Date(Date.UTC(
-						currentDay.getUTCFullYear(),
-						currentDay.getUTCMonth(),
-						currentDay.getUTCDate(),
-						startTime.hours,
-						startTime.minutes
-					))
+					const startDate = new Date(
+						Date.UTC(
+							currentDay.getUTCFullYear(),
+							currentDay.getUTCMonth(),
+							currentDay.getUTCDate(),
+							startTime.hours,
+							startTime.minutes
+						)
+					)
 
-					const endDate = new Date(Date.UTC(
-						currentDay.getUTCFullYear(),
-						currentDay.getUTCMonth(),
-						currentDay.getUTCDate(),
-						endTime.hours,
-						endTime.minutes
-					))
+					const endDate = new Date(
+						Date.UTC(
+							currentDay.getUTCFullYear(),
+							currentDay.getUTCMonth(),
+							currentDay.getUTCDate(),
+							endTime.hours,
+							endTime.minutes
+						)
+					)
 
 					daySchedules.push({ start: startDate, end: endDate })
 				}
@@ -104,18 +109,12 @@ function generateBusyTimesInNativeTimezone(
 		daySchedules.sort((a, b) => a.start.getTime() - b.start.getTime())
 
 		// Create start and end of day in the native timezone (no system timezone dependency)
-		const dayStart = new Date(Date.UTC(
-			currentDay.getUTCFullYear(),
-			currentDay.getUTCMonth(), 
-			currentDay.getUTCDate(),
-			0, 0, 0, 0
-		))
-		const dayEnd = new Date(Date.UTC(
-			currentDay.getUTCFullYear(),
-			currentDay.getUTCMonth(),
-			currentDay.getUTCDate(),
-			23, 59, 59, 999
-		))
+		const dayStart = new Date(
+			Date.UTC(currentDay.getUTCFullYear(), currentDay.getUTCMonth(), currentDay.getUTCDate(), 0, 0, 0, 0)
+		)
+		const dayEnd = new Date(
+			Date.UTC(currentDay.getUTCFullYear(), currentDay.getUTCMonth(), currentDay.getUTCDate(), 23, 59, 59, 999)
+		)
 
 		if (daySchedules.length === 0) {
 			// No availability, entire day is busy
@@ -148,7 +147,6 @@ function generateBusyTimesInNativeTimezone(
 	return busyTimes
 }
 
-
 /**
  * Converts a weekly availability pattern into busy times for a specific week.
  *
@@ -157,7 +155,7 @@ function generateBusyTimesInNativeTimezone(
  * available Monday 9-17, it creates busy times for Monday 0-9 and 17-24, plus
  * all day Tuesday through Sunday.
  *
- * Automatically chooses between legacy per-day processing and timezone-aware 
+ * Automatically chooses between legacy per-day processing and timezone-aware
  * week-wide processing based on whether cross-day boundary issues are possible.
  *
  * @param availability - The weekly availability pattern to convert
@@ -210,11 +208,9 @@ export function weeklyAvailabilityToBusyTimes(
 
 	// Convert weekStart to represent the same calendar date in the availability timezone
 	// This avoids all cross-day boundary issues by working in the availability's native timezone
-	const weekStartInTimezone = new Date(Date.UTC(
-		weekStart.getUTCFullYear(),
-		weekStart.getUTCMonth(), 
-		weekStart.getUTCDate()
-	))
+	const weekStartInTimezone = new Date(
+		Date.UTC(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate())
+	)
 
 	// Generate busy times in the availability's native timezone (no cross-day issues!)
 	const busyTimesInTimezone = generateBusyTimesInNativeTimezone(availability, weekStartInTimezone, resolvedTimezone)
@@ -230,14 +226,18 @@ export function weeklyAvailabilityToBusyTimes(
 		// Use convertTimeStringToUTC with the original date to avoid circular conversion issues
 		const startTimeStr = `${String(busyTime.start.getUTCHours()).padStart(2, '0')}:${String(busyTime.start.getUTCMinutes()).padStart(2, '0')}`
 		const endTimeStr = `${String(busyTime.end.getUTCHours()).padStart(2, '0')}:${String(busyTime.end.getUTCMinutes()).padStart(2, '0')}`
-		
+
 		// Create new Date with just the calendar date (year/month/day) for timezone conversion
-		const startDate = new Date(busyTime.start.getUTCFullYear(), busyTime.start.getUTCMonth(), busyTime.start.getUTCDate())
+		const startDate = new Date(
+			busyTime.start.getUTCFullYear(),
+			busyTime.start.getUTCMonth(),
+			busyTime.start.getUTCDate()
+		)
 		const endDate = new Date(busyTime.end.getUTCFullYear(), busyTime.end.getUTCMonth(), busyTime.end.getUTCDate())
-		
+
 		const startUTC = convertTimeStringToUTC(startTimeStr, startDate, resolvedTimezone)
 		const endUTC = convertTimeStringToUTC(endTimeStr, endDate, resolvedTimezone)
-		
+
 		busyTimesUTC.push({ start: startUTC, end: endUTC })
 	}
 
