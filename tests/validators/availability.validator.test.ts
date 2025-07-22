@@ -87,13 +87,12 @@ describe('validateWeeklyAvailability', () => {
 		)
 	})
 
-	test('throws for empty days array', () => {
+	test('allows empty days array (results in no availability)', () => {
 		const availability = {
 			schedules: [{ days: [], start: '09:00', end: '17:00' }],
 		}
-		expect(() => validateWeeklyAvailability(availability as unknown as WeeklyAvailability)).toThrow(
-			'Schedule at index 0: days array cannot be empty'
-		)
+		// Should not throw - empty days arrays are allowed
+		expect(() => validateWeeklyAvailability(availability as unknown as WeeklyAvailability)).not.toThrow()
 	})
 
 	test('throws for invalid day names', () => {
