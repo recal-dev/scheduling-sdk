@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import {
-	findFreeIntervals,
 	busyTimesToIntervals,
-	intervalsToTimeSlots,
 	findAvailableSlotsWithOverlaps,
+	findFreeIntervals,
 	type Interval,
+	intervalsToTimeSlots,
 } from '../../../src/helpers/busy-time/free-intervals'
 import type { BusyTime } from '../../../src/types/scheduling.types'
 

@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 import { AvailabilityScheduler } from '../../src/availability/scheduler.ts'
 import type { BusyTime, WeeklyAvailability } from '../../src/index.ts'
 

@@ -1,7 +1,7 @@
 import { Scheduler } from '../src/core/scheduler'
-import { generateSlots } from '../src/helpers/slot/generator'
+import { busyTimesToIntervals, findFreeIntervals } from '../src/helpers/busy-time/free-intervals'
 import { filterAvailableSlots } from '../src/helpers/slot/filter'
-import { findFreeIntervals, busyTimesToIntervals } from '../src/helpers/busy-time/free-intervals'
+import { generateSlots } from '../src/helpers/slot/generator'
 import type { BusyTime, SchedulingOptions } from '../src/types/scheduling.types'
 
 // Generate test data
@@ -18,7 +18,7 @@ function generateBusyTimes(count: number, timeRange: number): BusyTime[] {
 	return busyTimes.sort((a, b) => a.start.getTime() - b.start.getTime())
 }
 
-function benchmark(name: string, fn: () => any, iterations: number = 100): number {
+function benchmark<T>(name: string, fn: () => T, iterations: number = 100): number {
 	// Warm up
 	for (let i = 0; i < 10; i++) fn()
 

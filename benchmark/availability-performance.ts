@@ -25,7 +25,7 @@ function generateBusyTimes(count: number, dayOffset: number = 0): BusyTime[] {
 	return busyTimes.sort((a, b) => a.start.getTime() - b.start.getTime())
 }
 
-function benchmark(name: string, fn: () => any, iterations: number = 50): number {
+function benchmark<T>(name: string, fn: () => T, iterations: number = 50): number {
 	// Warm up
 	for (let i = 0; i < 5; i++) fn()
 
