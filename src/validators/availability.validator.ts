@@ -108,6 +108,8 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
 		throw new Error('Availability.schedules cannot be empty')
 	}
 
+	// Note: Timezone validation has been moved to AvailabilityScheduler constructor
+
 	// Validate each schedule
 	for (let i = 0; i < availability.schedules.length; i++) {
 		const schedule = availability.schedules[i]!
