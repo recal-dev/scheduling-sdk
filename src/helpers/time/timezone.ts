@@ -4,9 +4,9 @@
  */
 
 /**
- * Converts a time string (HH:mm) in a specific timezone to a UTC Date object for a given date.
+ * Converts a time (string HH:mm or number of minutes) in a specific timezone to a UTC Date object for a given date.
  *
- * @param timeStr - Time string in HH:mm format (e.g., "09:00", "14:30")
+ * @param timeStr - Time string in HH:mm format (e.g., "09:00", "14:30") or minutes from midnight (0-1439)
  * @param date - The date to apply the time to (timezone will be ignored, only year/month/day used)
  * @param timezone - IANA timezone identifier (e.g., "America/New_York", "Europe/London")
  * @returns UTC Date object representing the specified time in the given timezone
@@ -21,14 +21,27 @@
  * // Returns UTC date representing 9 AM EST (2 PM UTC) or 9 AM EDT (1 PM UTC) depending on DST
  * ```
  */
-export function convertTimeStringToUTC(timeStr: string, date: Date, timezone: string): Date {
-	// Parse time string
-	const [hoursStr, minutesStr] = timeStr.split(':')
-	const hours = parseInt(hoursStr!, 10)
-	const minutes = parseInt(minutesStr!, 10)
+export function convertTimeStringToUTC(timeStr: string | number, date: Date, timezone: string): Date {
+	// Parse time - handle both string and number formats
+	let hours: number
+	let minutes: number
+	
+	if (typeof timeStr === 'number') {
+		// Handle minutes from midnight (0-1439)
+		if (timeStr < 0 || timeStr >= 1440) {
+			throw new Error(`Invalid time in minutes: ${timeStr}. Must be between 0 and 1439`)
+		}
+		hours = Math.floor(timeStr / 60)
+		minutes = timeStr % 60
+	} else {
+		// Parse HH:mm string format
+		const [hoursStr, minutesStr] = timeStr.split(':')
+		hours = parseInt(hoursStr!, 10)
+		minutes = parseInt(minutesStr!, 10)
 
-	if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-		throw new Error(`Invalid time format: ${timeStr}. Expected HH:mm format (e.g., "09:00")`)
+		if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+			throw new Error(`Invalid time format: ${timeStr}. Expected HH:mm format (e.g., "09:00")`)
+		}
 	}
 
 	try {
