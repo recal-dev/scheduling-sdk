@@ -138,13 +138,21 @@ export function validateWeeklyAvailability(availability?: WeeklyAvailability): v
 		}
 
 		// Validate start time format
-		if (typeof schedule.start !== 'string' || !isValidTimeFormat(schedule.start)) {
+		if (typeof schedule.start === 'string' && !isValidTimeFormat(schedule.start)) {
 			throw new Error(`Schedule at index ${i}: start must be in HH:mm format (e.g., "09:00")`)
+		} else if (typeof schedule.start === 'number' && (schedule.start < 0 || schedule.start >= 1440)) {
+			throw new Error(`Schedule at index ${i}: start must be between 0 and 1439 minutes`)
+		} else if (typeof schedule.start !== 'string' && typeof schedule.start !== 'number') {
+			throw new Error(`Schedule at index ${i}: start must be a string (HH:mm) or number (minutes)`)
 		}
 
 		// Validate end time format
-		if (typeof schedule.end !== 'string' || !isValidTimeFormat(schedule.end)) {
+		if (typeof schedule.end === 'string' && !isValidTimeFormat(schedule.end)) {
 			throw new Error(`Schedule at index ${i}: end must be in HH:mm format (e.g., "17:00")`)
+		} else if (typeof schedule.end === 'number' && (schedule.end < 0 || schedule.end >= 1440)) {
+			throw new Error(`Schedule at index ${i}: end must be between 0 and 1439 minutes`)
+		} else if (typeof schedule.end !== 'string' && typeof schedule.end !== 'number') {
+			throw new Error(`Schedule at index ${i}: end must be a string (HH:mm) or number (minutes)`)
 		}
 
 		// Validate time range
