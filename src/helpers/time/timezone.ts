@@ -25,7 +25,7 @@ export function convertTimeStringToUTC(timeStr: string | number, date: Date, tim
 	// Parse time - handle both string and number formats
 	let hours: number
 	let minutes: number
-	
+
 	if (typeof timeStr === 'number') {
 		// Handle minutes from midnight (0-1439)
 		if (timeStr < 0 || timeStr >= 1440) {

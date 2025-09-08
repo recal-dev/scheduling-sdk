@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'bun:test'
-import { 
-	type BusyTime, 
-	createScheduler, 
-	createAvailabilityScheduler,
-	Scheduler, 
+import {
 	AvailabilityScheduler,
-	type SchedulingOptions, 
+	type BusyTime,
+	createAvailabilityScheduler,
+	createScheduler,
+	Scheduler,
+	type SchedulingOptions,
 	type TimeSlot,
-	type WeeklyAvailability 
+	type WeeklyAvailability,
 } from '../src/index.ts'
 
 describe('Index Exports', () => {
@@ -212,7 +212,7 @@ describe('Index Exports', () => {
 	describe('createAvailabilityScheduler convenience function', () => {
 		it('should create an AvailabilityScheduler instance', () => {
 			const availability: WeeklyAvailability = {
-				schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }]
+				schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
 			}
 			const scheduler = createAvailabilityScheduler(availability, 'America/New_York')
 			expect(scheduler).toBeInstanceOf(AvailabilityScheduler)
@@ -221,7 +221,7 @@ describe('Index Exports', () => {
 
 		it('should work with number-based time in availability', () => {
 			const availability: WeeklyAvailability = {
-				schedules: [{ days: ['tuesday'], start: 540, end: 1020 }] // 9:00 (540 min) to 17:00 (1020 min)
+				schedules: [{ days: ['tuesday'], start: 540, end: 1020 }], // 9:00 (540 min) to 17:00 (1020 min)
 			}
 			const scheduler = createAvailabilityScheduler(availability, 'UTC')
 			const slots = scheduler.findAvailableSlots(
@@ -235,7 +235,7 @@ describe('Index Exports', () => {
 
 		it('should handle timezone correctly', () => {
 			const availability: WeeklyAvailability = {
-				schedules: [{ days: ['monday'], start: '09:00', end: '10:00' }]
+				schedules: [{ days: ['monday'], start: '09:00', end: '10:00' }],
 			}
 			const scheduler = createAvailabilityScheduler(availability, 'America/New_York')
 			const slots = scheduler.findAvailableSlots(
