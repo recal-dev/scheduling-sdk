@@ -42,6 +42,7 @@ function parseTime(time: string | number): { hours: number; minutes: number } {
  *
  * @param availability - The weekly availability pattern
  * @param weekStartInTimezone - Monday of week in the availability timezone
+ * @param timezone - IANA timezone identifier for processing availability times
  * @returns Array of busy times in the availability timezone
  *
  * @internal
@@ -54,8 +55,18 @@ function generateBusyTimesInNativeTimezone(
 	const busyTimes: Array<{ start: Date; end: Date }> = []
 
 	// For each day of the week, build busy times (no timezone conversion needed!)
-	// Include the day before ONLY if needed for timezone spillover into Monday
-	const startOffset = timezone !== 'UTC' ? -1 : 0 // Only include previous day for non-UTC timezones
+	// Include the previous day ONLY if the timezone is behind UTC (e.g., America/New_York),
+	// so that the previous day's busy block covers the early UTC hours of Monday.
+	// For timezones ahead of UTC (e.g., Asia/Tokyo), do NOT include previous day to avoid
+	// overriding Monday-early availability that appears on Sunday UTC.
+	const baseYear = weekStartInTimezone.getUTCFullYear()
+	const baseMonth = weekStartInTimezone.getUTCMonth()
+	const baseDate = weekStartInTimezone.getUTCDate()
+	const utcMidnightMs = Date.UTC(baseYear, baseMonth, baseDate)
+	const localBaseDate = new Date(baseYear, baseMonth, baseDate)
+	const utcForLocalMidnight = convertTimeStringToUTC('00:00', localBaseDate, timezone)
+	const deltaMinutes = Math.round((utcForLocalMidnight.getTime() - utcMidnightMs) / (60 * 1000))
+	const startOffset = deltaMinutes > 0 ? -1 : 0
 	for (let dayOffset = startOffset; dayOffset < 7; dayOffset++) {
 		const currentDay = new Date(
 			Date.UTC(
@@ -111,7 +122,7 @@ function generateBusyTimesInNativeTimezone(
 		// Sort schedules by start time
 		daySchedules.sort((a, b) => a.start.getTime() - b.start.getTime())
 
-		// Create start and end of day in the native timezone (no system timezone dependency)
+		// Create start and inclusive end of day in the native timezone
 		const dayStart = new Date(
 			Date.UTC(currentDay.getUTCFullYear(), currentDay.getUTCMonth(), currentDay.getUTCDate(), 0, 0, 0, 0)
 		)
