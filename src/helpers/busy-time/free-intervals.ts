@@ -10,11 +10,7 @@ type Event = { t: number; d: 1 | -1 }
  * @param K    Allowed overlaps (collisions). Time is busy iff active >= K+1
  * @param bounds Optional bounding window [start, end) to clip results (default: inferred from data)
  */
-export function findFreeIntervals(
-	busy: Interval[],
-	K: number,
-	bounds?: Interval
-): Interval[] {
+export function findFreeIntervals(busy: Interval[], K: number, bounds?: Interval): Interval[] {
 	// Validate inputs
 	if (K < 0) {
 		throw new Error('K must be non-negative')
@@ -40,16 +36,16 @@ export function findFreeIntervals(
 	}
 
 	// Sort events: time ASC, then delta ASC (ends before starts at same time)
-	events.sort((a, b) => a.t === b.t ? a.d - b.d : a.t - b.t)
+	events.sort((a, b) => (a.t === b.t ? a.d - b.d : a.t - b.t))
 
 	// Sweep line algorithm
 	const freeIntervals: Interval[] = []
 	let active = 0
-	
+
 	// Determine effective bounds
 	const effectiveBounds = bounds || {
 		start: Math.min(...validBusy.map(b => b.start)),
-		end: Math.max(...validBusy.map(b => b.end))
+		end: Math.max(...validBusy.map(b => b.end)),
 	}
 
 	let prev = effectiveBounds.start
@@ -133,7 +129,7 @@ function clipIntervals(intervals: Interval[], bounds: Interval): Interval[] {
 export function busyTimesToIntervals(busyTimes: BusyTime[]): Interval[] {
 	return busyTimes.map(bt => ({
 		start: bt.start.getTime(),
-		end: bt.end.getTime()
+		end: bt.end.getTime(),
 	}))
 }
 
@@ -143,7 +139,7 @@ export function busyTimesToIntervals(busyTimes: BusyTime[]): Interval[] {
 export function intervalsToTimeSlots(intervals: Interval[]): TimeSlot[] {
 	return intervals.map(interval => ({
 		start: new Date(interval.start),
-		end: new Date(interval.end)
+		end: new Date(interval.end),
 	}))
 }
 
@@ -158,11 +154,11 @@ export function findAvailableSlotsWithOverlaps(
 ): TimeSlot[] {
 	const bounds: Interval = {
 		start: startTime.getTime(),
-		end: endTime.getTime()
+		end: endTime.getTime(),
 	}
 
 	const busyIntervals = busyTimesToIntervals(busyTimes)
 	const freeIntervals = findFreeIntervals(busyIntervals, maxOverlaps, bounds)
-	
+
 	return intervalsToTimeSlots(freeIntervals)
 }

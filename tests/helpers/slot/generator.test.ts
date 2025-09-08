@@ -151,12 +151,12 @@ describe('Slot Generator Helper', () => {
 			// Generate slots from 6 AM to 6 PM UTC
 			const earlyStart = new Date('2024-01-15T06:00:00Z')
 			const lateEnd = new Date('2024-01-15T18:00:00Z')
-			
+
 			const slots = generateSlots(earlyStart, lateEnd, {
 				slotDurationMinutes: 60,
 				timezone: 'America/New_York',
 				earliestTime: '09:00', // 9 AM New York time
-				latestTime: '17:00'    // 5 PM New York time
+				latestTime: '17:00', // 5 PM New York time
 			})
 
 			// All slots should fall within 9 AM - 5 PM New York time
@@ -173,12 +173,12 @@ describe('Slot Generator Helper', () => {
 		test('should filter slots by timezone and time range using number format', () => {
 			const earlyStart = new Date('2024-01-15T06:00:00Z')
 			const lateEnd = new Date('2024-01-15T18:00:00Z')
-			
+
 			const slots = generateSlots(earlyStart, lateEnd, {
 				slotDurationMinutes: 60,
 				timezone: 'America/New_York',
-				earliestTime: 9 * 60,    // 9 AM (540 minutes from midnight)
-				latestTime: 17 * 60     // 5 PM (1020 minutes from midnight)
+				earliestTime: 9 * 60, // 9 AM (540 minutes from midnight)
+				latestTime: 17 * 60, // 5 PM (1020 minutes from midnight)
 			})
 
 			slots.forEach(slot => {
@@ -193,7 +193,7 @@ describe('Slot Generator Helper', () => {
 		test('should work with timezone but no time restrictions', () => {
 			const slots = generateSlots(startTime, endTime, {
 				slotDurationMinutes: 60,
-				timezone: 'America/New_York'
+				timezone: 'America/New_York',
 			})
 
 			// Should return all slots (no filtering)
@@ -203,11 +203,11 @@ describe('Slot Generator Helper', () => {
 		test('should work with only earliest time specified', () => {
 			const earlyStart = new Date('2024-01-15T06:00:00Z')
 			const lateEnd = new Date('2024-01-15T18:00:00Z')
-			
+
 			const slots = generateSlots(earlyStart, lateEnd, {
 				slotDurationMinutes: 60,
 				timezone: 'America/New_York',
-				earliestTime: '09:00' // Only earliest time specified
+				earliestTime: '09:00', // Only earliest time specified
 			})
 
 			// All slots should be after 9 AM New York time (14:00 UTC)
@@ -220,11 +220,11 @@ describe('Slot Generator Helper', () => {
 		test('should work with only latest time specified', () => {
 			const earlyStart = new Date('2024-01-15T06:00:00Z')
 			const lateEnd = new Date('2024-01-15T18:00:00Z')
-			
+
 			const slots = generateSlots(earlyStart, lateEnd, {
 				slotDurationMinutes: 60,
 				timezone: 'America/New_York',
-				latestTime: '17:00' // Only latest time specified
+				latestTime: '17:00', // Only latest time specified
 			})
 
 			// All slots should be before 5 PM New York time (22:00 UTC)

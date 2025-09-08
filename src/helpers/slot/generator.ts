@@ -16,15 +16,15 @@ function parseTimeInput(timeInput: string | number): number {
 	if (typeof timeInput === 'number') {
 		return timeInput
 	}
-	
+
 	const [hoursStr, minutesStr] = timeInput.split(':')
 	const hours = parseInt(hoursStr!, 10)
 	const minutes = parseInt(minutesStr!, 10)
-	
+
 	if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
 		throw new Error(`Invalid time format: ${timeInput}. Expected HH:mm format (e.g., "09:00") or minutes as number`)
 	}
-	
+
 	return hours * 60 + minutes
 }
 
@@ -36,9 +36,14 @@ function isSlotWithinDailyTimeRange(
 ): boolean {
 	const slotDate = new Date(slot.start)
 	slotDate.setUTCHours(0, 0, 0, 0)
-	
-	const earliestTimeUtc = createDateInTimezone(slotDate, Math.floor(earliestMinutes / 60), earliestMinutes % 60, timezone)
-	
+
+	const earliestTimeUtc = createDateInTimezone(
+		slotDate,
+		Math.floor(earliestMinutes / 60),
+		earliestMinutes % 60,
+		timezone
+	)
+
 	// Handle 24:00 (end of day) by using next day's 00:00
 	let latestTimeUtc: Date
 	if (latestMinutes >= 24 * 60) {
@@ -48,18 +53,18 @@ function isSlotWithinDailyTimeRange(
 	} else {
 		latestTimeUtc = createDateInTimezone(slotDate, Math.floor(latestMinutes / 60), latestMinutes % 60, timezone)
 	}
-	
+
 	return slot.start.getTime() >= earliestTimeUtc.getTime() && slot.start.getTime() < latestTimeUtc.getTime()
 }
 
 export function generateSlots(startTime: Date, endTime: Date, options: SlotGenerationOptions): TimeSlot[] {
-	const { 
-		slotDurationMinutes, 
-		slotSplitMinutes = slotDurationMinutes, 
-		offsetMinutes = 0, 
-		timezone, 
-		earliestTime, 
-		latestTime 
+	const {
+		slotDurationMinutes,
+		slotSplitMinutes = slotDurationMinutes,
+		offsetMinutes = 0,
+		timezone,
+		earliestTime,
+		latestTime,
 	} = options
 
 	const slots: TimeSlot[] = []
@@ -92,10 +97,8 @@ export function generateSlots(startTime: Date, endTime: Date, options: SlotGener
 	if (timezone && (earliestTime !== undefined || latestTime !== undefined)) {
 		const earliestMinutes = earliestTime !== undefined ? parseTimeInput(earliestTime) : 0
 		const latestMinutes = latestTime !== undefined ? parseTimeInput(latestTime) : 24 * 60
-		
-		return slots.filter(slot => 
-			isSlotWithinDailyTimeRange(slot, earliestMinutes, latestMinutes, timezone)
-		)
+
+		return slots.filter(slot => isSlotWithinDailyTimeRange(slot, earliestMinutes, latestMinutes, timezone))
 	}
 
 	return slots

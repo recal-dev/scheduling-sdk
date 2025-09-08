@@ -33,14 +33,14 @@ export class Scheduler {
 
 	/**
 	 * Creates a new Scheduler with optional initial busy times.
-	 * 
+	 *
 	 * @param busyTimes - Optional array of initial busy times. Defaults to empty array.
-	 * 
+	 *
 	 * @example
 	 * ```typescript
 	 * // Create empty scheduler
 	 * const scheduler = new Scheduler()
-	 * 
+	 *
 	 * // Create scheduler with existing appointments
 	 * const existingAppointments = [
 	 *   { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') }
@@ -54,18 +54,18 @@ export class Scheduler {
 
 	/**
 	 * Finds available time slots within the specified range, avoiding all busy times.
-	 * 
+	 *
 	 * This method generates potential slots based on the provided options, then filters out
 	 * any slots that conflict with existing busy times (including padding).
 	 *
 	 * @param startTime - Start of the search range
-	 * @param endTime - End of the search range  
+	 * @param endTime - End of the search range
 	 * @param options - Slot generation options including duration, split, offset, and padding
-	 * 
+	 *
 	 * @returns Array of available time slots that don't conflict with busy times
-	 * 
+	 *
 	 * @throws If time range is invalid (start >= end) or options are invalid
-	 * 
+	 *
 	 * @example
 	 * ```typescript
 	 * // Find 1-hour slots with no overlap
@@ -89,7 +89,7 @@ export class Scheduler {
 	 *     offset: 5              // Start slots at :05, :20, :35, :50
 	 *   }
 	 * )
-	 * 
+	 *
 	 * // Multi-day search
 	 * const weekSlots = scheduler.findAvailableSlots(
 	 *   new Date('2024-01-15T00:00:00Z'),  // Monday
@@ -113,12 +113,12 @@ export class Scheduler {
 		if (maxOverlaps !== undefined) {
 			// Find free time periods with K-overlaps algorithm
 			const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, mergedBusyTimes, maxOverlaps)
-			
+
 			// Apply slot generation constraints to free periods
 			return this.applySlotConstraintsToFreeTime(freeSlots, {
 				slotDuration,
 				slotSplit,
-				offset
+				offset,
 			})
 		}
 
@@ -137,9 +137,9 @@ export class Scheduler {
 	/**
 	 * Adds a single busy time to the scheduler.
 	 * The busy time will be automatically sorted with existing busy times.
-	 * 
+	 *
 	 * @param busyTime - The busy time period to add
-	 * 
+	 *
 	 * @example
 	 * ```typescript
 	 * // Add a 1-hour meeting
@@ -147,7 +147,7 @@ export class Scheduler {
 	 *   start: new Date('2024-01-15T14:00:00Z'),
 	 *   end: new Date('2024-01-15T15:00:00Z')
 	 * })
-	 * 
+	 *
 	 * // Add a multi-hour block
 	 * scheduler.addBusyTime({
 	 *   start: new Date('2024-01-15T09:00:00Z'),
@@ -164,9 +164,9 @@ export class Scheduler {
 	 * Adds multiple busy times to the scheduler at once.
 	 * More efficient than calling addBusyTime multiple times.
 	 * All busy times will be automatically sorted together.
-	 * 
+	 *
 	 * @param busyTimes - Array of busy time periods to add
-	 * 
+	 *
 	 * @example
 	 * ```typescript
 	 * // Add multiple appointments
@@ -175,7 +175,7 @@ export class Scheduler {
 	 *   { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:30:00Z') },
 	 *   { start: new Date('2024-01-16T09:00:00Z'), end: new Date('2024-01-16T10:30:00Z') }
 	 * ])
-	 * 
+	 *
 	 * // Import busy times from external calendar
 	 * const externalEvents = getCalendarEvents() // Returns BusyTime[]
 	 * scheduler.addBusyTimes(externalEvents)
@@ -189,20 +189,20 @@ export class Scheduler {
 	/**
 	 * Removes all busy times from the scheduler.
 	 * After calling this method, the scheduler will have no busy time restrictions.
-	 * 
+	 *
 	 * @example
 	 * ```typescript
 	 * // Add some busy times
 	 * scheduler.addBusyTime(meeting1)
 	 * scheduler.addBusyTime(meeting2)
-	 * 
+	 *
 	 * console.log(scheduler.getBusyTimes().length) // 2
-	 * 
+	 *
 	 * // Clear all busy times
 	 * scheduler.clearBusyTimes()
-	 * 
+	 *
 	 * console.log(scheduler.getBusyTimes().length) // 0
-	 * 
+	 *
 	 * // Now all time slots will be available (subject to time range)
 	 * const slots = scheduler.findAvailableSlots(start, end, options)
 	 * ```
@@ -214,23 +214,23 @@ export class Scheduler {
 	/**
 	 * Returns a copy of all busy times currently in the scheduler.
 	 * The returned array is a copy, so modifying it won't affect the scheduler's internal state.
-	 * 
+	 *
 	 * @returns Array of all busy times, sorted by start time
-	 * 
+	 *
 	 * @example
 	 * ```typescript
 	 * // Get current busy times
 	 * const busyTimes = scheduler.getBusyTimes()
 	 * console.log(`Scheduler has ${busyTimes.length} busy periods`)
-	 * 
+	 *
 	 * // Safe to modify - won't affect scheduler
 	 * busyTimes.push(newBusyTime) // This won't change the scheduler
-	 * 
+	 *
 	 * // Check for conflicts with a specific time
-	 * const conflictingTimes = busyTimes.filter(busyTime => 
+	 * const conflictingTimes = busyTimes.filter(busyTime =>
 	 *   busyTime.start < proposedEnd && busyTime.end > proposedStart
 	 * )
-	 * 
+	 *
 	 * // Export busy times
 	 * const exported = {
 	 *   userId: 'user123',
@@ -260,7 +260,7 @@ export class Scheduler {
 				slotSplitMinutes: slotSplit,
 				offsetMinutes: offset,
 			})
-			
+
 			result.push(...slots)
 		}
 

@@ -244,8 +244,8 @@ export class AvailabilityScheduler {
 	 * const weekSlots = scheduler.findAvailableSlots(
 	 *   new Date('2024-01-15T00:00:00Z'),  // Monday
 	 *   new Date('2024-01-19T23:59:59Z'),  // Friday
-	 *   { 
-	 *     slotDuration: 60, 
+	 *   {
+	 *     slotDuration: 60,
 	 *     slotSplit: 60,
 	 *     maxOverlaps: 2         // Allow up to 2 overlapping appointments
 	 *   }
@@ -273,13 +273,13 @@ export class AvailabilityScheduler {
 		// Generate availability-based busy times for the requested range
 		const availabilityBusyTimes = this.generateAvailabilityBusyTimes(startTime, endTime)
 		const manualBusyTimes = this.scheduler.getBusyTimes()
-		
+
 		// Optimization: Use K-overlaps algorithm directly if maxOverlaps is specified
 		if (options.maxOverlaps !== undefined) {
 			return this.findSlotsWithOverlapsOptimized(
-				startTime, 
-				endTime, 
-				[...manualBusyTimes, ...availabilityBusyTimes], 
+				startTime,
+				endTime,
+				[...manualBusyTimes, ...availabilityBusyTimes],
 				options
 			)
 		}
@@ -394,9 +394,9 @@ export class AvailabilityScheduler {
 	/**
 	 * Optimized slot finding using K-overlaps algorithm directly.
 	 * Avoids creating temporary scheduler for better performance.
-	 * 
+	 *
 	 * @param startTime - Start of the search range
-	 * @param endTime - End of the search range  
+	 * @param endTime - End of the search range
 	 * @param allBusyTimes - Combined manual and availability busy times
 	 * @param options - Scheduling options with maxOverlaps specified
 	 * @returns Array of available time slots

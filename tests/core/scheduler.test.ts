@@ -337,7 +337,7 @@ describe('Scheduler', () => {
 		it('should work with K=0 (traditional behavior)', () => {
 			scheduler.addBusyTimes([
 				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
-				{ start: new Date('2024-01-01T10:30:00Z'), end: new Date('2024-01-01T11:30:00Z') }
+				{ start: new Date('2024-01-01T10:30:00Z'), end: new Date('2024-01-01T11:30:00Z') },
 			])
 
 			const startTime = new Date('2024-01-01T09:00:00Z')
@@ -345,14 +345,14 @@ describe('Scheduler', () => {
 
 			const slots = scheduler.findAvailableSlots(startTime, endTime, {
 				slotDuration: 60,
-				maxOverlaps: 0
+				maxOverlaps: 0,
 			})
 
 			// Should exclude overlapping period 10:00-11:30
 			slots.forEach(slot => {
 				expect(
 					slot.end.getTime() <= new Date('2024-01-01T10:00:00Z').getTime() ||
-					slot.start.getTime() >= new Date('2024-01-01T11:30:00Z').getTime()
+						slot.start.getTime() >= new Date('2024-01-01T11:30:00Z').getTime()
 				).toBe(true)
 			})
 		})
@@ -360,7 +360,7 @@ describe('Scheduler', () => {
 		it('should allow single overlap with K=1', () => {
 			scheduler.addBusyTimes([
 				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
-				{ start: new Date('2024-01-01T10:30:00Z'), end: new Date('2024-01-01T11:30:00Z') }
+				{ start: new Date('2024-01-01T10:30:00Z'), end: new Date('2024-01-01T11:30:00Z') },
 			])
 
 			const startTime = new Date('2024-01-01T09:00:00Z')
@@ -368,16 +368,17 @@ describe('Scheduler', () => {
 
 			const slots = scheduler.findAvailableSlots(startTime, endTime, {
 				slotDuration: 60,
-				maxOverlaps: 1
+				maxOverlaps: 1,
 			})
 
 			// Should allow slots throughout the period since only 2 intervals overlap at most
 			expect(slots.length).toBeGreaterThan(3) // Should have slots across entire period
 
 			// Check that we have slots in previously "blocked" time
-			const hasSlotInOverlap = slots.some(slot => 
-				slot.start.getTime() >= new Date('2024-01-01T10:00:00Z').getTime() &&
-				slot.end.getTime() <= new Date('2024-01-01T11:30:00Z').getTime()
+			const hasSlotInOverlap = slots.some(
+				slot =>
+					slot.start.getTime() >= new Date('2024-01-01T10:00:00Z').getTime() &&
+					slot.end.getTime() <= new Date('2024-01-01T11:30:00Z').getTime()
 			)
 			expect(hasSlotInOverlap).toBe(true)
 		})
@@ -386,7 +387,7 @@ describe('Scheduler', () => {
 			scheduler.addBusyTimes([
 				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T12:00:00Z') },
 				{ start: new Date('2024-01-01T10:30:00Z'), end: new Date('2024-01-01T11:30:00Z') },
-				{ start: new Date('2024-01-01T10:45:00Z'), end: new Date('2024-01-01T11:15:00Z') }
+				{ start: new Date('2024-01-01T10:45:00Z'), end: new Date('2024-01-01T11:15:00Z') },
 			])
 
 			const startTime = new Date('2024-01-01T09:00:00Z')
@@ -395,14 +396,15 @@ describe('Scheduler', () => {
 			// K=2: allow up to 2 overlaps (busy when ≥3)
 			const slots = scheduler.findAvailableSlots(startTime, endTime, {
 				slotDuration: 30,
-				maxOverlaps: 2
+				maxOverlaps: 2,
 			})
 
 			// Period 10:45-11:15 has 3 overlaps, so should be excluded
 			// But periods with ≤2 overlaps should be available
-			const hasSlotInTripleOverlap = slots.some(slot =>
-				slot.start.getTime() >= new Date('2024-01-01T10:45:00Z').getTime() &&
-				slot.end.getTime() <= new Date('2024-01-01T11:15:00Z').getTime()
+			const hasSlotInTripleOverlap = slots.some(
+				slot =>
+					slot.start.getTime() >= new Date('2024-01-01T10:45:00Z').getTime() &&
+					slot.end.getTime() <= new Date('2024-01-01T11:15:00Z').getTime()
 			)
 			expect(hasSlotInTripleOverlap).toBe(false)
 
@@ -411,9 +413,7 @@ describe('Scheduler', () => {
 		})
 
 		it('should integrate with slot generation options', () => {
-			scheduler.addBusyTimes([
-				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }
-			])
+			scheduler.addBusyTimes([{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }])
 
 			const startTime = new Date('2024-01-01T09:00:00Z')
 			const endTime = new Date('2024-01-01T13:00:00Z')
@@ -422,7 +422,7 @@ describe('Scheduler', () => {
 				slotDuration: 30,
 				slotSplit: 15,
 				offset: 5,
-				maxOverlaps: 0
+				maxOverlaps: 0,
 			})
 
 			// Should respect offset
@@ -438,9 +438,7 @@ describe('Scheduler', () => {
 		})
 
 		it('should work with padding and maxOverlaps', () => {
-			scheduler.addBusyTimes([
-				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }
-			])
+			scheduler.addBusyTimes([{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }])
 
 			const startTime = new Date('2024-01-01T09:00:00Z')
 			const endTime = new Date('2024-01-01T13:00:00Z')
@@ -448,33 +446,31 @@ describe('Scheduler', () => {
 			const slots = scheduler.findAvailableSlots(startTime, endTime, {
 				slotDuration: 60,
 				padding: 15,
-				maxOverlaps: 0
+				maxOverlaps: 0,
 			})
 
 			// Should respect padding: exclude 09:45-11:15 (15min before/after busy time)
 			slots.forEach(slot => {
 				expect(
 					slot.end.getTime() <= new Date('2024-01-01T09:45:00Z').getTime() ||
-					slot.start.getTime() >= new Date('2024-01-01T11:15:00Z').getTime()
+						slot.start.getTime() >= new Date('2024-01-01T11:15:00Z').getTime()
 				).toBe(true)
 			})
 		})
 
 		it('should fall back to traditional behavior when maxOverlaps is undefined', () => {
-			scheduler.addBusyTimes([
-				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }
-			])
+			scheduler.addBusyTimes([{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }])
 
 			const startTime = new Date('2024-01-01T09:00:00Z')
 			const endTime = new Date('2024-01-01T13:00:00Z')
 
 			const slotsTraditional = scheduler.findAvailableSlots(startTime, endTime, {
-				slotDuration: 60
+				slotDuration: 60,
 			})
 
 			const slotsK0 = scheduler.findAvailableSlots(startTime, endTime, {
 				slotDuration: 60,
-				maxOverlaps: 0
+				maxOverlaps: 0,
 			})
 
 			// Should behave the same
