@@ -1,6 +1,6 @@
 {
 	"name": "scheduling-sdk",
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"description": "Brought to you by Recal - A TypeScript SDK for scheduling functionality",
 	"author": "Recal",
 	"license": "MIT",
