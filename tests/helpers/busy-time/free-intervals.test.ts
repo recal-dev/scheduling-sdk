@@ -250,6 +250,21 @@ describe('Free Intervals with K Overlaps', () => {
 			])
 		})
 
+		// New test: ensure that returned free intervals are merged when adjacent (touching)
+		test('should return merged free intervals when touching due to neutral events', () => {
+			// Busy intervals that end and start at the same timestamp; with K=1
+			// the free intervals before and after the timestamp are adjacent and should be merged
+			const busy: Interval[] = [
+				{ start: 2, end: 10 },
+				{ start: 10, end: 12 },
+			]
+			const bounds = { start: 0, end: 20 }
+			const result = findFreeIntervals(busy, 1, bounds)
+			// Without merging, intermediate free segments would be [0,2],[2,10],[10,12],[12,20]
+			// After merging touching intervals, we expect a single free block equal to bounds
+			expect(result).toEqual([{ start: 0, end: 20 }])
+		})
+
 		test('should handle zero-length bounds', () => {
 			const busy: Interval[] = [{ start: 5, end: 10 }]
 			const result = findFreeIntervals(busy, 0, { start: 7, end: 7 })
