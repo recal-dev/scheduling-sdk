@@ -147,6 +147,93 @@ describe('Slot Generator Helper', () => {
 			})
 		})
 
+		test('should filter slots by timezone and time range using string format', () => {
+			// Generate slots from 6 AM to 6 PM UTC
+			const earlyStart = new Date('2024-01-15T06:00:00Z')
+			const lateEnd = new Date('2024-01-15T18:00:00Z')
+			
+			const slots = generateSlots(earlyStart, lateEnd, {
+				slotDurationMinutes: 60,
+				timezone: 'America/New_York',
+				earliestTime: '09:00', // 9 AM New York time
+				latestTime: '17:00'    // 5 PM New York time
+			})
+
+			// All slots should fall within 9 AM - 5 PM New York time
+			// In January, New York is UTC-5, so this should be 14:00-22:00 UTC
+			slots.forEach(slot => {
+				const hour = slot.start.getUTCHours()
+				expect(hour).toBeGreaterThanOrEqual(14) // 9 AM EST = 14:00 UTC
+				expect(hour).toBeLessThan(22) // 5 PM EST = 22:00 UTC
+			})
+
+			expect(slots.length).toBeGreaterThan(0)
+		})
+
+		test('should filter slots by timezone and time range using number format', () => {
+			const earlyStart = new Date('2024-01-15T06:00:00Z')
+			const lateEnd = new Date('2024-01-15T18:00:00Z')
+			
+			const slots = generateSlots(earlyStart, lateEnd, {
+				slotDurationMinutes: 60,
+				timezone: 'America/New_York',
+				earliestTime: 9 * 60,    // 9 AM (540 minutes from midnight)
+				latestTime: 17 * 60     // 5 PM (1020 minutes from midnight)
+			})
+
+			slots.forEach(slot => {
+				const hour = slot.start.getUTCHours()
+				expect(hour).toBeGreaterThanOrEqual(14)
+				expect(hour).toBeLessThan(22)
+			})
+
+			expect(slots.length).toBeGreaterThan(0)
+		})
+
+		test('should work with timezone but no time restrictions', () => {
+			const slots = generateSlots(startTime, endTime, {
+				slotDurationMinutes: 60,
+				timezone: 'America/New_York'
+			})
+
+			// Should return all slots (no filtering)
+			expect(slots.length).toBe(8) // 9 AM to 5 PM UTC = 8 hours
+		})
+
+		test('should work with only earliest time specified', () => {
+			const earlyStart = new Date('2024-01-15T06:00:00Z')
+			const lateEnd = new Date('2024-01-15T18:00:00Z')
+			
+			const slots = generateSlots(earlyStart, lateEnd, {
+				slotDurationMinutes: 60,
+				timezone: 'America/New_York',
+				earliestTime: '09:00' // Only earliest time specified
+			})
+
+			// All slots should be after 9 AM New York time (14:00 UTC)
+			slots.forEach(slot => {
+				const hour = slot.start.getUTCHours()
+				expect(hour).toBeGreaterThanOrEqual(14)
+			})
+		})
+
+		test('should work with only latest time specified', () => {
+			const earlyStart = new Date('2024-01-15T06:00:00Z')
+			const lateEnd = new Date('2024-01-15T18:00:00Z')
+			
+			const slots = generateSlots(earlyStart, lateEnd, {
+				slotDurationMinutes: 60,
+				timezone: 'America/New_York',
+				latestTime: '17:00' // Only latest time specified
+			})
+
+			// All slots should be before 5 PM New York time (22:00 UTC)
+			slots.forEach(slot => {
+				const hour = slot.start.getUTCHours()
+				expect(hour).toBeLessThan(22)
+			})
+		})
+
 		test('should handle very small durations', () => {
 			const slots = generateSlots(startTime, new Date('2024-01-15T09:05:00Z'), { slotDurationMinutes: 1 }) // 1-minute slots
 
