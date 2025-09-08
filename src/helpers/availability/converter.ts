@@ -23,7 +23,7 @@ const DAY_MAP: Record<DayOfWeek, number> = {
  */
 function parseTime(time: string | number): { hours: number; minutes: number } {
 	if (typeof time === 'number') {
-		return { hours: time / 60, minutes: time % 60 }
+		return { hours: Math.floor(time / 60), minutes: time % 60 }
 	}
 	const [hoursStr, minutesStr] = time.split(':')
 	const hours = parseInt(hoursStr!, 10)
