@@ -2,6 +2,7 @@ import { mergeBusyTimes } from '../helpers/busy-time/merge'
 import { applyPadding } from '../helpers/busy-time/padding'
 import { filterAvailableSlots } from '../helpers/slot/filter'
 import { generateSlots } from '../helpers/slot/generator'
+import { findAvailableSlotsWithOverlaps } from '../helpers/busy-time/free-intervals'
 import type { BusyTime, SchedulingOptions, TimeSlot } from '../types/scheduling.types'
 import { validateOptions } from '../validators/options.validator'
 import { validateTimeRange } from '../validators/time-range.validator'
@@ -102,12 +103,26 @@ export class Scheduler {
 		validateTimeRange(startTime, endTime)
 		validateOptions(options)
 
-		const { slotDuration, padding = 0, slotSplit = slotDuration, offset = 0 } = options
+		const { slotDuration, padding = 0, slotSplit = slotDuration, offset = 0, maxOverlaps } = options
 
 		// Apply padding and merge busy times
 		const paddedBusyTimes = applyPadding(this.busyTimes, padding)
 		const mergedBusyTimes = mergeBusyTimes(paddedBusyTimes)
 
+		// Use K-overlaps algorithm if maxOverlaps is specified
+		if (maxOverlaps !== undefined) {
+			// Find free time periods with K-overlaps algorithm
+			const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, mergedBusyTimes, maxOverlaps)
+			
+			// Apply slot generation constraints to free periods
+			return this.applySlotConstraintsToFreeTime(freeSlots, {
+				slotDuration,
+				slotSplit,
+				offset
+			})
+		}
+
+		// Traditional approach for backward compatibility
 		// Generate potential slots
 		const slots = generateSlots(startTime, endTime, {
 			slotDurationMinutes: slotDuration,
@@ -225,5 +240,31 @@ export class Scheduler {
 	 */
 	getBusyTimes(): BusyTime[] {
 		return this.busyTimes.slice()
+	}
+
+	/**
+	 * Applies slot duration, split, and offset constraints to free time periods
+	 * @private
+	 */
+	private applySlotConstraintsToFreeTime(
+		freeSlots: TimeSlot[],
+		options: { slotDuration: number; slotSplit: number; offset: number }
+	): TimeSlot[] {
+		const { slotDuration, slotSplit, offset } = options
+		const result: TimeSlot[] = []
+
+		for (const freeSlot of freeSlots) {
+			// Generate slots within this free time period
+			const slots = generateSlots(freeSlot.start, freeSlot.end, {
+				slotDurationMinutes: slotDuration,
+				slotSplitMinutes: slotSplit,
+				offsetMinutes: offset,
+			})
+			
+			result.push(...slots)
+		}
+
+		// Sort by start time and return
+		return result.sort((a, b) => a.start.getTime() - b.start.getTime())
 	}
 }

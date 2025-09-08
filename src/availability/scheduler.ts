@@ -1,5 +1,9 @@
 import { Scheduler } from '../core/scheduler'
 import { weeklyAvailabilityToBusyTimes } from '../helpers/availability/converter'
+import { findAvailableSlotsWithOverlaps } from '../helpers/busy-time/free-intervals'
+import { generateSlots } from '../helpers/slot/generator'
+import { applyPadding } from '../helpers/busy-time/padding'
+import { mergeBusyTimes } from '../helpers/busy-time/merge'
 import type { WeeklyAvailability } from '../types/availability.types'
 import type { BusyTime, SchedulingOptions, TimeSlot } from '../types/scheduling.types'
 import { validateWeeklyAvailability } from '../validators/availability.validator'
@@ -214,7 +218,7 @@ export class AvailabilityScheduler {
 	 *
 	 * @example
 	 * ```typescript
-	 * // Find 1-hour slots with no overlap
+	 * // Find 1-hour slots with no overlap (traditional behavior)
 	 * const slots = scheduler.findAvailableSlots(
 	 *   new Date('2024-01-15T08:00:00Z'),
 	 *   new Date('2024-01-15T18:00:00Z'),
@@ -225,22 +229,39 @@ export class AvailabilityScheduler {
 	 *   }
 	 * )
 	 *
-	 * // Find 30-minute slots with 15-minute overlap
+	 * // Find slots allowing single overlap (K-overlaps with K=1)
 	 * const overlappingSlots = scheduler.findAvailableSlots(
 	 *   new Date('2024-01-15T09:00:00Z'),
 	 *   new Date('2024-01-15T17:00:00Z'),
 	 *   {
 	 *     slotDuration: 30,      // 30-minute slots
-	 *     slotSplit: 15,         // Slots start every 15 minutes (15-minute overlap)
-	 *     offset: 5              // Start slots at :05, :20, :35, :50
+	 *     slotSplit: 15,         // Slots start every 15 minutes
+	 *     maxOverlaps: 1         // Allow up to 1 overlapping busy time
 	 *   }
 	 * )
 	 *
-	 * // Multi-day search
+	 * // Multi-day search with flexible scheduling (allow 2 overlaps)
 	 * const weekSlots = scheduler.findAvailableSlots(
 	 *   new Date('2024-01-15T00:00:00Z'),  // Monday
 	 *   new Date('2024-01-19T23:59:59Z'),  // Friday
-	 *   { slotDuration: 60, slotSplit: 60 }
+	 *   { 
+	 *     slotDuration: 60, 
+	 *     slotSplit: 60,
+	 *     maxOverlaps: 2         // Allow up to 2 overlapping appointments
+	 *   }
+	 * )
+	 *
+	 * // Timezone-aware scheduling with overlaps
+	 * const timezoneSlots = scheduler.findAvailableSlots(
+	 *   new Date('2024-01-15T08:00:00Z'),
+	 *   new Date('2024-01-15T18:00:00Z'),
+	 *   {
+	 *     slotDuration: 45,
+	 *     padding: 10,
+	 *     maxOverlaps: 1,        // Allow single overlap
+	 *     // Availability pattern respects scheduler's timezone
+	 *     // Manual busy times + availability restrictions combined
+	 *   }
 	 * )
 	 * ```
 	 */
@@ -249,10 +270,23 @@ export class AvailabilityScheduler {
 			return this.scheduler.findAvailableSlots(startTime, endTime, options)
 		}
 
+		// Generate availability-based busy times for the requested range
 		const availabilityBusyTimes = this.generateAvailabilityBusyTimes(startTime, endTime)
-		const allBusyTimes = [...this.scheduler.getBusyTimes(), ...availabilityBusyTimes]
-		const tempScheduler = new Scheduler(allBusyTimes)
+		const manualBusyTimes = this.scheduler.getBusyTimes()
+		
+		// Optimization: Use K-overlaps algorithm directly if maxOverlaps is specified
+		if (options.maxOverlaps !== undefined) {
+			return this.findSlotsWithOverlapsOptimized(
+				startTime, 
+				endTime, 
+				[...manualBusyTimes, ...availabilityBusyTimes], 
+				options
+			)
+		}
 
+		// Traditional approach: create temporary scheduler
+		const allBusyTimes = [...manualBusyTimes, ...availabilityBusyTimes]
+		const tempScheduler = new Scheduler(allBusyTimes)
 		return tempScheduler.findAvailableSlots(startTime, endTime, options)
 	}
 
@@ -355,5 +389,46 @@ export class AvailabilityScheduler {
 		monday.setUTCDate(date.getUTCDate() + diff)
 		monday.setUTCHours(0, 0, 0, 0)
 		return monday
+	}
+
+	/**
+	 * Optimized slot finding using K-overlaps algorithm directly.
+	 * Avoids creating temporary scheduler for better performance.
+	 * 
+	 * @param startTime - Start of the search range
+	 * @param endTime - End of the search range  
+	 * @param allBusyTimes - Combined manual and availability busy times
+	 * @param options - Scheduling options with maxOverlaps specified
+	 * @returns Array of available time slots
+	 * @private
+	 */
+	private findSlotsWithOverlapsOptimized(
+		startTime: Date,
+		endTime: Date,
+		allBusyTimes: BusyTime[],
+		options: SchedulingOptions
+	): TimeSlot[] {
+		const { slotDuration, padding = 0, slotSplit = slotDuration, offset = 0, maxOverlaps } = options
+
+		// Apply padding and merge busy times (same as core scheduler)
+		const paddedBusyTimes = applyPadding(allBusyTimes, padding)
+		const mergedBusyTimes = mergeBusyTimes(paddedBusyTimes)
+
+		// Use K-overlaps algorithm to find free time periods
+		const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, mergedBusyTimes, maxOverlaps!)
+
+		// Apply slot generation constraints to free periods
+		const result: TimeSlot[] = []
+		for (const freeSlot of freeSlots) {
+			const slots = generateSlots(freeSlot.start, freeSlot.end, {
+				slotDurationMinutes: slotDuration,
+				slotSplitMinutes: slotSplit,
+				offsetMinutes: offset,
+			})
+			result.push(...slots)
+		}
+
+		// Sort by start time and return
+		return result.sort((a, b) => a.start.getTime() - b.start.getTime())
 	}
 }
