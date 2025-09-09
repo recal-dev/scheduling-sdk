@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'bun:test'
-import { type BusyTime, createScheduler, Scheduler, type SchedulingOptions, type TimeSlot } from '../src/index.ts'
+import {
+	AvailabilityScheduler,
+	type BusyTime,
+	createAvailabilityScheduler,
+	createScheduler,
+	Scheduler,
+	type SchedulingOptions,
+	type TimeSlot,
+	type WeeklyAvailability,
+} from '../src/index.ts'
 
 describe('Index Exports', () => {
 	describe('type exports', () => {
@@ -197,6 +206,45 @@ describe('Index Exports', () => {
 
 			expect(typeof directScheduler.getBusyTimes).toBe('function')
 			expect(typeof convenienceScheduler.getBusyTimes).toBe('function')
+		})
+	})
+
+	describe('createAvailabilityScheduler convenience function', () => {
+		it('should create an AvailabilityScheduler instance', () => {
+			const availability: WeeklyAvailability = {
+				schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
+			}
+			const scheduler = createAvailabilityScheduler(availability, 'America/New_York')
+			expect(scheduler).toBeInstanceOf(AvailabilityScheduler)
+			expect(scheduler.getAvailability()).toEqual(availability)
+		})
+
+		it('should work with number-based time in availability', () => {
+			const availability: WeeklyAvailability = {
+				schedules: [{ days: ['tuesday'], start: 540, end: 1020 }], // 9:00 (540 min) to 17:00 (1020 min)
+			}
+			const scheduler = createAvailabilityScheduler(availability, 'UTC')
+			const slots = scheduler.findAvailableSlots(
+				new Date('2024-01-02T08:00:00Z'), // Tuesday
+				new Date('2024-01-02T18:00:00Z'),
+				{ slotDuration: 60 }
+			)
+			expect(slots.length).toBe(8) // 8 hourly slots from 9-17
+			expect(slots[0]!.start.getUTCHours()).toBe(9)
+		})
+
+		it('should handle timezone correctly', () => {
+			const availability: WeeklyAvailability = {
+				schedules: [{ days: ['monday'], start: '09:00', end: '10:00' }],
+			}
+			const scheduler = createAvailabilityScheduler(availability, 'America/New_York')
+			const slots = scheduler.findAvailableSlots(
+				new Date('2024-01-15T00:00:00Z'), // Monday UTC
+				new Date('2024-01-15T23:59:00Z'),
+				{ slotDuration: 60 }
+			)
+			// 9 AM EST = 14:00 UTC
+			expect(slots[0]!.start.getUTCHours()).toBe(14)
 		})
 	})
 })

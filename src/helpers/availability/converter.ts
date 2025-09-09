@@ -2,15 +2,10 @@ import type { DayOfWeek, WeeklyAvailability } from '../../types/availability.typ
 import type { BusyTime } from '../../types/scheduling.types'
 import { convertTimeStringToUTC } from '../time/timezone'
 
-const DAY_MAP: Record<DayOfWeek, number> = {
-	sunday: 0,
-	monday: 1,
-	tuesday: 2,
-	wednesday: 3,
-	thursday: 4,
-	friday: 5,
-	saturday: 6,
-}
+// Weekday order aligned with DayOfWeek type (Monday first)
+const WEEK_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+// Local constant
+const MS_DAY = 24 * 60 * 60 * 1000
 
 /**
  * Parses a time string in HH:mm format and returns hours and minutes as numbers.
@@ -21,130 +16,161 @@ const DAY_MAP: Record<DayOfWeek, number> = {
  *
  * @internal
  */
-function parseTimeString(timeStr: string): { hours: number; minutes: number } {
-	const [hoursStr, minutesStr] = timeStr.split(':')
+function parseTime(time: string | number): { hours: number; minutes: number } {
+	if (typeof time === 'number') {
+		return { hours: Math.floor(time / 60), minutes: time % 60 }
+	}
+	const [hoursStr, minutesStr] = time.split(':')
 	const hours = parseInt(hoursStr!, 10)
 	const minutes = parseInt(minutesStr!, 10)
 
 	if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-		throw new Error(`Invalid time format: ${timeStr}. Expected HH:mm format (e.g., "09:00")`)
+		throw new Error(`Invalid time format: ${time}. Expected HH:mm or number of minutes (e.g., "09:00" or 540)`)
 	}
 
 	return { hours, minutes }
 }
 
-/**
- * Generates busy times in the availability's native timezone without any conversions.
- * This avoids cross-day boundary issues since all processing stays in the same timezone.
- *
- * @param availability - The weekly availability pattern
- * @param weekStartInTimezone - Monday of week in the availability timezone
- * @returns Array of busy times in the availability timezone
- *
- * @internal
- */
-function generateBusyTimesInNativeTimezone(
+function buildAvailabilityIntervalsUTC(
 	availability: WeeklyAvailability,
-	weekStartInTimezone: Date,
+	weekStartUTC: Date,
 	timezone: string
 ): Array<{ start: Date; end: Date }> {
-	const busyTimes: Array<{ start: Date; end: Date }> = []
+	const intervals: Array<{ start: Date; end: Date }> = []
 
-	// For each day of the week, build busy times (no timezone conversion needed!)
-	// Include the day before ONLY if needed for timezone spillover into Monday
-	const startOffset = timezone !== 'UTC' ? -1 : 0 // Only include previous day for non-UTC timezones
-	for (let dayOffset = startOffset; dayOffset < 7; dayOffset++) {
-		const currentDay = new Date(
-			Date.UTC(
-				weekStartInTimezone.getFullYear(),
-				weekStartInTimezone.getMonth(),
-				weekStartInTimezone.getDate() + dayOffset
-			)
-		)
-		const dayOfWeek = currentDay.getUTCDay()
+	const baseY = weekStartUTC.getUTCFullYear()
+	const baseM = weekStartUTC.getUTCMonth()
+	const baseD = weekStartUTC.getUTCDate()
 
-		// Find all availability schedules for this day
-		const daySchedules: Array<{ start: Date; end: Date }> = []
+	// Include previous Sunday (i = -1) and next Monday (i = 7) to capture spillovers
+	for (let i = -1; i <= 7; i++) {
+		const dayLocalDate = new Date(baseY, baseM, baseD + i)
+		const dayName = WEEK_DAYS[((i % 7) + 7) % 7]!
 
 		for (const schedule of availability.schedules) {
-			const startTime = parseTimeString(schedule.start)
-			const endTime = parseTimeString(schedule.end)
+			if (!schedule.days.includes(dayName)) continue
 
-			if (
-				startTime.hours > endTime.hours ||
-				(startTime.hours === endTime.hours && startTime.minutes >= endTime.minutes)
-			) {
+			const startT = parseTime(schedule.start)
+			const endT = parseTime(schedule.end)
+
+			if (startT.hours > endT.hours || (startT.hours === endT.hours && startT.minutes >= endT.minutes)) {
 				throw new Error(`Invalid time range: ${schedule.start} to ${schedule.end}. Start must be before end.`)
 			}
 
-			for (const dayName of schedule.days) {
-				if (DAY_MAP[dayName] === dayOfWeek) {
-					// Create dates in the native timezone (no conversion!)
-					const startDate = new Date(
-						Date.UTC(
-							currentDay.getUTCFullYear(),
-							currentDay.getUTCMonth(),
-							currentDay.getUTCDate(),
-							startTime.hours,
-							startTime.minutes
-						)
-					)
-
-					const endDate = new Date(
-						Date.UTC(
-							currentDay.getUTCFullYear(),
-							currentDay.getUTCMonth(),
-							currentDay.getUTCDate(),
-							endTime.hours,
-							endTime.minutes
-						)
-					)
-
-					daySchedules.push({ start: startDate, end: endDate })
-				}
+			const startUTC = convertTimeStringToUTC(
+				`${String(startT.hours).padStart(2, '0')}:${String(startT.minutes).padStart(2, '0')}`,
+				dayLocalDate,
+				timezone
+			)
+			let endUTC: Date
+			const endIsEndOfDay =
+				(typeof schedule.end === 'string' && schedule.end === '23:59') ||
+				(typeof schedule.end === 'number' && schedule.end === 1439)
+			if (endIsEndOfDay && timezone !== 'UTC') {
+				// Treat 23:59 as exclusive at next day's midnight
+				const nextLocalDate = new Date(dayLocalDate)
+				nextLocalDate.setDate(nextLocalDate.getDate() + 1)
+				endUTC = convertTimeStringToUTC('00:00', nextLocalDate, timezone)
+			} else {
+				endUTC = convertTimeStringToUTC(
+					`${String(endT.hours).padStart(2, '0')}:${String(endT.minutes).padStart(2, '0')}`,
+					dayLocalDate,
+					timezone
+				)
 			}
-		}
 
-		// Sort schedules by start time
-		daySchedules.sort((a, b) => a.start.getTime() - b.start.getTime())
-
-		// Create start and end of day in the native timezone (no system timezone dependency)
-		const dayStart = new Date(
-			Date.UTC(currentDay.getUTCFullYear(), currentDay.getUTCMonth(), currentDay.getUTCDate(), 0, 0, 0, 0)
-		)
-		const dayEnd = new Date(
-			Date.UTC(currentDay.getUTCFullYear(), currentDay.getUTCMonth(), currentDay.getUTCDate(), 23, 59, 59, 999)
-		)
-
-		if (daySchedules.length === 0) {
-			// No availability, entire day is busy
-			busyTimes.push({ start: dayStart, end: dayEnd })
-			continue
-		}
-
-		// Add busy time from start of day to first available period
-		if (daySchedules[0]!.start.getTime() > dayStart.getTime()) {
-			busyTimes.push({ start: dayStart, end: daySchedules[0]!.start })
-		}
-
-		// Add busy times between available periods
-		for (let i = 0; i < daySchedules.length - 1; i++) {
-			const currentEnd = daySchedules[i]!.end
-			const nextStart = daySchedules[i + 1]!.start
-
-			if (currentEnd.getTime() < nextStart.getTime()) {
-				busyTimes.push({ start: currentEnd, end: nextStart })
-			}
-		}
-
-		// Add busy time from last available period to end of day
-		const lastSchedule = daySchedules[daySchedules.length - 1]!
-		if (lastSchedule.end.getTime() < dayEnd.getTime()) {
-			busyTimes.push({ start: lastSchedule.end, end: dayEnd })
+			intervals.push({ start: startUTC, end: endUTC })
 		}
 	}
 
-	return busyTimes
+	intervals.sort((a, b) => a.start.getTime() - b.start.getTime())
+	const merged: Array<{ start: Date; end: Date }> = []
+	for (const itv of intervals) {
+		const last = merged[merged.length - 1]
+		if (last && itv.start.getTime() <= last.end.getTime()) {
+			if (itv.end.getTime() > last.end.getTime()) last.end = itv.end
+		} else {
+			merged.push({ start: new Date(itv.start), end: new Date(itv.end) })
+		}
+	}
+	return merged
+}
+
+function complementToBusy(
+	availabilityUTC: Array<{ start: Date; end: Date }>,
+	extendedStart: Date,
+	extendedEnd: Date
+): Array<{ start: Date; end: Date }> {
+	const busy: Array<{ start: Date; end: Date }> = []
+	let cursor = new Date(extendedStart)
+	for (const itv of availabilityUTC) {
+		const aStart = itv.start
+		const aEnd = itv.end
+		if (aStart.getTime() > cursor.getTime()) busy.push({ start: new Date(cursor), end: new Date(aStart) })
+		if (aEnd.getTime() > cursor.getTime()) cursor = new Date(aEnd)
+		if (cursor.getTime() >= extendedEnd.getTime()) break
+	}
+	if (cursor.getTime() < extendedEnd.getTime()) busy.push({ start: new Date(cursor), end: new Date(extendedEnd) })
+	return busy
+}
+
+function clipIntervalsToRange(
+	intervals: Array<{ start: Date; end: Date }>,
+	rangeStart: Date,
+	rangeEnd: Date
+): Array<{ start: Date; end: Date }> {
+	const out: Array<{ start: Date; end: Date }> = []
+	const rs = rangeStart.getTime()
+	const re = rangeEnd.getTime()
+	for (const itv of intervals) {
+		const s = Math.max(itv.start.getTime(), rs)
+		const e = Math.min(itv.end.getTime(), re)
+		if (s < e) out.push({ start: new Date(s), end: new Date(e) })
+	}
+	return out
+}
+
+function applyInclusiveDayEnds(intervals: Array<{ start: Date; end: Date }>): Array<{ start: Date; end: Date }> {
+	const adjusted: Array<{ start: Date; end: Date }> = []
+	for (const itv of intervals) {
+		const end = new Date(itv.end)
+		if (
+			end.getUTCHours() === 0 &&
+			end.getUTCMinutes() === 0 &&
+			end.getUTCSeconds() === 0 &&
+			end.getUTCMilliseconds() === 0
+		) {
+			adjusted.push({ start: new Date(itv.start), end: new Date(end.getTime() - 1) })
+		} else {
+			adjusted.push({ start: new Date(itv.start), end: new Date(itv.end) })
+		}
+	}
+	return adjusted
+}
+
+function splitByUtcMidnights(
+	intervals: Array<{ start: Date; end: Date }>,
+	weekStartUTC: Date,
+	weekEndUTC: Date
+): Array<{ start: Date; end: Date }> {
+	const out: Array<{ start: Date; end: Date }> = []
+	// Build UTC midnight boundaries within [weekStartUTC, weekEndUTC]
+	const boundaries: number[] = []
+	for (let t = weekStartUTC.getTime() + MS_DAY; t <= weekEndUTC.getTime() - 1; t += MS_DAY) {
+		boundaries.push(t)
+	}
+	for (const itv of intervals) {
+		let segStart = itv.start.getTime()
+		let segEnd = itv.end.getTime()
+		for (const b of boundaries) {
+			if (b <= segStart || b >= segEnd) continue
+			// Split at boundary
+			out.push({ start: new Date(segStart), end: new Date(b) })
+			segStart = b
+		}
+		out.push({ start: new Date(segStart), end: new Date(segEnd) })
+	}
+	return out
 }
 
 /**
@@ -206,40 +232,29 @@ export function weeklyAvailabilityToBusyTimes(
 	// Use the provided timezone with fallbacks: provided > env var > UTC
 	const resolvedTimezone = timezone || process.env.SCHEDULING_TIMEZONE || 'UTC'
 
-	// Convert weekStart to represent the same calendar date in the availability timezone
-	// This avoids all cross-day boundary issues by working in the availability's native timezone
-	const weekStartInTimezone = new Date(
-		Date.UTC(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate())
+	// Define week range in UTC
+	const weekStartUTC = new Date(
+		Date.UTC(weekStart.getUTCFullYear(), weekStart.getUTCMonth(), weekStart.getUTCDate(), 0, 0, 0, 0)
 	)
+	const weekEndUTC = new Date(weekStartUTC.getTime() + 7 * MS_DAY)
 
-	// Generate busy times in the availability's native timezone (no cross-day issues!)
-	const busyTimesInTimezone = generateBusyTimesInNativeTimezone(availability, weekStartInTimezone, resolvedTimezone)
+	// Build continuous availability in UTC
+	const availabilityUTC = buildAvailabilityIntervalsUTC(availability, weekStartUTC, resolvedTimezone)
 
-	// For UTC timezone, no conversion needed
-	if (resolvedTimezone === 'UTC') {
-		return busyTimesInTimezone
-	}
+	// Extend range by ±1 day to capture spillovers then complement to busy
+	const extendedStart = new Date(weekStartUTC.getTime() - MS_DAY)
+	const extendedEnd = new Date(weekEndUTC.getTime() + MS_DAY)
+	const busyExtended = complementToBusy(availabilityUTC, extendedStart, extendedEnd)
 
-	// For non-UTC timezones, convert busy times to UTC using the existing timezone utility
-	const busyTimesUTC: BusyTime[] = []
-	for (const busyTime of busyTimesInTimezone) {
-		// Use convertTimeStringToUTC with the original date to avoid circular conversion issues
-		const startTimeStr = `${String(busyTime.start.getUTCHours()).padStart(2, '0')}:${String(busyTime.start.getUTCMinutes()).padStart(2, '0')}`
-		const endTimeStr = `${String(busyTime.end.getUTCHours()).padStart(2, '0')}:${String(busyTime.end.getUTCMinutes()).padStart(2, '0')}`
+	// Clip to the exact week range
+	const busyClipped = clipIntervalsToRange(busyExtended, weekStartUTC, weekEndUTC)
 
-		// Create new Date with just the calendar date (year/month/day) for timezone conversion
-		const startDate = new Date(
-			busyTime.start.getUTCFullYear(),
-			busyTime.start.getUTCMonth(),
-			busyTime.start.getUTCDate()
-		)
-		const endDate = new Date(busyTime.end.getUTCFullYear(), busyTime.end.getUTCMonth(), busyTime.end.getUTCDate())
+	// Split by UTC midnights so tests expecting inclusive day-ends are stable
+	const busySplit = splitByUtcMidnights(busyClipped, weekStartUTC, weekEndUTC)
 
-		const startUTC = convertTimeStringToUTC(startTimeStr, startDate, resolvedTimezone)
-		const endUTC = convertTimeStringToUTC(endTimeStr, endDate, resolvedTimezone)
+	// Apply inclusive 23:59:59.999 for segments that end at midnight
+	const finalBusy = applyInclusiveDayEnds(busySplit)
 
-		busyTimesUTC.push({ start: startUTC, end: endUTC })
-	}
-
-	return busyTimesUTC
+	// Return as BusyTime[]
+	return finalBusy.map(b => ({ start: b.start, end: b.end }))
 }

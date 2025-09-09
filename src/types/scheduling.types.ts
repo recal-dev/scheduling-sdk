@@ -34,4 +34,11 @@ export interface SchedulingOptions {
 	 * @default 0
 	 */
 	offset?: number
+
+	/**
+	 * Maximum allowed overlapping busy times before considering a time slot unavailable
+	 * For example, maxOverlaps of 1 means a time is available if ≤1 busy times overlap it
+	 * @default undefined (traditional behavior: any overlap makes time unavailable)
+	 */
+	maxOverlaps?: number
 }

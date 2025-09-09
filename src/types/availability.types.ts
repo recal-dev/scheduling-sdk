@@ -35,10 +35,17 @@ export const weekendDays: DayOfWeek[] = ['saturday', 'sunday']
 export interface DaySchedule {
 	/** Array of days this schedule applies to. Must contain at least one valid day. */
 	days: DayOfWeek[]
-	/** Start time in 24-hour HH:mm format (e.g., "09:00", "14:30"). */
-	start: string
-	/** End time in 24-hour HH:mm format (e.g., "17:00", "23:30"). Must be after start time. */
-	end: string
+	/**
+	 * Start time in 24-hour HH:mm format (e.g., "09:00", "14:30")
+	 * or in minutes from the start of the day (e.g., 540 for 09:00).
+	 */
+	start: string | number
+	/**
+	 * End time in 24-hour HH:mm format (e.g., "17:00", "23:30")
+	 * or in minutes from the start of the day (e.g., 1020 for 17:00).
+	 * Must be after start time.
+	 */
+	end: string | number
 }
 
 /**
