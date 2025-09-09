@@ -99,7 +99,7 @@ function parseTimeToMinutes(time: string | number, allowEndOfDay: boolean): numb
 		return 1440
 	}
 	if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-		throw new Error(`Invalid time format: ${time}. Expected HH:mm`)
+		throw new Error(`Invalid time format: ${time}. Expected HH:mm (0<=HH<=23, 0<=MM<=59)`)
 	}
 	return hours * 60 + minutes
 }
