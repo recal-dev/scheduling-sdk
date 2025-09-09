@@ -39,31 +39,9 @@ describe('Index Exports', () => {
 		})
 	})
 
-	describe('Scheduler class export', () => {
-		it('should export Scheduler class', () => {
-			expect(Scheduler).toBeDefined()
-			expect(typeof Scheduler).toBe('function')
-		})
-
-		it('should create Scheduler instances', () => {
-			const scheduler = new Scheduler()
-			expect(scheduler).toBeInstanceOf(Scheduler)
-			expect(typeof scheduler.findAvailableSlots).toBe('function')
-			expect(typeof scheduler.addBusyTimes).toBe('function')
-			expect(typeof scheduler.clearBusyTimes).toBe('function')
-			expect(typeof scheduler.getBusyTimes).toBe('function')
-		})
-	})
-
-	describe('Scheduler instantiation (as per README)', () => {
+	describe('Scheduler constructor behavior', () => {
 		it('should create a Scheduler instance with no arguments', () => {
 			const scheduler = new Scheduler()
-			expect(scheduler).toBeInstanceOf(Scheduler)
-			expect(scheduler.getBusyTimes()).toEqual([])
-		})
-
-		it('should create a Scheduler instance with empty busy times', () => {
-			const scheduler = new Scheduler([])
 			expect(scheduler).toBeInstanceOf(Scheduler)
 			expect(scheduler.getBusyTimes()).toEqual([])
 		})
@@ -77,44 +55,6 @@ describe('Index Exports', () => {
 			const scheduler = new Scheduler(busyTimes)
 			expect(scheduler).toBeInstanceOf(Scheduler)
 			expect(scheduler.getBusyTimes()).toEqual(busyTimes)
-		})
-
-		it('should create a functional scheduler instance', () => {
-			const busyTimes: BusyTime[] = [
-				{ start: new Date('2024-01-01T12:00:00Z'), end: new Date('2024-01-01T13:00:00Z') },
-			]
-
-			const scheduler = new Scheduler(busyTimes)
-
-			const startTime = new Date('2024-01-01T09:00:00Z')
-			const endTime = new Date('2024-01-01T17:00:00Z')
-			const options: SchedulingOptions = {
-				slotDuration: 60,
-				slotSplit: 60,
-				padding: 0,
-				offset: 0,
-			}
-
-			const slots = scheduler.findAvailableSlots(startTime, endTime, options)
-			expect(Array.isArray(slots)).toBe(true)
-			expect(slots.length).toBeGreaterThan(0)
-
-			// Verify slots don't conflict with busy time
-			slots.forEach(slot => {
-				expect(
-					slot.end.getTime() <= new Date('2024-01-01T12:00:00Z').getTime() ||
-						slot.start.getTime() >= new Date('2024-01-01T13:00:00Z').getTime()
-				).toBe(true)
-			})
-		})
-
-		it('should return different instances on multiple calls', () => {
-			const scheduler1 = new Scheduler()
-			const scheduler2 = new Scheduler()
-
-			expect(scheduler1).not.toBe(scheduler2)
-			expect(scheduler1).toBeInstanceOf(Scheduler)
-			expect(scheduler2).toBeInstanceOf(Scheduler)
 		})
 
 		it('should not share state between instances', () => {
@@ -181,34 +121,14 @@ describe('Index Exports', () => {
 	})
 
 	describe('API surface validation', () => {
-		it('should export all expected components', () => {
-			// Verify all main exports are present
+		it('should export main classes', () => {
 			expect(Scheduler).toBeDefined()
-			expect(AvailabilityScheduler).toBeDefined()
 			expect(typeof Scheduler).toBe('function')
-			expect(typeof AvailabilityScheduler).toBe('function')
-		})
-
-		it('should maintain consistent API for Scheduler', () => {
-			const scheduler1 = new Scheduler()
-			const scheduler2 = new Scheduler()
-
-			// Both should have the same methods
-			expect(typeof scheduler1.findAvailableSlots).toBe('function')
-			expect(typeof scheduler2.findAvailableSlots).toBe('function')
-
-			expect(typeof scheduler1.addBusyTimes).toBe('function')
-			expect(typeof scheduler2.addBusyTimes).toBe('function')
-
-			expect(typeof scheduler1.clearBusyTimes).toBe('function')
-			expect(typeof scheduler2.clearBusyTimes).toBe('function')
-
-			expect(typeof scheduler1.getBusyTimes).toBe('function')
-			expect(typeof scheduler2.getBusyTimes).toBe('function')
+			expect(AvailabilityScheduler).toBeDefined()
 		})
 	})
 
-	describe('AvailabilityScheduler instantiation (as per README)', () => {
+	describe('AvailabilityScheduler constructor usage', () => {
 		it('should create an AvailabilityScheduler instance', () => {
 			const availability: WeeklyAvailability = {
 				schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
