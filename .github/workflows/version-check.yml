@@ -1,0 +1,51 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-version:
+    # Only run if PR title starts with 'v'
+    if: startsWith(github.event.pull_request.title, 'v')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      
+      - name: Get current package version
+        id: current
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+      
+      - name: Get latest npm version
+        id: npm
+        run: |
+          NPM_VERSION=$(npm view scheduling-sdk version 2>/dev/null || echo "0.0.0")
+          echo "version=$NPM_VERSION" >> $GITHUB_OUTPUT
+          echo "Latest npm version: $NPM_VERSION"
+      
+      - name: Compare versions
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          NPM="${{ steps.npm.outputs.version }}"
+          
+          # Function to compare semver versions
+          verlte() {
+              [ "$1" = "$2" ] && return 0 || [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
+          }
+          
+          if verlte "$CURRENT" "$NPM"; then
+            echo "❌ Package version ($CURRENT) must be higher than npm version ($NPM)"
+            exit 1
+          else
+            echo "✅ Package version ($CURRENT) is higher than npm version ($NPM)"
+          fi
