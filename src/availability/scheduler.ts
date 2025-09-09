@@ -285,19 +285,19 @@ export class AvailabilityScheduler {
 		const manualBusyTimes = this.scheduler.getBusyTimes()
 
 		// Optimization: Use K-overlaps algorithm directly if maxOverlaps is specified
-		if (options.maxOverlaps !== undefined) {
+		if (normalizedOptions.maxOverlaps !== undefined) {
 			return this.findSlotsWithOverlapsOptimized(
 				startTime,
 				endTime,
 				[...manualBusyTimes, ...availabilityBusyTimes],
-				options
+				normalizedOptions
 			)
 		}
 
 		// Traditional approach: create temporary scheduler
 		const allBusyTimes = [...manualBusyTimes, ...availabilityBusyTimes]
 		const tempScheduler = new Scheduler(allBusyTimes)
-		return tempScheduler.findAvailableSlots(startTime, endTime, options)
+		return tempScheduler.findAvailableSlots(startTime, endTime, normalizedOptions)
 	}
 
 	/**
@@ -418,7 +418,16 @@ export class AvailabilityScheduler {
 		allBusyTimes: BusyTime[],
 		options: SchedulingOptions
 	): TimeSlot[] {
-		const { slotDuration, padding = 0, slotSplit = slotDuration, offset = 0, maxOverlaps } = options
+		const {
+			slotDuration,
+			padding = 0,
+			slotSplit = slotDuration,
+			offset = 0,
+			maxOverlaps,
+			timezone,
+			earliestTime,
+			latestTime,
+		} = options
 
 		// Apply padding and merge busy times (same as core scheduler)
 		const paddedBusyTimes = applyPadding(allBusyTimes, padding)
@@ -434,6 +443,9 @@ export class AvailabilityScheduler {
 				slotDurationMinutes: slotDuration,
 				slotSplitMinutes: slotSplit,
 				offsetMinutes: offset,
+				timezone,
+				earliestTime,
+				latestTime,
 			})
 			result.push(...slots)
 		}
