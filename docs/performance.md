@@ -113,12 +113,12 @@ scheduler.addBusyTimes([meeting1, meeting2, meeting3])
 ```typescript
 // ❌ Inefficient: Creating new schedulers
 function findSlots(busyTimes, start, end, options) {
-    const scheduler = createScheduler(busyTimes)
+    const scheduler = new Scheduler(busyTimes)
     return scheduler.findAvailableSlots(start, end, options)
 }
 
 // ✅ Efficient: Reuse existing scheduler
-const scheduler = createScheduler()
+const scheduler = new Scheduler()
 
 function findSlots(busyTimes, start, end, options) {
     scheduler.clearBusyTimes()
@@ -186,7 +186,7 @@ function addBusinessHoursConstraints(scheduler) {
 
 ```typescript
 class PerformantScheduler {
-    private scheduler = createScheduler()
+    private scheduler = new Scheduler()
     private maxBusyTimes = 1000
 
     addBusyTimes(busyTimes: BusyTime[]) {
@@ -251,7 +251,7 @@ monitorMemory('After scheduling')
 import { performance } from 'perf_hooks'
 
 function benchmarkScheduling() {
-    const scheduler = createScheduler()
+    const scheduler = new Scheduler()
 
     // Generate test data
     const busyTimes = generateRandomBusyTimes(1000)
@@ -299,7 +299,7 @@ class PartitionedScheduler {
         const key = this.getPartitionKey(busyTime.start)
 
         if (!this.schedulers.has(key)) {
-            this.schedulers.set(key, createScheduler())
+            this.schedulers.set(key, new Scheduler())
         }
 
         this.schedulers.get(key)!.addBusyTimes([busyTime])
@@ -328,7 +328,7 @@ class PartitionedScheduler {
 
 ```typescript
 class CachedScheduler {
-    private scheduler = createScheduler()
+    private scheduler = new Scheduler()
     private cache = new Map<string, TimeSlot[]>()
 
     findAvailableSlots(start: Date, end: Date, options: SchedulingOptions) {
@@ -372,12 +372,12 @@ class CachedScheduler {
 ```typescript
 // ❌ Recreating scheduler repeatedly
 meetings.forEach(meeting => {
-    const scheduler = createScheduler([meeting])
+    const scheduler = new Scheduler([meeting])
     // ... use scheduler
 })
 
 // ✅ Single scheduler instance
-const scheduler = createScheduler(meetings)
+const scheduler = new Scheduler(meetings)
 ```
 
 ### 3. Large Time Ranges

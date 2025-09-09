@@ -1,5 +1,7 @@
 # Getting Started
 
+Next: [Core Concepts](core-concepts.md)
+
 ## Installation
 
 ```bash
@@ -26,10 +28,10 @@ The Scheduling SDK provides a simple interface for finding available time slots 
 ### Basic Example
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
 // Create a scheduler with busy times (periods when NOT available)
-const scheduler = createScheduler([
+const scheduler = new Scheduler([
     {
         start: new Date('2024-01-15T09:00:00Z'),  // 9:00 AM meeting
         end: new Date('2024-01-15T10:00:00Z'),    // ends at 10:00 AM
@@ -61,7 +63,7 @@ console.log(availableSlots)
 
 ### Step-by-Step Breakdown
 
-1. **Import the SDK**: Import the `createScheduler` function
+1. **Import the SDK**: Import the `Scheduler` class
 2. **Create Scheduler**: Initialize with existing busy times (optional)
 3. **Define Options**: Configure slot duration, padding, splitting, and offset
 4. **Find Slots**: Call `findAvailableSlots` with time range and options
@@ -97,21 +99,36 @@ Configure how slots are generated:
 
 ```typescript
 interface SchedulingOptions {
+    // Required
     slotDuration: number // Duration of each slot in minutes
+
+    // Optional
     slotSplit?: number // Interval between slot starts (default: same as duration)
-    padding?: number // Buffer time around busy periods in minutes
-    offset?: number // Offset from hour boundaries in minutes
+    padding?: number   // Buffer time around busy periods in minutes
+    offset?: number    // Offset from hour boundaries in minutes
+    maxOverlaps?: number // Allow up to K overlapping busy intervals (K-overlaps)
+
+    // Daily window filtering (timezone-aware)
+    timezone?: string
+    earliestTime?: string | number // 'HH:mm' or minutes since midnight
+    latestTime?: string | number   // 'HH:mm' or minutes since midnight; supports '24:00' or 1440
 }
 ```
+
+Quick links:
+
+- [API Reference › SchedulingOptions](api-reference.md#schedulingoptions)
+- [Core Concepts › Daily Windows](core-concepts.md#daily-windows)
+- [Core Concepts › K-overlaps](core-concepts.md#k-overlaps)
 
 ## Common Use Cases
 
 ### 1. Simple Appointment Booking
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
-const scheduler = createScheduler()
+const scheduler = new Scheduler()
 
 // Add existing appointments
 scheduler.addBusyTimes([
@@ -145,6 +162,17 @@ const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new
 })
 ```
 
+### 3b. Allowing Overlaps (K-overlaps)
+
+```typescript
+// Allow up to 1 overlapping busy time (K = 1)
+const kOverlapSlots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
+    slotDuration: 30,
+    slotSplit: 15,
+    maxOverlaps: 1,
+})
+```
+
 ### 4. Aligned Scheduling
 
 ```typescript
@@ -160,8 +188,8 @@ const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new
 
 ```typescript
 // Separate schedulers for different resources
-const roomScheduler = createScheduler()
-const equipmentScheduler = createScheduler()
+const roomScheduler = new Scheduler()
+const equipmentScheduler = new Scheduler()
 
 // Add resource-specific busy times
 roomScheduler.addBusyTimes([...roomBookings])
@@ -191,7 +219,8 @@ try {
 
 ## Next Steps
 
-- [API Reference](api-reference.md) - Complete method documentation
-- [Core Concepts](core-concepts.md) - Detailed explanation of scheduling concepts
-- [Examples](examples.md) - Real-world usage scenarios
-- [Performance Guide](performance.md) - Optimization tips
+- [API Reference](api-reference.md) — Complete method documentation
+- [Core Concepts](core-concepts.md) — Daily Windows and K-overlaps
+- [Availability Scheduler](availability-scheduler.md) — Weekly schedules and scheduler-level timezone
+- [Recipes](recipes.md) — Real-world usage scenarios
+- [Performance Guide](performance.md) — Optimization tips

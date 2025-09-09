@@ -1,10 +1,12 @@
-# Usage Examples
+# Recipes
 
-This document provides practical examples for common scheduling scenarios using the Scheduling SDK.
+Back: [API Reference](api-reference.md) • Next: [Performance](performance.md)
+
+This document provides practical recipes for common scheduling scenarios using the Scheduling SDK.
 
 ## Table of Contents
 
-- [Basic Examples](#basic-examples)
+- [Basic Recipes](#basic-recipes)
 - [Calendar Scheduling](#calendar-scheduling)
 - [Weekly Availability Scheduling](#weekly-availability-scheduling)
 - [Resource Management](#resource-management)
@@ -12,15 +14,15 @@ This document provides practical examples for common scheduling scenarios using 
 - [Advanced Scenarios](#advanced-scenarios)
 - [Integration Patterns](#integration-patterns)
 
-## Basic Examples
+## Basic Recipes
 
 ### Simple Appointment Booking
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
 // Create scheduler with busy times (when you're NOT available)
-const appointmentScheduler = createScheduler([
+const appointmentScheduler = new Scheduler([
     { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') }, // Morning meeting
     { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') }, // Afternoon call
 ])
@@ -40,7 +42,7 @@ console.log(`Found ${availableSlots.length} available appointment slots`)
 
 ```typescript
 // Medical appointments need cleanup/prep time between patients
-const doctorScheduler = createScheduler([
+const doctorScheduler = new Scheduler([
     { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T10:30:00Z') },
     { start: new Date('2024-01-15T14:00:00Z'), end: new Date('2024-01-15T15:00:00Z') },
 ])
@@ -57,7 +59,7 @@ const slots = doctorScheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'
 
 ```typescript
 // Generate overlapping consultation slots for flexibility
-const consultationScheduler = createScheduler()
+const consultationScheduler = new Scheduler()
 
 const flexibleSlots = consultationScheduler.findAvailableSlots(
     new Date('2024-01-15T09:00:00Z'),
@@ -76,10 +78,10 @@ const flexibleSlots = consultationScheduler.findAvailableSlots(
 ### Business Hours Scheduling
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
 function createBusinessHoursScheduler() {
-    const scheduler = createScheduler()
+    const scheduler = new Scheduler()
 
     // Add non-business hours as busy times
     const today = new Date('2024-01-15T00:00:00Z')
@@ -114,7 +116,7 @@ const meetingSlots = businessScheduler.findAvailableSlots(
 
 ```typescript
 function findSlotsAcrossWeek(existingMeetings, slotDuration = 60) {
-    const scheduler = createScheduler(existingMeetings)
+    const scheduler = new Scheduler(existingMeetings)
     const allSlots = []
 
     // Schedule across work week
@@ -154,7 +156,7 @@ class MeetingRoomScheduler {
 
     constructor(roomNames: string[]) {
         roomNames.forEach(name => {
-            this.rooms.set(name, createScheduler())
+            this.rooms.set(name, new Scheduler())
         })
     }
 
@@ -227,7 +229,7 @@ class EquipmentScheduler {
     constructor(equipment: { id: string; name: string; setupTime: number }[]) {
         equipment.forEach(item => {
             this.equipmentSchedulers.set(item.id, {
-                scheduler: createScheduler(),
+                scheduler: new Scheduler(),
                 setupTime: item.setupTime,
                 name: item.name,
             })
@@ -320,10 +322,9 @@ const medicalSchedule = {
         { days: ['saturday'], start: '09:00', end: '13:00' },
         // Sunday is automatically unavailable (no schedule)
     ],
-    timezone: 'America/New_York',
 }
 
-const doctorScheduler = new AvailabilityScheduler(medicalSchedule)
+const doctorScheduler = new AvailabilityScheduler(medicalSchedule, 'America/New_York')
 
 // Find 30-minute appointment slots with 10-minute buffer
 const appointments = doctorScheduler.findAvailableSlots(
@@ -480,52 +481,6 @@ const earliestSlot = multiLocationService.findEarliestAvailableSlot(
 console.log(`Earliest available: ${earliestSlot.location} at ${earliestSlot.slot?.start}`)
 ```
 
-### Dynamic Availability Updates
-
-```typescript
-class DynamicAvailabilityScheduler {
-    private scheduler: AvailabilityScheduler
-
-    constructor(initialAvailability: WeeklyAvailability) {
-        this.scheduler = new AvailabilityScheduler(initialAvailability)
-    }
-
-    updateHours(newAvailability: WeeklyAvailability) {
-        // Clear existing busy times and update availability
-        this.scheduler.clearBusyTimes()
-        this.scheduler.setAvailability(newAvailability)
-    }
-
-    addTemporaryBlock(startTime: Date, endTime: Date, reason: string) {
-        this.scheduler.addBusyTime({ start: startTime, end: endTime })
-        console.log(`Added temporary block: ${reason}`)
-    }
-
-    findAvailabilityForWeek(weekStart: Date) {
-        const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)
-
-        return this.scheduler.findAvailableSlots(weekStart, weekEnd, {
-            slotDuration: 60,
-            slotSplit: 60,
-            padding: 10,
-        })
-    }
-}
-
-// Usage
-const dynamicScheduler = new DynamicAvailabilityScheduler({
-    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }],
-})
-
-// Update for holiday hours
-dynamicScheduler.updateHours({
-    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '10:00', end: '15:00' }],
-})
-
-// Add temporary blocks
-dynamicScheduler.addTemporaryBlock(new Date('2024-01-15T12:00:00Z'), new Date('2024-01-15T13:00:00Z'), 'Team meeting')
-```
-
 ## Meeting Scheduling
 
 ### Team Meeting Finder
@@ -535,7 +490,7 @@ class TeamMeetingScheduler {
     private teamMembers = new Map()
 
     addTeamMember(name: string, busyTimes: BusyTime[] = []) {
-        this.teamMembers.set(name, createScheduler(busyTimes))
+        this.teamMembers.set(name, new Scheduler(busyTimes))
     }
 
     addMemberBusyTime(name: string, busyTime: BusyTime) {
@@ -610,8 +565,8 @@ console.log(`Found ${teamSlots.length} slots where all team members are availabl
 
 ```typescript
 class PriorityScheduler {
-    private highPriorityScheduler = createScheduler()
-    private normalScheduler = createScheduler()
+    private highPriorityScheduler = new Scheduler()
+    private normalScheduler = new Scheduler()
 
     addHighPriorityBusyTime(busyTime: BusyTime) {
         this.highPriorityScheduler.addBusyTimes([busyTime])
@@ -647,7 +602,7 @@ class PriorityScheduler {
 
 ```typescript
 class RecurringScheduler {
-    private scheduler = createScheduler()
+    private scheduler = new Scheduler()
 
     addRecurringBusyTime(startTime: Date, endTime: Date, pattern: 'daily' | 'weekly' | 'monthly', occurrences: number) {
         const busyTimes = []
@@ -709,7 +664,7 @@ const slots = recurringScheduler.findAvailableSlots(
 ```typescript
 // Example integration with a calendar API
 class CalendarIntegration {
-    private scheduler = createScheduler()
+    private scheduler = new Scheduler()
 
     async syncWithCalendar(calendarApi: any, startDate: Date, endDate: Date) {
         // Fetch events from calendar API
@@ -744,7 +699,7 @@ class CalendarIntegration {
 ```typescript
 // Example with database persistence
 class PersistentScheduler {
-    private scheduler = createScheduler()
+    private scheduler = new Scheduler()
     private db: any // Your database connection
 
     async loadBusyTimes(resourceId: string) {
@@ -785,4 +740,4 @@ class PersistentScheduler {
 }
 ```
 
-These examples demonstrate the flexibility and power of the Scheduling SDK for various real-world scenarios. For more information, see the [API Reference](api-reference.md) and [Core Concepts](core-concepts.md) documentation.
+These recipes demonstrate the flexibility and power of the Scheduling SDK for various real-world scenarios. For more information, see the [API Reference](api-reference.md) and [Core Concepts](core-concepts.md) documentation.

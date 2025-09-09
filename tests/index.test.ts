@@ -2,8 +2,6 @@ import { describe, expect, it } from 'bun:test'
 import {
 	AvailabilityScheduler,
 	type BusyTime,
-	createAvailabilityScheduler,
-	createScheduler,
 	Scheduler,
 	type SchedulingOptions,
 	type TimeSlot,
@@ -41,31 +39,9 @@ describe('Index Exports', () => {
 		})
 	})
 
-	describe('Scheduler class export', () => {
-		it('should export Scheduler class', () => {
-			expect(Scheduler).toBeDefined()
-			expect(typeof Scheduler).toBe('function')
-		})
-
-		it('should create Scheduler instances', () => {
-			const scheduler = new Scheduler()
-			expect(scheduler).toBeInstanceOf(Scheduler)
-			expect(typeof scheduler.findAvailableSlots).toBe('function')
-			expect(typeof scheduler.addBusyTimes).toBe('function')
-			expect(typeof scheduler.clearBusyTimes).toBe('function')
-			expect(typeof scheduler.getBusyTimes).toBe('function')
-		})
-	})
-
-	describe('createScheduler convenience function', () => {
+	describe('Scheduler constructor behavior', () => {
 		it('should create a Scheduler instance with no arguments', () => {
-			const scheduler = createScheduler()
-			expect(scheduler).toBeInstanceOf(Scheduler)
-			expect(scheduler.getBusyTimes()).toEqual([])
-		})
-
-		it('should create a Scheduler instance with empty busy times', () => {
-			const scheduler = createScheduler([])
+			const scheduler = new Scheduler()
 			expect(scheduler).toBeInstanceOf(Scheduler)
 			expect(scheduler.getBusyTimes()).toEqual([])
 		})
@@ -76,52 +52,14 @@ describe('Index Exports', () => {
 				{ start: new Date('2024-01-01T14:00:00Z'), end: new Date('2024-01-01T15:00:00Z') },
 			]
 
-			const scheduler = createScheduler(busyTimes)
+			const scheduler = new Scheduler(busyTimes)
 			expect(scheduler).toBeInstanceOf(Scheduler)
 			expect(scheduler.getBusyTimes()).toEqual(busyTimes)
 		})
 
-		it('should create a functional scheduler instance', () => {
-			const busyTimes: BusyTime[] = [
-				{ start: new Date('2024-01-01T12:00:00Z'), end: new Date('2024-01-01T13:00:00Z') },
-			]
-
-			const scheduler = createScheduler(busyTimes)
-
-			const startTime = new Date('2024-01-01T09:00:00Z')
-			const endTime = new Date('2024-01-01T17:00:00Z')
-			const options: SchedulingOptions = {
-				slotDuration: 60,
-				slotSplit: 60,
-				padding: 0,
-				offset: 0,
-			}
-
-			const slots = scheduler.findAvailableSlots(startTime, endTime, options)
-			expect(Array.isArray(slots)).toBe(true)
-			expect(slots.length).toBeGreaterThan(0)
-
-			// Verify slots don't conflict with busy time
-			slots.forEach(slot => {
-				expect(
-					slot.end.getTime() <= new Date('2024-01-01T12:00:00Z').getTime() ||
-						slot.start.getTime() >= new Date('2024-01-01T13:00:00Z').getTime()
-				).toBe(true)
-			})
-		})
-
-		it('should return different instances on multiple calls', () => {
-			const scheduler1 = createScheduler()
-			const scheduler2 = createScheduler()
-
-			expect(scheduler1).not.toBe(scheduler2)
-			expect(scheduler1).toBeInstanceOf(Scheduler)
-			expect(scheduler2).toBeInstanceOf(Scheduler)
-		})
-
 		it('should not share state between instances', () => {
-			const scheduler1 = createScheduler()
-			const scheduler2 = createScheduler()
+			const scheduler1 = new Scheduler()
+			const scheduler2 = new Scheduler()
 
 			const busyTime: BusyTime = {
 				start: new Date('2024-01-01T10:00:00Z'),
@@ -137,13 +75,13 @@ describe('Index Exports', () => {
 
 	describe('integration with exported functionality', () => {
 		it('should work with all exported components together', () => {
-			// Create scheduler using convenience function
+			// Create scheduler using direct instantiation (as per README)
 			const busyTimes: BusyTime[] = [
 				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
 				{ start: new Date('2024-01-01T14:00:00Z'), end: new Date('2024-01-01T15:00:00Z') },
 			]
 
-			const scheduler = createScheduler(busyTimes)
+			const scheduler = new Scheduler(busyTimes)
 
 			// Define scheduling parameters using exported types
 			const startTime = new Date('2024-01-01T09:00:00Z')
@@ -183,38 +121,19 @@ describe('Index Exports', () => {
 	})
 
 	describe('API surface validation', () => {
-		it('should export all expected components', () => {
-			// Verify all main exports are present
+		it('should export main classes', () => {
 			expect(Scheduler).toBeDefined()
-			expect(createScheduler).toBeDefined()
-			expect(typeof createScheduler).toBe('function')
-		})
-
-		it('should maintain consistent API across export methods', () => {
-			const directScheduler = new Scheduler()
-			const convenienceScheduler = createScheduler()
-
-			// Both should have the same methods
-			expect(typeof directScheduler.findAvailableSlots).toBe('function')
-			expect(typeof convenienceScheduler.findAvailableSlots).toBe('function')
-
-			expect(typeof directScheduler.addBusyTimes).toBe('function')
-			expect(typeof convenienceScheduler.addBusyTimes).toBe('function')
-
-			expect(typeof directScheduler.clearBusyTimes).toBe('function')
-			expect(typeof convenienceScheduler.clearBusyTimes).toBe('function')
-
-			expect(typeof directScheduler.getBusyTimes).toBe('function')
-			expect(typeof convenienceScheduler.getBusyTimes).toBe('function')
+			expect(typeof Scheduler).toBe('function')
+			expect(AvailabilityScheduler).toBeDefined()
 		})
 	})
 
-	describe('createAvailabilityScheduler convenience function', () => {
+	describe('AvailabilityScheduler constructor usage', () => {
 		it('should create an AvailabilityScheduler instance', () => {
 			const availability: WeeklyAvailability = {
 				schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
 			}
-			const scheduler = createAvailabilityScheduler(availability, 'America/New_York')
+			const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
 			expect(scheduler).toBeInstanceOf(AvailabilityScheduler)
 			expect(scheduler.getAvailability()).toEqual(availability)
 		})
@@ -223,7 +142,7 @@ describe('Index Exports', () => {
 			const availability: WeeklyAvailability = {
 				schedules: [{ days: ['tuesday'], start: 540, end: 1020 }], // 9:00 (540 min) to 17:00 (1020 min)
 			}
-			const scheduler = createAvailabilityScheduler(availability, 'UTC')
+			const scheduler = new AvailabilityScheduler(availability, 'UTC')
 			const slots = scheduler.findAvailableSlots(
 				new Date('2024-01-02T08:00:00Z'), // Tuesday
 				new Date('2024-01-02T18:00:00Z'),
@@ -237,7 +156,7 @@ describe('Index Exports', () => {
 			const availability: WeeklyAvailability = {
 				schedules: [{ days: ['monday'], start: '09:00', end: '10:00' }],
 			}
-			const scheduler = createAvailabilityScheduler(availability, 'America/New_York')
+			const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
 			const slots = scheduler.findAvailableSlots(
 				new Date('2024-01-15T00:00:00Z'), // Monday UTC
 				new Date('2024-01-15T23:59:00Z'),

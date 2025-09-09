@@ -37,17 +37,3 @@ export {
 } from './validators/options.validator'
 // Export validators
 export { validateTimeRange } from './validators/time-range.validator'
-
-import { AvailabilityScheduler } from './availability/scheduler'
-// Export convenience function
-import { Scheduler } from './core/scheduler'
-import type { WeeklyAvailability } from './types/availability.types'
-import type { BusyTime } from './types/scheduling.types'
-
-export function createScheduler(busyTimes: BusyTime[] = []): Scheduler {
-	return new Scheduler(busyTimes)
-}
-
-export function createAvailabilityScheduler(availability: WeeklyAvailability, timezone: string): AvailabilityScheduler {
-	return new AvailabilityScheduler(availability, timezone)
-}
