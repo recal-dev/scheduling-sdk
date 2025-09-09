@@ -15,6 +15,7 @@ A fast TypeScript Scheduling SDK for finding available time slots with **excepti
 - **📖 Extensive Documentation**: In-depth guides, examples, and API references (With help by Claude)
 - **⚡ Blazing Fast Performance**: Optimized algorithms for handling large datasets
 - **🔧 Flexible Configuration**: Customizable slot duration, padding, splitting, and offset
+- **⏰ Timezone-Aware Daily Windows**: Filter slots to local hours using `timezone`, `earliestTime`, and `latestTime`
 - **📅 Weekly Availability Patterns**: Define recurring weekly schedules with automatic break management
 - **🏗️ Modular Architecture**: Clean separation of concerns for maintainability and testing
 - **🧪 98%+ Test Coverage**: Comprehensive testing with edge case handling (Supported by the [CODE's](https://code.berlin) Automated Testing LU)
@@ -167,6 +168,102 @@ const slots = scheduler.findAvailableSlots(
 //   { start: "2024-01-15T16:00:00Z", end: "2024-01-15T17:00:00Z" },
 //   ...
 // ]
+```
+
+### Daily Time Windows and Timezone Filtering
+
+Restrict generated slots to specific local hours by providing a timezone and a daily window.
+
+Core `Scheduler` usage:
+
+```typescript
+import { createScheduler } from 'scheduling-sdk'
+
+const scheduler = createScheduler()
+
+// Search the whole day in UTC, but only return slots that START between 9:00 and 17:00 New York time
+const slots = scheduler.findAvailableSlots(
+  new Date('2024-01-15T00:00:00Z'),
+  new Date('2024-01-15T23:59:59Z'),
+  {
+    slotDuration: 60,
+    timezone: 'America/New_York',
+    earliestTime: '09:00',
+    latestTime: '17:00',
+  }
+)
+// In January, America/New_York is UTC-5, so this filters to 14:00–22:00 UTC
+```
+
+Availability `AvailabilityScheduler` usage (timezone can be omitted in options; it falls back to the scheduler’s timezone):
+
+```typescript
+import { AvailabilityScheduler } from 'scheduling-sdk'
+
+const availability = {
+  schedules: [{ days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '17:00' }],
+}
+
+const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
+
+const slots = scheduler.findAvailableSlots(
+  new Date('2024-01-15T00:00:00Z'),
+  new Date('2024-01-15T23:59:59Z'),
+  {
+    slotDuration: 30,
+    // No timezone here → uses scheduler's timezone automatically
+    earliestTime: 9 * 60,  // numbers = minutes since midnight
+    latestTime: '24:00',   // string format supports '24:00' for end of day
+  }
+)
+```
+
+Daily window parameters:
+
+- `timezone` (string, IANA ID, e.g. `"America/New_York"`) — required when using `earliestTime`/`latestTime` with the core `Scheduler`.
+- `earliestTime` (string `HH:mm` or number minutes) — lowest local start time to allow.
+- `latestTime` (string `HH:mm` or number minutes) — highest local start time to allow; supports `"24:00"` or `1440`.
+
+Notes:
+
+- If you use `AvailabilityScheduler`, you may omit `timezone` in `findAvailableSlots` when using `earliestTime`/`latestTime`; it will default to the scheduler’s timezone.
+- If you use the core `Scheduler`, providing `earliestTime`/`latestTime` without `timezone` will throw a validation error.
+- Daily windows filter by slot START time.
+
+### Allowing Overlaps (K-overlaps)
+
+You can allow up to K overlapping busy intervals by setting `maxOverlaps` in options. This uses an optimized algorithm internally.
+
+```typescript
+const slots = scheduler.findAvailableSlots(
+  new Date('2024-01-15T09:00:00Z'),
+  new Date('2024-01-15T17:00:00Z'),
+  {
+    slotDuration: 30,
+    slotSplit: 15,
+    maxOverlaps: 1, // allow 1 collision
+  }
+)
+```
+
+### SchedulingOptions reference
+
+```ts
+interface SchedulingOptions {
+  // Required
+  slotDuration: number
+
+  // Optional
+  padding?: number
+  slotSplit?: number
+  offset?: number
+  maxOverlaps?: number
+
+  // Daily window filtering (timezone-aware)
+  timezone?: string
+  earliestTime?: string | number // 'HH:mm' or minutes since midnight
+  latestTime?: string | number   // 'HH:mm' or minutes since midnight; supports '24:00' or 1440
+}
 ```
 
 ## Documentation 📚

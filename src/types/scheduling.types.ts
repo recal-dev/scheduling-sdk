@@ -41,4 +41,22 @@ export interface SchedulingOptions {
 	 * @default undefined (traditional behavior: any overlap makes time unavailable)
 	 */
 	maxOverlaps?: number
+
+	/**
+	 * Optional timezone identifier (IANA string, e.g., "America/New_York") used for daily time window filtering
+	 * If provided together with earliestTime/latestTime, generated slots will be filtered to that daily range.
+	 */
+	timezone?: string
+
+	/**
+	 * Optional earliest local time within a day when slots may start (HH:mm or minutes since midnight)
+	 * Requires timezone to be set when used.
+	 */
+	earliestTime?: string | number
+
+	/**
+	 * Optional latest local time within a day when slots may start (HH:mm or minutes since midnight).
+	 * Requires timezone to be set when used. May be set to 24:00 (or 1440) to indicate end of day.
+	 */
+	latestTime?: string | number
 }

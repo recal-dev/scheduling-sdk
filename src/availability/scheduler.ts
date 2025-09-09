@@ -7,6 +7,7 @@ import { generateSlots } from '../helpers/slot/generator'
 import type { WeeklyAvailability } from '../types/availability.types'
 import type { BusyTime, SchedulingOptions, TimeSlot } from '../types/scheduling.types'
 import { validateWeeklyAvailability } from '../validators/availability.validator'
+import { validateOptions } from '../validators/options.validator'
 
 /**
  * Enhanced scheduler that combines weekly availability patterns with traditional busy time management.
@@ -266,8 +267,17 @@ export class AvailabilityScheduler {
 	 * ```
 	 */
 	findAvailableSlots(startTime: Date, endTime: Date, options: SchedulingOptions): TimeSlot[] {
+		// Normalize options to ensure timezone is present when earliest/latest are provided
+		const needsTimezone = options.earliestTime !== undefined || options.latestTime !== undefined
+		const normalizedOptions: SchedulingOptions = needsTimezone
+			? { ...options, timezone: options.timezone ?? this.timezone }
+			: options
+
+		// Validate options early
+		validateOptions(normalizedOptions)
+
 		if (!this.availability) {
-			return this.scheduler.findAvailableSlots(startTime, endTime, options)
+			return this.scheduler.findAvailableSlots(startTime, endTime, normalizedOptions)
 		}
 
 		// Generate availability-based busy times for the requested range
@@ -275,19 +285,19 @@ export class AvailabilityScheduler {
 		const manualBusyTimes = this.scheduler.getBusyTimes()
 
 		// Optimization: Use K-overlaps algorithm directly if maxOverlaps is specified
-		if (options.maxOverlaps !== undefined) {
+		if (normalizedOptions.maxOverlaps !== undefined) {
 			return this.findSlotsWithOverlapsOptimized(
 				startTime,
 				endTime,
 				[...manualBusyTimes, ...availabilityBusyTimes],
-				options
+				normalizedOptions
 			)
 		}
 
 		// Traditional approach: create temporary scheduler
 		const allBusyTimes = [...manualBusyTimes, ...availabilityBusyTimes]
 		const tempScheduler = new Scheduler(allBusyTimes)
-		return tempScheduler.findAvailableSlots(startTime, endTime, options)
+		return tempScheduler.findAvailableSlots(startTime, endTime, normalizedOptions)
 	}
 
 	/**
@@ -408,7 +418,16 @@ export class AvailabilityScheduler {
 		allBusyTimes: BusyTime[],
 		options: SchedulingOptions
 	): TimeSlot[] {
-		const { slotDuration, padding = 0, slotSplit = slotDuration, offset = 0, maxOverlaps } = options
+		const {
+			slotDuration,
+			padding = 0,
+			slotSplit = slotDuration,
+			offset = 0,
+			maxOverlaps,
+			timezone,
+			earliestTime,
+			latestTime,
+		} = options
 
 		// Apply padding and merge busy times (same as core scheduler)
 		const paddedBusyTimes = applyPadding(allBusyTimes, padding)
@@ -424,6 +443,9 @@ export class AvailabilityScheduler {
 				slotDurationMinutes: slotDuration,
 				slotSplitMinutes: slotSplit,
 				offsetMinutes: offset,
+				timezone,
+				earliestTime,
+				latestTime,
 			})
 			result.push(...slots)
 		}

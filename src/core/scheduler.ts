@@ -103,7 +103,16 @@ export class Scheduler {
 		validateTimeRange(startTime, endTime)
 		validateOptions(options)
 
-		const { slotDuration, padding = 0, slotSplit = slotDuration, offset = 0, maxOverlaps } = options
+		const {
+			slotDuration,
+			padding = 0,
+			slotSplit = slotDuration,
+			offset = 0,
+			maxOverlaps,
+			timezone,
+			earliestTime,
+			latestTime,
+		} = options
 
 		// Apply padding and merge busy times
 		const paddedBusyTimes = applyPadding(this.busyTimes, padding)
@@ -119,6 +128,9 @@ export class Scheduler {
 				slotDuration,
 				slotSplit,
 				offset,
+				timezone,
+				earliestTime,
+				latestTime,
 			})
 		}
 
@@ -128,6 +140,9 @@ export class Scheduler {
 			slotDurationMinutes: slotDuration,
 			slotSplitMinutes: slotSplit,
 			offsetMinutes: offset,
+			timezone,
+			earliestTime,
+			latestTime,
 		})
 
 		// Filter available slots
@@ -248,9 +263,16 @@ export class Scheduler {
 	 */
 	private applySlotConstraintsToFreeTime(
 		freeSlots: TimeSlot[],
-		options: { slotDuration: number; slotSplit: number; offset: number }
+		options: {
+			slotDuration: number
+			slotSplit: number
+			offset: number
+			timezone?: string
+			earliestTime?: string | number
+			latestTime?: string | number
+		}
 	): TimeSlot[] {
-		const { slotDuration, slotSplit, offset } = options
+		const { slotDuration, slotSplit, offset, timezone, earliestTime, latestTime } = options
 		const result: TimeSlot[] = []
 
 		for (const freeSlot of freeSlots) {
@@ -259,6 +281,9 @@ export class Scheduler {
 				slotDurationMinutes: slotDuration,
 				slotSplitMinutes: slotSplit,
 				offsetMinutes: offset,
+				timezone,
+				earliestTime,
+				latestTime,
 			})
 
 			result.push(...slots)

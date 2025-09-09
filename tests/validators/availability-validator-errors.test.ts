@@ -4,27 +4,27 @@ import { validateWeeklyAvailability } from '../../src/validators/availability.va
 
 describe('Availability Validator Error Cases', () => {
 	test('throws error for non-object availability', () => {
-		// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+		// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 		expect(() => validateWeeklyAvailability(null as any)).toThrow('Availability must be an object')
-		// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+		// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 		expect(() => validateWeeklyAvailability('invalid' as any)).toThrow('Availability must be an object')
-		// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+		// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 		expect(() => validateWeeklyAvailability(123 as any)).toThrow('Availability must be an object')
 		// Arrays are objects in JavaScript, so they pass the typeof check but fail the schedules check
-		// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+		// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 		expect(() => validateWeeklyAvailability([] as any)).toThrow('Availability.schedules must be an array')
 	})
 
 	test('throws error for invalid schedules array', () => {
-		// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+		// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 		expect(() => validateWeeklyAvailability({ schedules: null as any })).toThrow(
 			'Availability.schedules must be an array'
 		)
-		// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+		// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 		expect(() => validateWeeklyAvailability({ schedules: 'invalid' as any })).toThrow(
 			'Availability.schedules must be an array'
 		)
-		// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+		// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 		expect(() => validateWeeklyAvailability({ schedules: {} as any })).toThrow(
 			'Availability.schedules must be an array'
 		)
@@ -37,21 +37,21 @@ describe('Availability Validator Error Cases', () => {
 	test('throws error for invalid schedule objects', () => {
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [null as any],
 			})
 		).toThrow('Schedule at index 0 must be an object')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: ['invalid' as any],
 			})
 		).toThrow('Schedule at index 0 must be an object')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [123 as any],
 			})
 		).toThrow('Schedule at index 0 must be an object')
@@ -60,21 +60,21 @@ describe('Availability Validator Error Cases', () => {
 	test('throws error for invalid days array', () => {
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: null as any, start: '09:00', end: '17:00' }],
 			})
 		).toThrow('Schedule at index 0: days must be an array')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: 'monday' as any, start: '09:00', end: '17:00' }],
 			})
 		).toThrow('Schedule at index 0: days must be an array')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: {} as any, start: '09:00', end: '17:00' }],
 			})
 		).toThrow('Schedule at index 0: days must be an array')
@@ -83,7 +83,7 @@ describe('Availability Validator Error Cases', () => {
 	test('throws error for invalid day names', () => {
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['invalidday'] as any, start: '09:00', end: '17:00' }],
 			})
 		).toThrow(
@@ -92,7 +92,7 @@ describe('Availability Validator Error Cases', () => {
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['monday', 'funday'] as any, start: '09:00', end: '17:00' }],
 			})
 		).toThrow(
@@ -204,21 +204,21 @@ describe('Availability Validator Error Cases', () => {
 		// Invalid start time types
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['monday'], start: null as any, end: '17:00' }],
 			})
 		).toThrow('Schedule at index 0: start must be a string (HH:mm) or number (minutes)')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['monday'], start: {} as any, end: '17:00' }],
 			})
 		).toThrow('Schedule at index 0: start must be a string (HH:mm) or number (minutes)')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['monday'], start: [] as any, end: '17:00' }],
 			})
 		).toThrow('Schedule at index 0: start must be a string (HH:mm) or number (minutes)')
@@ -226,21 +226,21 @@ describe('Availability Validator Error Cases', () => {
 		// Invalid end time types
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['monday'], start: '09:00', end: null as any }],
 			})
 		).toThrow('Schedule at index 0: end must be a string (HH:mm) or number (minutes)')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['monday'], start: '09:00', end: {} as any }],
 			})
 		).toThrow('Schedule at index 0: end must be a string (HH:mm) or number (minutes)')
 
 		expect(() =>
 			validateWeeklyAvailability({
-				// biome-ignore lint/suspicious/noExplicitAny: needed for false positive test
+				// biome-ignore lint/suspicious/noExplicitAny: needed for negative test
 				schedules: [{ days: ['monday'], start: '09:00', end: [] as any }],
 			})
 		).toThrow('Schedule at index 0: end must be a string (HH:mm) or number (minutes)')

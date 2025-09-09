@@ -477,4 +477,60 @@ describe('Scheduler', () => {
 			expect(slotsTraditional.length).toBe(slotsK0.length)
 		})
 	})
+
+	describe('daily window and timezone filtering (core scheduler)', () => {
+		it('filters slots by earliest/latest within timezone in traditional path', () => {
+			const start = new Date('2024-01-15T00:00:00Z')
+			const end = new Date('2024-01-15T23:59:59Z')
+
+			const slots = scheduler.findAvailableSlots(start, end, {
+				slotDuration: 60,
+				slotSplit: 60,
+				timezone: 'America/New_York',
+				earliestTime: '09:00',
+				latestTime: '17:00',
+			})
+
+			// In Jan, New York is UTC-5, so window is 14:00 - 22:00 UTC
+			expect(slots.length).toBeGreaterThan(0)
+			slots.forEach(slot => {
+				const h = slot.start.getUTCHours()
+				expect(h).toBeGreaterThanOrEqual(14)
+				expect(h).toBeLessThan(22)
+			})
+		})
+
+		it('filters slots by earliest/latest within timezone in K-overlaps path', () => {
+			const start = new Date('2024-01-15T00:00:00Z')
+			const end = new Date('2024-01-15T23:59:59Z')
+
+			const slots = scheduler.findAvailableSlots(start, end, {
+				slotDuration: 60,
+				maxOverlaps: 0, // force K-overlaps path
+				timezone: 'America/New_York',
+				earliestTime: 9 * 60,
+				latestTime: 17 * 60,
+			})
+
+			// Expect same 14:00 - 22:00 UTC start times
+			expect(slots.length).toBeGreaterThan(0)
+			slots.forEach(slot => {
+				const h = slot.start.getUTCHours()
+				expect(h).toBeGreaterThanOrEqual(14)
+				expect(h).toBeLessThan(22)
+			})
+		})
+
+		it('throws when earliest/latest provided without timezone', () => {
+			const start = new Date('2024-01-15T00:00:00Z')
+			const end = new Date('2024-01-15T23:59:59Z')
+
+			expect(() =>
+				scheduler.findAvailableSlots(start, end, {
+					slotDuration: 60,
+					earliestTime: '09:00',
+				})
+			).toThrow('Timezone must be specified when using earliestTime/latestTime')
+		})
+	})
 })

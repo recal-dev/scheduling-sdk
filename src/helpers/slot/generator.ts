@@ -21,6 +21,11 @@ function parseTimeInput(timeInput: string | number): number {
 	const hours = parseInt(hoursStr!, 10)
 	const minutes = parseInt(minutesStr!, 10)
 
+	// Accept special case 24:00 to represent end of day (1440 minutes)
+	if (hours === 24 && minutes === 0) {
+		return 24 * 60
+	}
+
 	if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
 		throw new Error(`Invalid time format: ${timeInput}. Expected HH:mm format (e.g., "09:00") or minutes as number`)
 	}
