@@ -23,6 +23,8 @@ describe('Scheduling with timezone edge cases', () => {
 		const sundaySlots = slots.filter(s => s.start.getUTCDate() === 14)
 		expect(sundaySlots.length).toBe(2) // 2 hourly slots (1-2 AM and 2-3 AM JST)
 		expect(sundaySlots[0]!.start.getUTCHours()).toBe(16) // 1 AM JST = 4 PM UTC
+		expect(sundaySlots[1]!.start.getUTCHours()).toBe(17)
+		expect(sundaySlots.every(s => s.start.getUTCMinutes() === 0)).toBe(true)
 	})
 
 	test('handles late night availability in negative UTC offset timezones', () => {
@@ -42,8 +44,9 @@ describe('Scheduling with timezone edge cases', () => {
 
 		// Should find slots on Tuesday UTC (which is Monday night in LA)
 		const tuesdaySlots = slots.filter(s => s.start.getUTCDate() === 16)
-		expect(tuesdaySlots.length).toBeGreaterThan(0)
+		expect(tuesdaySlots.length).toBe(2) // 23:00-24:00 local -> 07:00-08:00 UTC, 30-min slots
 		expect(tuesdaySlots[0]!.start.getUTCHours()).toBe(7) // 11 PM PST = 7 AM UTC next day
+		expect(tuesdaySlots.map(s => s.start.getUTCMinutes())).toEqual([0, 30])
 	})
 
 	test('handles availability that spans midnight in local timezone', () => {
@@ -64,12 +67,11 @@ describe('Scheduling with timezone edge cases', () => {
 			{ slotDuration: 60 }
 		)
 
-		// Should find continuous slots across the midnight boundary
-		expect(slots.length).toBeGreaterThan(0)
-
-		// Saturday 10 PM AEDT = Saturday 11 AM UTC
-		const saturdaySlots = slots.filter(s => s.start.getUTCDate() === 20 && s.start.getUTCHours() >= 11)
-		expect(saturdaySlots.length).toBeGreaterThan(0)
+		// Should find continuous 1-hour slots across the midnight boundary: 22:00-02:00 local = 11:00-15:00 UTC
+		const saturdaySlots = slots.filter(s => s.start.getUTCDate() === 20)
+		expect(saturdaySlots.length).toBe(4)
+		expect(saturdaySlots.map(s => s.start.getUTCHours())).toEqual([11, 12, 13, 14])
+		expect(saturdaySlots.every(s => s.start.getUTCMinutes() === 0)).toBe(true)
 	})
 
 	test('handles half-hour timezone offsets with number format', () => {
@@ -87,10 +89,15 @@ describe('Scheduling with timezone edge cases', () => {
 			{ slotDuration: 30 }
 		)
 
-		expect(slots.length).toBeGreaterThan(0)
+		expect(slots.length).toBe(16) // 09:30-17:30 local = 23:00-07:00 UTC (16 x 30-min slots)
 		// First slot should be Sunday 11 PM UTC
 		expect(slots[0]!.start.getUTCHours()).toBe(23)
 		expect(slots[0]!.start.getUTCDate()).toBe(14) // Sunday
+		// Last slot should start at 06:30 UTC on Monday
+		const last = slots[slots.length - 1]!
+		expect(last.start.getUTCDate()).toBe(15)
+		expect(last.start.getUTCHours()).toBe(6)
+		expect(last.start.getUTCMinutes()).toBe(30)
 	})
 
 	test('validates that K-overlaps works with timezone edge cases', () => {
@@ -109,19 +116,30 @@ describe('Scheduling with timezone edge cases', () => {
 
 		// With K=0, should exclude overlap period
 		const slotsK0 = scheduler.findAvailableSlots(
-			new Date('2024-01-14T15:00:00Z'),
-			new Date('2024-01-14T19:00:00Z'),
+			new Date('2024-01-14T16:00:00Z'), // Limit to availability window
+			new Date('2024-01-14T18:00:00Z'),
 			{ slotDuration: 30, maxOverlaps: 0 }
 		)
 
 		// With K=1, should allow single overlap
 		const slotsK1 = scheduler.findAvailableSlots(
-			new Date('2024-01-14T15:00:00Z'),
-			new Date('2024-01-14T19:00:00Z'),
+			new Date('2024-01-14T16:00:00Z'), // Limit to availability window
+			new Date('2024-01-14T18:00:00Z'),
 			{ slotDuration: 30, maxOverlaps: 1 }
 		)
 
-		expect(slotsK1.length).toBeGreaterThan(slotsK0.length)
+		// With K=0, only 17:30-18:00 UTC remains free -> exactly 1 slot
+		expect(slotsK0.length).toBe(1)
+		expect(slotsK0[0]!.start.getUTCHours()).toBe(17)
+		expect(slotsK0[0]!.start.getUTCMinutes()).toBe(30)
+		// With K=1 and merged busy intervals, free windows cover 16:00-17:30 and 17:30-18:00 -> 4 slots
+		expect(slotsK1.length).toBe(4)
+		expect(
+			slotsK1.map(
+				s =>
+					`${String(s.start.getUTCHours()).padStart(2, '0')}:${String(s.start.getUTCMinutes()).padStart(2, '0')}`
+			)
+		).toEqual(['16:00', '16:30', '17:00', '17:30'])
 	})
 
 	test('CRITICAL: timezone transition during DST changes', () => {
@@ -137,19 +155,17 @@ describe('Scheduling with timezone edge cases', () => {
 			slotDuration: 30,
 		})
 
-		// Should handle the DST transition correctly
-		expect(slots.length).toBeGreaterThan(0)
-		// Verify slots exist for valid times during DST transition
-		const morningSlots = slots.filter(s => s.start.getUTCHours() >= 6 && s.start.getUTCHours() <= 8)
-		expect(morningSlots.length).toBeGreaterThan(0)
+		// Should handle the DST transition: implementation yields a 3-hour window in UTC
+		expect(slots.length).toBe(6)
+		expect(
+			slots.map(
+				s =>
+					`${String(s.start.getUTCHours()).padStart(2, '0')}:${String(s.start.getUTCMinutes()).padStart(2, '0')}`
+			)
+		).toEqual(['06:00', '06:30', '07:00', '07:30', '08:00', '08:30'])
 	})
 
 	test('CRITICAL: very short availability windows with timezone conversion', () => {
-		// BUG IDENTIFIED: Monday 1:01-1:02 JST should become Sunday 16:01-16:02 UTC
-		// But the converter incorrectly processes Sunday as entirely busy
-		// Expected: exactly 1 slot at Sunday 16:01 UTC
-		// Actual: finds 3 slots including spurious ones
-
 		const availability: WeeklyAvailability = {
 			schedules: [{ days: ['monday'], start: 61, end: 62 }], // 01:01-01:02 in minutes
 		}
@@ -162,21 +178,21 @@ describe('Scheduling with timezone edge cases', () => {
 			{ slotDuration: 1 }
 		)
 
-		// BUG: Should find exactly 1 slot at 16:01 UTC on Sunday (Monday 1:01 JST)
-		// Current: finds 3 slots due to converter bug
-		expect(slots.length).toBe(3) // Current incorrect behavior
+		// Should find exactly 1 slot at 16:01 UTC on Sunday (Monday 1:01 JST)
+		expect(slots.length).toBe(1)
 
 		// Find the correct slot that should exist
 		const correctSlot = slots.find(
 			s => s.start.getUTCHours() === 16 && s.start.getUTCMinutes() === 1 && s.start.getUTCDate() === 14
 		)
-		expect(correctSlot).toBeDefined() // This slot should exist
+		expect(correctSlot).toBeDefined() // This exact slot should exist
+		// Verify end of the slot is 16:02 UTC
+		expect(slots[0]!.end.getUTCHours()).toBe(16)
+		expect(slots[0]!.end.getUTCMinutes()).toBe(2)
 
-		// BUG: These spurious slots should not exist:
-		// - Sunday 14:59 UTC (no availability scheduled)
-		// - Monday 14:59 UTC (no availability scheduled)
+		// Ensure there are no spurious :59 slots
 		const spuriousSlots = slots.filter(s => s.start.getUTCMinutes() === 59)
-		expect(spuriousSlots.length).toBe(2) // Documents the bug - should be 0
+		expect(spuriousSlots.length).toBe(0)
 	})
 
 	test('CRITICAL: availability at exactly midnight with timezone boundaries', () => {
@@ -193,13 +209,12 @@ describe('Scheduling with timezone edge cases', () => {
 			{ slotDuration: 1 }
 		)
 
-		// Tuesday midnight NZDT = Monday 11 AM UTC
+		// Tuesday midnight NZDT = Monday 11 AM UTC -> exactly one 1-minute slot at 11:00 UTC
 		const mondaySlots = slotsNZ.filter(s => s.start.getUTCDate() === 15)
-		expect(mondaySlots.length).toBeGreaterThan(0)
-		// Verify the midnight slot appears at the correct UTC time
-		const midnightSlot = mondaySlots.find(s => s.start.getUTCHours() === 11)
-		expect(midnightSlot).toBeDefined()
-		expect(midnightSlot!.start.getUTCMinutes()).toBe(0)
+		expect(mondaySlots.length).toBe(1)
+		const midnightSlot = mondaySlots[0]!
+		expect(midnightSlot.start.getUTCHours()).toBe(11)
+		expect(midnightSlot.start.getUTCMinutes()).toBe(0)
 	})
 
 	test('CRITICAL: overlapping busy times across day boundaries in different timezones', () => {
@@ -221,13 +236,14 @@ describe('Scheduling with timezone edge cases', () => {
 			{ slotDuration: 30 }
 		)
 
-		// Should have slots before and after the busy time
-		expect(slots.length).toBeGreaterThan(0)
-		const earlySlots = slots.filter(s => s.start.getTime() < new Date('2024-01-16T08:30:00Z').getTime())
-		const lateSlots = slots.filter(s => s.start.getTime() >= new Date('2024-01-16T09:30:00Z').getTime())
-
-		expect(earlySlots.length).toBeGreaterThan(0) // Before busy time
-		expect(lateSlots.length).toBeGreaterThan(0) // After busy time
+		// Should have exactly two 30-min slots at 08:00 and 09:30 UTC
+		expect(slots.length).toBe(2)
+		expect(
+			slots.map(
+				s =>
+					`${String(s.start.getUTCHours()).padStart(2, '0')}:${String(s.start.getUTCMinutes()).padStart(2, '0')}`
+			)
+		).toEqual(['08:00', '09:30'])
 	})
 
 	test('CRITICAL: leap year February 29th with timezone edge cases', () => {
@@ -247,8 +263,10 @@ describe('Scheduling with timezone edge cases', () => {
 
 		// Should find slots on Feb 28 UTC (which is Feb 29 Tokyo morning)
 		const feb28Slots = slots.filter(s => s.start.getUTCDate() === 28)
-		expect(feb28Slots.length).toBe(2) // Two 30-min slots (00:30-01:00 and 01:00-01:30 JST)
+		expect(feb28Slots.length).toBe(2) // Two 30-min slots (00:30-01:30 JST)
 		expect(feb28Slots[0]!.start.getUTCHours()).toBe(15) // 00:30 JST = 15:30 UTC previous day
 		expect(feb28Slots[0]!.start.getUTCMinutes()).toBe(30)
+		expect(feb28Slots[1]!.start.getUTCHours()).toBe(16)
+		expect(feb28Slots[1]!.start.getUTCMinutes()).toBe(0)
 	})
 })
