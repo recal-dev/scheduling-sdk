@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { AvailabilityScheduler } from '../../src/availability/scheduler.ts'
-import type { BusyTime, WeeklyAvailability, DayOfWeek } from '../../src/index.ts'
+import type { BusyTime, DayOfWeek, WeeklyAvailability } from '../../src/index.ts'
 
 describe('AvailabilityScheduler', () => {
 	const mockAvailability: WeeklyAvailability = {
@@ -223,7 +223,11 @@ describe('AvailabilityScheduler', () => {
 		beforeEach(() => {
 			const availability = {
 				schedules: [
-					{ days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as DayOfWeek[], start: '09:00', end: '17:00' },
+					{
+						days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as DayOfWeek[],
+						start: '09:00',
+						end: '17:00',
+					},
 				],
 			}
 			scheduler = new AvailabilityScheduler(availability, 'America/New_York')
