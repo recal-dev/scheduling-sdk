@@ -85,7 +85,10 @@ function parseTimeToMinutes(time: string | number, allowEndOfDay: boolean): numb
 		return time
 	}
 
-	// Expect HH:mm
+	// Expect HH:mm format (exactly 5 characters with colon in the middle)
+	if (time.length !== 5 || time[2] !== ':') {
+		throw new Error(`Invalid time format: ${time}. Expected HH:mm`)
+	}
 	const [hoursStr, minutesStr] = time.split(':')
 	const hours = Number.parseInt(hoursStr!, 10)
 	const minutes = Number.parseInt(minutesStr!, 10)
