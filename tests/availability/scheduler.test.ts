@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import { AvailabilityScheduler } from '../../src/availability/scheduler.ts'
-import type { BusyTime, WeeklyAvailability } from '../../src/index.ts'
+import type { BusyTime, WeeklyAvailability, DayOfWeek } from '../../src/index.ts'
 
 describe('AvailabilityScheduler', () => {
 	const mockAvailability: WeeklyAvailability = {
@@ -223,7 +223,7 @@ describe('AvailabilityScheduler', () => {
 		beforeEach(() => {
 			const availability = {
 				schedules: [
-					{ days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], start: '09:00', end: '17:00' },
+					{ days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as DayOfWeek[], start: '09:00', end: '17:00' },
 				],
 			}
 			scheduler = new AvailabilityScheduler(availability, 'America/New_York')
@@ -313,7 +313,7 @@ describe('AvailabilityScheduler', () => {
 
 		test('should work with timezone and K-overlaps together', () => {
 			const availabilityUTC = {
-				schedules: [{ days: ['monday'], start: '12:00', end: '20:00' }],
+				schedules: [{ days: ['monday'] as DayOfWeek[], start: '12:00', end: '20:00' }],
 			}
 			const schedulerUTC = new AvailabilityScheduler(availabilityUTC, 'UTC')
 
@@ -358,7 +358,7 @@ describe('AvailabilityScheduler', () => {
 
 		test('should maintain performance optimization path', () => {
 			// Add many busy times to test performance
-			const busyTimes = []
+			const busyTimes: BusyTime[] = []
 			for (let i = 0; i < 50; i++) {
 				busyTimes.push({
 					start: new Date(
