@@ -84,10 +84,19 @@ The `SchedulingOptions` interface provides fine-grained control over how slots a
 
 ```typescript
 interface SchedulingOptions {
-    slotDuration: number // Required
-    slotSplit?: number // Optional
-    padding?: number // Optional
-    offset?: number // Optional
+    // Required
+    slotDuration: number
+
+    // Optional
+    slotSplit?: number
+    padding?: number
+    offset?: number
+    maxOverlaps?: number
+
+    // Daily window filtering (timezone-aware)
+    timezone?: string
+    earliestTime?: string | number // 'HH:mm' or minutes since midnight
+    latestTime?: string | number   // 'HH:mm' or minutes since midnight; supports '24:00' or 1440
 }
 ```
 
@@ -181,6 +190,39 @@ The `offset` parameter shifts slot start times from standard boundaries (in minu
 
 **Default:** 0 (align to standard boundaries)
 
+### Daily Windows
+
+The `earliestTime` and `latestTime` parameters control the daily window for slot generation.
+
+```typescript
+// Restrict slots to 9:00 AM - 5:00 PM
+{
+    earliestTime: '09:00',
+    latestTime: '17:00'
+}
+
+// Restrict slots to 10:00 AM - 6:00 PM with 24-hour clock support
+{
+    earliestTime: '10:00',
+    latestTime: '24:00'
+}
+```
+
+**Default:** No daily window restrictions
+
+### K-overlaps
+
+The `maxOverlaps` parameter allows up to K overlapping busy intervals.
+
+```typescript
+// Allow one overlapping busy time
+{
+    maxOverlaps: 1
+}
+```
+
+**Default:** 0 (no overlapping busy times)
+
 ## Weekly Availability
 
 The **weekly availability** system allows you to define recurring weekly patterns that specify when time slots are available for scheduling. This is perfect for businesses, professionals, or services that operate on predictable weekly schedules.
@@ -255,16 +297,48 @@ The availability system processes one week at a time, starting from Monday:
 
 ### Timezone Support
 
-You can specify timezone information for your availability patterns:
+Timezone is specified at the scheduler level (not inside `WeeklyAvailability`).
 
 ```typescript
-{
-    schedules: [...],
-    timezone: 'America/New_York'  // IANA timezone identifier
-}
+const availability = { schedules: [...] }
+const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
 ```
 
-**Note**: Timezone is primarily for documentation and future timezone-aware features. The current implementation processes dates as provided.
+- The `AvailabilityScheduler` uses its constructor timezone for availability conversion and as a fallback for daily-window filtering if you omit `options.timezone`.
+- The core `Scheduler` requires `options.timezone` when you use `earliestTime`/`latestTime`.
+
+Daily window filtering supports `'HH:mm'` strings or minute numbers, with `latestTime` accepting `'24:00'` or `1440`.
+
+```typescript
+// Core Scheduler daily windows
+createScheduler().findAvailableSlots(start, end, {
+  slotDuration: 30,
+  timezone: 'America/New_York',
+  earliestTime: '09:00',
+  latestTime: '17:00',
+})
+
+// AvailabilityScheduler daily windows (timezone fallback from constructor)
+new AvailabilityScheduler(availability, 'UTC').findAvailableSlots(start, end, {
+  slotDuration: 30,
+  earliestTime: 9 * 60,
+  latestTime: '24:00',
+})
+```
+
+### Allowing Overlaps (K-overlaps)
+
+You can allow up to `K` overlapping busy intervals by providing `maxOverlaps`.
+
+```typescript
+createScheduler().findAvailableSlots(start, end, {
+  slotDuration: 30,
+  slotSplit: 15,
+  maxOverlaps: 1, // allow one overlapping busy time
+})
+```
+
+When `maxOverlaps` is set, an optimized algorithm finds free periods before slot generation. Daily-window filtering and timezone rules still apply during slot generation.
 
 ## Algorithm Overview
 

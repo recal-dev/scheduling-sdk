@@ -42,10 +42,19 @@ Configuration options for slot generation.
 
 ```typescript
 interface SchedulingOptions {
+    // Required
     slotDuration: number
+
+    // Optional
     slotSplit?: number
     padding?: number
     offset?: number
+    maxOverlaps?: number
+
+    // Daily window filtering (timezone-aware)
+    timezone?: string
+    earliestTime?: string | number // 'HH:mm' or minutes since midnight
+    latestTime?: string | number   // 'HH:mm' or minutes since midnight; supports '24:00' or 1440
 }
 ```
 
@@ -55,6 +64,9 @@ interface SchedulingOptions {
 - `slotSplit` (optional): Interval between the start times of consecutive slots in minutes. Defaults to `slotDuration`. Must be positive.
 - `padding` (optional): Buffer time in minutes to add before and after each busy time. Defaults to 0. Must be non-negative.
 - `offset` (optional): Offset from standard time boundaries in minutes. Defaults to 0. Must be non-negative.
+- `maxOverlaps` (optional): Allow up to K overlapping busy intervals. If undefined, traditional behavior applies (any overlap blocks a slot).
+- `timezone` (optional): IANA timezone identifier used for daily window filtering. Required if `earliestTime`/`latestTime` are provided when using the core `Scheduler`.
+- `earliestTime`/`latestTime` (optional): Local daily time window for slot START times. Specify as `HH:mm` or minutes since midnight. `latestTime` accepts `"24:00"` or `1440` as end of day.
 
 ### Availability Types
 
@@ -91,14 +103,12 @@ Defines a weekly availability pattern with multiple schedules.
 ```typescript
 interface WeeklyAvailability {
     schedules: DaySchedule[]
-    timezone?: string
 }
 ```
 
 **Properties:**
 
 - `schedules`: Array of availability schedules. Must contain at least one schedule.
-- `timezone` (optional): IANA timezone identifier (e.g., 'America/New_York', 'Europe/London')
 
 ## Functions
 
@@ -256,12 +266,13 @@ Enhanced scheduler that combines weekly availability patterns with traditional b
 ### Constructor
 
 ```typescript
-constructor(availability?: WeeklyAvailability, existingBusyTimes?: BusyTime[])
+constructor(availability?: WeeklyAvailability, timezone?: string, existingBusyTimes?: BusyTime[])
 ```
 
 **Parameters:**
 
 - `availability` (optional): Weekly availability pattern defining when slots are available
+- `timezone` (optional): IANA timezone identifier for availability processing and daily window fallback
 - `existingBusyTimes` (optional): Array of existing busy times to include
 
 **Throws:**
@@ -278,9 +289,14 @@ const scheduler = new AvailabilityScheduler({
     schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
 })
 
-// Create with availability and existing busy times
+// Create with availability and timezone
+const schedulerTz = new AvailabilityScheduler({
+    schedules: [{ days: ['monday'], start: '09:00', end: '17:00' }],
+}, 'America/New_York')
+
+// Create with availability, timezone, and existing busy times
 const busyTimes = [{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') }]
-const scheduler = new AvailabilityScheduler(availability, busyTimes)
+const schedulerWithAll = new AvailabilityScheduler(availability, 'Europe/London', busyTimes)
 ```
 
 ### setAvailability
@@ -304,7 +320,6 @@ setAvailability(availability: WeeklyAvailability): void
 ```typescript
 scheduler.setAvailability({
     schedules: [{ days: ['monday', 'tuesday'], start: '09:00', end: '17:00' }],
-    timezone: 'America/New_York',
 })
 ```
 
@@ -417,13 +432,18 @@ const slots = scheduler.findAvailableSlots(new Date('2024-01-15T08:00:00Z'), new
 Converts a weekly availability pattern into busy times for a specific week.
 
 ```typescript
-function weeklyAvailabilityToBusyTimes(availability: WeeklyAvailability, weekStart: Date): BusyTime[]
+function weeklyAvailabilityToBusyTimes(
+  availability: WeeklyAvailability,
+  weekStart: Date,
+  timezone?: string
+): BusyTime[]
 ```
 
 **Parameters:**
 
 - `availability`: The weekly availability pattern to convert
 - `weekStart`: The Monday date for the week to process (MUST be a Monday)
+- `timezone` (optional): IANA timezone used to interpret availability times. Falls back to `process.env.SCHEDULING_TIMEZONE` or `UTC`.
 
 **Returns:**
 
@@ -483,6 +503,9 @@ All methods perform input validation and will throw descriptive errors for inval
 - `slotSplit` must be a positive number (if provided)
 - `padding` must be a non-negative number (if provided)
 - `offset` must be a non-negative number (if provided)
+- `maxOverlaps` must be a non-negative integer (if provided)
+- If `earliestTime` or `latestTime` is provided, `timezone` must also be specified when using the core `Scheduler`
+- `earliestTime`/`latestTime` must be valid times (string `HH:mm` or minutes). `latestTime` may be `24:00`/`1440`.
 - All numeric values must be finite
 
 ### Availability Validation
@@ -493,7 +516,7 @@ All methods perform input validation and will throw descriptive errors for inval
 - Time format must be HH:mm (24-hour format)
 - Start time must be before end time
 - No overlapping schedules on the same day
-- Timezone must be valid IANA format (if provided)
+  
 
 ## Behavior Details
 

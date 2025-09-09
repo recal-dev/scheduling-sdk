@@ -320,10 +320,9 @@ const medicalSchedule = {
         { days: ['saturday'], start: '09:00', end: '13:00' },
         // Sunday is automatically unavailable (no schedule)
     ],
-    timezone: 'America/New_York',
 }
 
-const doctorScheduler = new AvailabilityScheduler(medicalSchedule)
+const doctorScheduler = new AvailabilityScheduler(medicalSchedule, 'America/New_York')
 
 // Find 30-minute appointment slots with 10-minute buffer
 const appointments = doctorScheduler.findAvailableSlots(

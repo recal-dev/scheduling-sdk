@@ -69,14 +69,12 @@ interface DaySchedule {
 ```typescript
 interface WeeklyAvailability {
     schedules: DaySchedule[] // Array of availability schedules
-    timezone?: string // Optional IANA timezone identifier
 }
 ```
 
 **Key Requirements:**
 
 - `schedules`: Must contain at least one schedule
-- `timezone`: Optional IANA timezone (e.g., "America/New_York", "Europe/London")
 
 ## AvailabilityScheduler Class
 
@@ -85,7 +83,7 @@ The main class for working with weekly availability patterns.
 ### Constructor
 
 ```typescript
-constructor(availability?: WeeklyAvailability, existingBusyTimes: BusyTime[] = [])
+constructor(availability?: WeeklyAvailability, timezone?: string, existingBusyTimes: BusyTime[] = [])
 ```
 
 Creates a new availability scheduler with optional initial availability and existing busy times.
@@ -93,6 +91,7 @@ Creates a new availability scheduler with optional initial availability and exis
 **Parameters:**
 
 - `availability` (optional): The weekly availability pattern
+- `timezone` (optional): IANA timezone identifier used for availability processing and daily window fallback
 - `existingBusyTimes` (optional): Array of existing busy times to include
 
 **Example:**
@@ -102,7 +101,7 @@ const availability = {
     schedules: [{ days: ['monday', 'tuesday'], start: '09:00', end: '17:00' }],
 }
 
-const scheduler = new AvailabilityScheduler(availability)
+const scheduler = new AvailabilityScheduler(availability, 'America/New_York')
 ```
 
 ### Methods
@@ -201,7 +200,7 @@ const slots = scheduler.findAvailableSlots(new Date('2024-01-15T08:00:00Z'), new
 
 ## Helper Functions
 
-### `weeklyAvailabilityToBusyTimes(availability: WeeklyAvailability, weekStart: Date): BusyTime[]`
+### `weeklyAvailabilityToBusyTimes(availability: WeeklyAvailability, weekStart: Date, timezone?: string): BusyTime[]`
 
 Converts a weekly availability pattern into busy times for a specific week.
 
@@ -209,6 +208,7 @@ Converts a weekly availability pattern into busy times for a specific week.
 
 - `availability`: The weekly availability pattern
 - `weekStart`: **Must be a Monday** (Date.getDay() === 1)
+- `timezone` (optional): IANA timezone identifier used to interpret availability times. Falls back to `process.env.SCHEDULING_TIMEZONE` or `UTC`.
 
 **Returns:** Array of busy times representing unavailable periods
 
@@ -272,10 +272,9 @@ const businessHours = {
             end: '17:00',
         },
     ],
-    timezone: 'America/New_York',
 }
 
-const scheduler = new AvailabilityScheduler(businessHours)
+const scheduler = new AvailabilityScheduler(businessHours, 'America/New_York')
 
 // Find 1-hour appointment slots for this week
 const slots = scheduler.findAvailableSlots(new Date('2024-01-15T00:00:00Z'), new Date('2024-01-19T23:59:59Z'), {
@@ -364,14 +363,13 @@ scheduler.setAvailability({
 ### 2. Handling Timezones
 
 ```typescript
-// ✅ Good - specify timezone when working across timezones
-const availability = {
-  schedules: [...],
-  timezone: 'America/Los_Angeles'
-}
+// ✅ Specify timezone at the scheduler level
+const availability = { schedules: [...] }
+const scheduler = new AvailabilityScheduler(availability, 'America/Los_Angeles')
 
-// ✅ Good - convert dates to appropriate timezone before processing
-const localMondayStart = new Date('2024-01-01T08:00:00Z') // UTC Monday 8 AM
+// ✅ Or specify timezone when converting availability for a week
+const localMondayStart = new Date('2024-01-01T00:00:00Z') // Monday UTC
+const busyTimes = weeklyAvailabilityToBusyTimes(availability, localMondayStart, 'America/Los_Angeles')
 ```
 
 ### 3. Break Management

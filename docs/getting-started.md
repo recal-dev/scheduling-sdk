@@ -97,12 +97,27 @@ Configure how slots are generated:
 
 ```typescript
 interface SchedulingOptions {
+    // Required
     slotDuration: number // Duration of each slot in minutes
+
+    // Optional
     slotSplit?: number // Interval between slot starts (default: same as duration)
-    padding?: number // Buffer time around busy periods in minutes
-    offset?: number // Offset from hour boundaries in minutes
+    padding?: number   // Buffer time around busy periods in minutes
+    offset?: number    // Offset from hour boundaries in minutes
+    maxOverlaps?: number // Allow up to K overlapping busy intervals (K-overlaps)
+
+    // Daily window filtering (timezone-aware)
+    timezone?: string
+    earliestTime?: string | number // 'HH:mm' or minutes since midnight
+    latestTime?: string | number   // 'HH:mm' or minutes since midnight; supports '24:00' or 1440
 }
 ```
+
+Quick links:
+
+- [API Reference › SchedulingOptions](api-reference.md#schedulingoptions)
+- [Core Concepts › Daily Windows](core-concepts.md#daily-windows)
+- [Core Concepts › K-overlaps](core-concepts.md#k-overlaps)
 
 ## Common Use Cases
 
@@ -142,6 +157,17 @@ const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new
 const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
     slotDuration: 60,
     slotSplit: 30, // New slot every 30 minutes
+})
+```
+
+### 3b. Allowing Overlaps (K-overlaps)
+
+```typescript
+// Allow up to 1 overlapping busy time (K = 1)
+const kOverlapSlots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new Date('2024-01-15T17:00:00Z'), {
+    slotDuration: 30,
+    slotSplit: 15,
+    maxOverlaps: 1,
 })
 ```
 
@@ -191,7 +217,8 @@ try {
 
 ## Next Steps
 
-- [API Reference](api-reference.md) - Complete method documentation
-- [Core Concepts](core-concepts.md) - Detailed explanation of scheduling concepts
-- [Examples](examples.md) - Real-world usage scenarios
-- [Performance Guide](performance.md) - Optimization tips
+- [API Reference](api-reference.md) — Complete method documentation
+- [Core Concepts](core-concepts.md) — Daily Windows and K-overlaps
+- [Availability API](availability-api.md) — Weekly schedules and scheduler-level timezone
+- [Examples](examples.md) — Real-world usage scenarios
+- [Performance Guide](performance.md) — Optimization tips
