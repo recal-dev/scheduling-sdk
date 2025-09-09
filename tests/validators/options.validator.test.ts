@@ -140,9 +140,12 @@ describe('Options Validator', () => {
 		})
 
 		it('should reject non-numbers', () => {
-			expect(() => validateSplit('30' as unknown)).toThrow('Slot split must be a positive number')
-			expect(() => validateSplit(null as unknown)).toThrow('Slot split must be a positive number')
-			expect(() => validateSplit(undefined as unknown)).toThrow('Slot split must be a positive number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validateSplit('30' as any)).toThrow('Slot split must be a positive number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validateSplit(null as any)).toThrow('Slot split must be a positive number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validateSplit(undefined as any)).toThrow('Slot split must be a positive number')
 		})
 	})
 
@@ -170,9 +173,12 @@ describe('Options Validator', () => {
 		})
 
 		it('should reject non-numbers', () => {
-			expect(() => validateOffset('15' as unknown)).toThrow('Offset must be a non-negative number')
-			expect(() => validateOffset(null as unknown)).toThrow('Offset must be a non-negative number')
-			expect(() => validateOffset(undefined as unknown)).toThrow('Offset must be a non-negative number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validateOffset('15' as any)).toThrow('Offset must be a non-negative number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validateOffset(null as any)).toThrow('Offset must be a non-negative number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validateOffset(undefined as any)).toThrow('Offset must be a non-negative number')
 		})
 	})
 
@@ -200,9 +206,12 @@ describe('Options Validator', () => {
 		})
 
 		it('should reject non-numbers', () => {
-			expect(() => validatePadding('15' as unknown)).toThrow('Padding must be a non-negative number')
-			expect(() => validatePadding(null as unknown)).toThrow('Padding must be a non-negative number')
-			expect(() => validatePadding(undefined as unknown)).toThrow('Padding must be a non-negative number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validatePadding('15' as any)).toThrow('Padding must be a non-negative number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validatePadding(null as any)).toThrow('Padding must be a non-negative number')
+			// biome-ignore lint/suspicious/noExplicitAny: needed for negative tests
+			expect(() => validatePadding(undefined as any)).toThrow('Padding must be a non-negative number')
 		})
 	})
 
