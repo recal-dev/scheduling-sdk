@@ -112,33 +112,19 @@ interface WeeklyAvailability {
 
 ## Functions
 
-### createScheduler
+### Creating a Scheduler
 
-Creates a new Scheduler instance.
-
-```typescript
-function createScheduler(busyTimes?: BusyTime[]): Scheduler
-```
-
-**Parameters:**
-
-- `busyTimes` (optional): Initial array of busy times. Defaults to empty array.
-
-**Returns:**
-
-- New `Scheduler` instance
-
-**Example:**
+Instantiate the class directly.
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
 // Create empty scheduler
-const scheduler = createScheduler()
+const scheduler = new Scheduler()
 
 // Create scheduler with initial busy times
-const busyScheduler = createScheduler([
-    { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
+const busyScheduler = new Scheduler([
+  { start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
 ])
 ```
 

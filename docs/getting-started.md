@@ -26,10 +26,10 @@ The Scheduling SDK provides a simple interface for finding available time slots 
 ### Basic Example
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
 // Create a scheduler with busy times (periods when NOT available)
-const scheduler = createScheduler([
+const scheduler = new Scheduler([
     {
         start: new Date('2024-01-15T09:00:00Z'),  // 9:00 AM meeting
         end: new Date('2024-01-15T10:00:00Z'),    // ends at 10:00 AM
@@ -61,7 +61,7 @@ console.log(availableSlots)
 
 ### Step-by-Step Breakdown
 
-1. **Import the SDK**: Import the `createScheduler` function
+1. **Import the SDK**: Import the `Scheduler` class
 2. **Create Scheduler**: Initialize with existing busy times (optional)
 3. **Define Options**: Configure slot duration, padding, splitting, and offset
 4. **Find Slots**: Call `findAvailableSlots` with time range and options
@@ -124,9 +124,9 @@ Quick links:
 ### 1. Simple Appointment Booking
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
-const scheduler = createScheduler()
+const scheduler = new Scheduler()
 
 // Add existing appointments
 scheduler.addBusyTimes([
@@ -186,8 +186,8 @@ const slots = scheduler.findAvailableSlots(new Date('2024-01-15T09:00:00Z'), new
 
 ```typescript
 // Separate schedulers for different resources
-const roomScheduler = createScheduler()
-const equipmentScheduler = createScheduler()
+const roomScheduler = new Scheduler()
+const equipmentScheduler = new Scheduler()
 
 // Add resource-specific busy times
 roomScheduler.addBusyTimes([...roomBookings])

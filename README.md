@@ -46,11 +46,11 @@ bun add scheduling-sdk
 ### Standard Scheduling
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
 // Initialize scheduler with busy times (existing meetings, appointments, etc.)
 // Busy times are periods when you're NOT available
-const scheduler = createScheduler([
+const scheduler = new Scheduler([
     {
         start: new Date('2024-01-15T09:00:00Z'), // Meeting starts at 9:00 AM
         end: new Date('2024-01-15T10:00:00Z'), // Meeting ends at 10:00 AM
@@ -83,9 +83,9 @@ const availableSlots = scheduler.findAvailableSlots(
 ### Managing Busy Times
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
-const scheduler = createScheduler()
+const scheduler = new Scheduler()
 
 // Add a single busy time (e.g., a new meeting)
 scheduler.addBusyTime({
@@ -177,9 +177,9 @@ Restrict generated slots to specific local hours by providing a timezone and a d
 Core `Scheduler` usage:
 
 ```typescript
-import { createScheduler } from 'scheduling-sdk'
+import { Scheduler } from 'scheduling-sdk'
 
-const scheduler = createScheduler()
+const scheduler = new Scheduler()
 
 // Search the whole day in UTC, but only return slots that START between 9:00 and 17:00 New York time
 const slots = scheduler.findAvailableSlots(

@@ -311,7 +311,7 @@ Daily window filtering supports `'HH:mm'` strings or minute numbers, with `lates
 
 ```typescript
 // Core Scheduler daily windows
-createScheduler().findAvailableSlots(start, end, {
+new Scheduler().findAvailableSlots(start, end, {
   slotDuration: 30,
   timezone: 'America/New_York',
   earliestTime: '09:00',
@@ -331,7 +331,7 @@ new AvailabilityScheduler(availability, 'UTC').findAvailableSlots(start, end, {
 You can allow up to `K` overlapping busy intervals by providing `maxOverlaps`.
 
 ```typescript
-createScheduler().findAvailableSlots(start, end, {
+new Scheduler().findAvailableSlots(start, end, {
   slotDuration: 30,
   slotSplit: 15,
   maxOverlaps: 1, // allow one overlapping busy time
