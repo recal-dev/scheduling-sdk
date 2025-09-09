@@ -1,5 +1,7 @@
 # API Reference
 
+Back: [Availability Scheduler](availability-scheduler.md) • Next: [Recipes](recipes.md)
+
 ## Types
 
 ### Core Types

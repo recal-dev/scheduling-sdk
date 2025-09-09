@@ -11,7 +11,7 @@ Welcome to the Scheduling SDK documentation. Start here to explore concepts, API
 
 ## Practical Guides
 
-- [Examples / Recipes](examples.md) — copy‑paste scenarios for common use cases
+- [Recipes](recipes.md) — copy‑paste scenarios for common use cases
 - [Performance](performance.md) — benchmarks and optimization strategies
 
 ## Contributing

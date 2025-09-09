@@ -1,10 +1,12 @@
-# Usage Examples
+# Recipes
 
-This document provides practical examples for common scheduling scenarios using the Scheduling SDK.
+Back: [API Reference](api-reference.md) • Next: [Performance](performance.md)
+
+This document provides practical recipes for common scheduling scenarios using the Scheduling SDK.
 
 ## Table of Contents
 
-- [Basic Examples](#basic-examples)
+- [Basic Recipes](#basic-recipes)
 - [Calendar Scheduling](#calendar-scheduling)
 - [Weekly Availability Scheduling](#weekly-availability-scheduling)
 - [Resource Management](#resource-management)
@@ -12,7 +14,7 @@ This document provides practical examples for common scheduling scenarios using 
 - [Advanced Scenarios](#advanced-scenarios)
 - [Integration Patterns](#integration-patterns)
 
-## Basic Examples
+## Basic Recipes
 
 ### Simple Appointment Booking
 
@@ -479,52 +481,6 @@ const earliestSlot = multiLocationService.findEarliestAvailableSlot(
 console.log(`Earliest available: ${earliestSlot.location} at ${earliestSlot.slot?.start}`)
 ```
 
-### Dynamic Availability Updates
-
-```typescript
-class DynamicAvailabilityScheduler {
-    private scheduler: AvailabilityScheduler
-
-    constructor(initialAvailability: WeeklyAvailability) {
-        this.scheduler = new AvailabilityScheduler(initialAvailability)
-    }
-
-    updateHours(newAvailability: WeeklyAvailability) {
-        // Clear existing busy times and update availability
-        this.scheduler.clearBusyTimes()
-        this.scheduler.setAvailability(newAvailability)
-    }
-
-    addTemporaryBlock(startTime: Date, endTime: Date, reason: string) {
-        this.scheduler.addBusyTime({ start: startTime, end: endTime })
-        console.log(`Added temporary block: ${reason}`)
-    }
-
-    findAvailabilityForWeek(weekStart: Date) {
-        const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)
-
-        return this.scheduler.findAvailableSlots(weekStart, weekEnd, {
-            slotDuration: 60,
-            slotSplit: 60,
-            padding: 10,
-        })
-    }
-}
-
-// Usage
-const dynamicScheduler = new DynamicAvailabilityScheduler({
-    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '09:00', end: '17:00' }],
-})
-
-// Update for holiday hours
-dynamicScheduler.updateHours({
-    schedules: [{ days: ['monday', 'tuesday', 'wednesday'], start: '10:00', end: '15:00' }],
-})
-
-// Add temporary blocks
-dynamicScheduler.addTemporaryBlock(new Date('2024-01-15T12:00:00Z'), new Date('2024-01-15T13:00:00Z'), 'Team meeting')
-```
-
 ## Meeting Scheduling
 
 ### Team Meeting Finder
@@ -784,4 +740,4 @@ class PersistentScheduler {
 }
 ```
 
-These examples demonstrate the flexibility and power of the Scheduling SDK for various real-world scenarios. For more information, see the [API Reference](api-reference.md) and [Core Concepts](core-concepts.md) documentation.
+These recipes demonstrate the flexibility and power of the Scheduling SDK for various real-world scenarios. For more information, see the [API Reference](api-reference.md) and [Core Concepts](core-concepts.md) documentation.

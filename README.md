@@ -271,8 +271,8 @@ interface SchedulingOptions {
 - **📖 [Getting Started](docs/getting-started.md)** - Installation and basic usage
 - **📋 [API Reference](docs/api-reference.md)** - Complete API documentation
 - **🧠 [Core Concepts](docs/core-concepts.md)** - Understanding scheduling concepts
-- **⏰ [Availability API](docs/availability-api.md)** - Weekly availability patterns and scheduling
-- **💡 [Examples](docs/examples.md)** - Practical usage examples
+- **⏰ [Availability Scheduler](docs/availability-scheduler.md)** - Weekly availability patterns and scheduling
+- **💡 [Recipes](docs/recipes.md)** - Practical usage examples
 - **⚡ [Performance Guide](docs/performance.md)** - Optimization and benchmarks
 - **🤝 [Contributing](docs/contributing.md)** - Development and contribution guidelines
 

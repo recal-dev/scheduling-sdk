@@ -1,5 +1,7 @@
 # Getting Started
 
+Next: [Core Concepts](core-concepts.md)
+
 ## Installation
 
 ```bash
@@ -219,6 +221,6 @@ try {
 
 - [API Reference](api-reference.md) — Complete method documentation
 - [Core Concepts](core-concepts.md) — Daily Windows and K-overlaps
-- [Availability API](availability-api.md) — Weekly schedules and scheduler-level timezone
-- [Examples](examples.md) — Real-world usage scenarios
+- [Availability Scheduler](availability-scheduler.md) — Weekly schedules and scheduler-level timezone
+- [Recipes](recipes.md) — Real-world usage scenarios
 - [Performance Guide](performance.md) — Optimization tips

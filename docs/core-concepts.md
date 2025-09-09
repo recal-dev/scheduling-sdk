@@ -1,5 +1,7 @@
 # Core Concepts
 
+Next: [Availability Scheduler](availability-scheduler.md)
+
 Understanding the fundamental concepts behind the Scheduling SDK will help you make the most of its features and configure it correctly for your use cases.
 
 ## Table of Contents
@@ -535,4 +537,4 @@ The SDK is optimized for common scheduling scenarios:
     - Efficient slot generation avoids unnecessary calculations
     - Early termination when no more slots can fit
 
-Understanding these concepts will help you configure the SDK effectively for your specific scheduling needs. For practical examples, see the [Examples](examples.md) documentation.
+Understanding these concepts will help you configure the SDK effectively for your specific scheduling needs. For practical examples, see the [Recipes](recipes.md) documentation.
