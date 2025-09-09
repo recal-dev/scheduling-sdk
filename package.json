@@ -39,7 +39,7 @@
 	"homepage": "https://github.com/recal-dev/scheduling-sdk#readme",
 	"devDependencies": {
 		"@types/bun": "latest",
-		"jiti": "^2.4.2"
+		"@biomejs/biome": "^2.1.2"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
@@ -60,8 +60,5 @@
 		"date-time",
 		"slots",
 		"busy-time"
-	],
-	"dependencies": {
-		"@biomejs/biome": "^2.1.2"
-	}
+	]
 }
