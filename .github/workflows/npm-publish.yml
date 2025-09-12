@@ -18,6 +18,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -27,19 +32,19 @@ jobs:
         run: npm install -g npm@latest
 
       - name: Install dependencies
-        run: npm install
+        run: bun install
 
       - name: Run tests
-        run: npm test
+        run: bun test
 
       - name: Run type checking
-        run: npm run typecheck
+        run: bun run typecheck
 
       - name: Run linting
-        run: npm run lint
+        run: bun run lint
 
       - name: Build package
-        run: npm run build
+        run: bun run build
 
       - name: Publish to npm
         run: npm publish
