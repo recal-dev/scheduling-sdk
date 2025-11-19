@@ -6,17 +6,27 @@
 	"license": "MIT",
 	"contributors": ["tkoehlerlg"],
 	"type": "module",
-	"main": "./dist/index.js",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
-			"types": "./dist/index.d.ts"
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
 		}
 	},
 	"files": ["dist"],
 	"scripts": {
-		"build": "tsc --declaration --emitDeclarationOnly --outDir dist && NODE_ENV=production bun build src/index.ts --outdir dist --target node",
+		"build": "bun run build:types && bun run build:esm && bun run build:cjs",
+		"build:types": "tsc --declaration --emitDeclarationOnly --outDir dist && cp dist/index.d.ts dist/index.d.cts",
+		"build:esm": "NODE_ENV=production bun build src/index.ts --outdir dist --target node --format esm",
+		"build:cjs": "NODE_ENV=production bun build src/index.ts --outfile dist/index.cjs --target node --format cjs",
 		"dev": "bun --watch src/index.ts",
 		"test": "bun test",
 		"test:coverage": "bun test --coverage --coverage-reporter=lcov --coverage-reporter=text",
