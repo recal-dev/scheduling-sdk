@@ -213,7 +213,7 @@ export class AvailabilityScheduler {
 	 * @param endTime - End of the search range
 	 * @param options - Slot generation options (duration, split, offset, padding)
 	 *
-	 * @returns Array of available time slots
+	 * @returns Array of available time slots (sorted by start time ascending)
 	 *
 	 * @throws {Error} If time range or options are invalid
 	 *
@@ -313,7 +313,6 @@ export class AvailabilityScheduler {
 		if (timezone !== undefined) {
 			return this.validateTimezone(timezone)
 		}
-
 		const fallbackTimezone = process.env.SCHEDULING_TIMEZONE || 'UTC'
 		return fallbackTimezone === 'UTC' ? fallbackTimezone : this.validateTimezone(fallbackTimezone)
 	}
