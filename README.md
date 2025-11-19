@@ -12,6 +12,7 @@ A fast TypeScript Scheduling SDK for finding available time slots with **excepti
 
 - **🎯 DX First**: Intuitive APIs that feel intuitive to use
 - **🔒 Full TypeScript Support**: Complete type safety with excellent IntelliSense
+- **📦 Dual Module Support**: Works with both ESM and CommonJS (NestJS compatible!)
 - **📖 Extensive Documentation**: In-depth guides, examples, and API references (With help by Claude)
 - **⚡ Blazing Fast Performance**: Optimized algorithms for handling large datasets
 - **🔧 Flexible Configuration**: Customizable slot duration, padding, splitting, and offset
@@ -21,7 +22,7 @@ A fast TypeScript Scheduling SDK for finding available time slots with **excepti
 - **🧪 98%+ Test Coverage**: Comprehensive testing with edge case handling (Supported by the [CODE's](https://code.berlin) Automated Testing LU)
 
 > **Note**
-> The SDK is fully written in TypeScript and uses Bun as the build and test tool. It requires TypeScript 5.0 or later as a peer dependency. While we use Bun for development, the compiled SDK is compatible with any JavaScript runtime, including Node.js, Deno, and modern browsers with ESM support.
+> The SDK is fully written in TypeScript and uses Bun as the build and test tool. It requires TypeScript 5.0 or later as a peer dependency. While we use Bun for development, the compiled SDK is compatible with any JavaScript runtime (Node.js, Deno, browsers) and works with both ESM and CommonJS module systems.
 
 ## Quick Start 💨
 
@@ -33,6 +34,20 @@ bun add scheduling-sdk
 ```
 
 **Zero configuration required** - start scheduling in seconds! 🚀
+
+### Module Compatibility
+
+The SDK supports both ESM and CommonJS module systems:
+
+```typescript
+// ESM (Modern)
+import { Scheduler, AvailabilityScheduler } from 'scheduling-sdk'
+
+// CommonJS (NestJS, older Node.js)
+const { Scheduler, AvailabilityScheduler } = require('scheduling-sdk')
+```
+
+Both formats provide identical functionality and TypeScript support.
 
 ## Core Concepts
 
