@@ -132,14 +132,15 @@ describe('Scheduling with timezone edge cases', () => {
 		expect(slotsK0.length).toBe(1)
 		expect(slotsK0[0]!.start.getUTCHours()).toBe(17)
 		expect(slotsK0[0]!.start.getUTCMinutes()).toBe(30)
-		// With K=1 and merged busy intervals, free windows cover 16:00-17:30 and 17:30-18:00 -> 4 slots
-		expect(slotsK1.length).toBe(4)
+		// With K=1, depth is 2 across 16:30-17:00, so the free windows are 16:00-16:30 and
+		// 17:00-18:00 -> 3 slots
+		expect(slotsK1.length).toBe(3)
 		expect(
 			slotsK1.map(
 				s =>
 					`${String(s.start.getUTCHours()).padStart(2, '0')}:${String(s.start.getUTCMinutes()).padStart(2, '0')}`
 			)
-		).toEqual(['16:00', '16:30', '17:00', '17:30'])
+		).toEqual(['16:00', '17:00', '17:30'])
 	})
 
 	test('CRITICAL: timezone transition during DST changes', () => {

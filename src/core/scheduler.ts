@@ -114,14 +114,14 @@ export class Scheduler {
 			latestTime,
 		} = options
 
-		// Apply padding and merge busy times
 		const paddedBusyTimes = applyPadding(this.busyTimes, padding)
-		const mergedBusyTimes = mergeBusyTimes(paddedBusyTimes)
 
 		// Use K-overlaps algorithm if maxOverlaps is specified
 		if (maxOverlaps !== undefined) {
-			// Find free time periods with K-overlaps algorithm
-			const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, mergedBusyTimes, maxOverlaps)
+			// Deliberately unmerged: merging rewrites two overlapping busy times as one
+			// interval, so the depth this algorithm counts could never exceed 1 and every
+			// maxOverlaps >= 1 reported the whole window free.
+			const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, paddedBusyTimes, maxOverlaps)
 
 			// Apply slot generation constraints to free periods
 			return this.applySlotConstraintsToFreeTime(freeSlots, {
@@ -134,7 +134,10 @@ export class Scheduler {
 			})
 		}
 
-		// Traditional approach for backward compatibility
+		// Traditional approach for backward compatibility: here overlapping busy times are
+		// equivalent to their union, so merging first keeps the filter below cheap.
+		const mergedBusyTimes = mergeBusyTimes(paddedBusyTimes)
+
 		// Generate potential slots
 		const slots = generateSlots(startTime, endTime, {
 			slotDurationMinutes: slotDuration,

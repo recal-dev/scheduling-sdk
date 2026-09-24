@@ -273,13 +273,19 @@ describe('AvailabilityScheduler', () => {
 			// Should allow slots in period with single overlap
 			expect(slots.length).toBeGreaterThan(0)
 
-			// Should have slots throughout most of the period since only 2 intervals overlap at most
-			const hasSlotInSingleOverlap = slots.some(
+			// Depth reaches 2 over 14:30-15:00, so K=1 refuses any slot covering it while the
+			// singly covered time on either side stays offered.
+			const coversDoubleBooking = slots.some(
 				slot =>
-					slot.start.getTime() >= new Date('2024-01-15T14:00:00Z').getTime() &&
-					slot.start.getTime() < new Date('2024-01-15T14:30:00Z').getTime()
+					slot.start.getTime() < new Date('2024-01-15T15:00:00Z').getTime() &&
+					slot.end.getTime() > new Date('2024-01-15T14:30:00Z').getTime()
 			)
-			expect(hasSlotInSingleOverlap).toBe(true)
+			expect(coversDoubleBooking).toBe(false)
+
+			const offersAfterTheOverlap = slots.some(
+				slot => slot.start.getTime() === new Date('2024-01-15T15:00:00Z').getTime()
+			)
+			expect(offersAfterTheOverlap).toBe(true)
 		})
 
 		test('should integrate with availability patterns correctly', () => {
@@ -432,13 +438,14 @@ describe('AvailabilityScheduler', () => {
 			// Should behave like core scheduler with K-overlaps
 			expect(slots.length).toBeGreaterThan(0)
 
-			// Should allow slots throughout period since only 2 intervals overlap max
-			const hasSlotDuringOverlap = slots.some(
+			// Same rule as the core scheduler: 10:30-11:00 carries two busy times, so K=1
+			// refuses it rather than treating the pair as one interval.
+			const coversDoubleBooking = slots.some(
 				slot =>
-					slot.start.getTime() >= new Date('2024-01-15T10:00:00Z').getTime() &&
-					slot.end.getTime() <= new Date('2024-01-15T11:30:00Z').getTime()
+					slot.start.getTime() < new Date('2024-01-15T11:00:00Z').getTime() &&
+					slot.end.getTime() > new Date('2024-01-15T10:30:00Z').getTime()
 			)
-			expect(hasSlotDuringOverlap).toBe(true)
+			expect(coversDoubleBooking).toBe(false)
 		})
 	})
 })

@@ -334,6 +334,53 @@ describe('Scheduler', () => {
 			scheduler = new Scheduler()
 		})
 
+		it('blocks a period two busy times cover when K=1, rather than merging them into one', () => {
+			scheduler.addBusyTimes([
+				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
+				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
+			])
+
+			const slots = scheduler.findAvailableSlots(new Date('2024-01-01T09:00:00Z'), new Date('2024-01-01T13:00:00Z'), {
+				slotDuration: 60,
+				maxOverlaps: 1,
+			})
+
+			const offersCoveredHour = slots.some(slot => slot.start.getTime() === new Date('2024-01-01T10:00:00Z').getTime())
+			expect(offersCoveredHour).toBe(false)
+		})
+
+		it('counts depth rather than coverage, so K=2 offers what K=1 refuses', () => {
+			scheduler.addBusyTimes([
+				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
+				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
+			])
+
+			const at = (maxOverlaps: number) =>
+				scheduler
+					.findAvailableSlots(new Date('2024-01-01T09:00:00Z'), new Date('2024-01-01T13:00:00Z'), {
+						slotDuration: 60,
+						maxOverlaps,
+					})
+					.some(slot => slot.start.getTime() === new Date('2024-01-01T10:00:00Z').getTime())
+
+			expect(at(1)).toBe(false)
+			expect(at(2)).toBe(true)
+		})
+
+		it('still treats a single busy time as depth one when K=1', () => {
+			scheduler.addBusyTimes([
+				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
+			])
+
+			const slots = scheduler.findAvailableSlots(new Date('2024-01-01T09:00:00Z'), new Date('2024-01-01T13:00:00Z'), {
+				slotDuration: 60,
+				maxOverlaps: 1,
+			})
+
+			const offersCoveredHour = slots.some(slot => slot.start.getTime() === new Date('2024-01-01T10:00:00Z').getTime())
+			expect(offersCoveredHour).toBe(true)
+		})
+
 		it('should work with K=0 (traditional behavior)', () => {
 			scheduler.addBusyTimes([
 				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
@@ -371,16 +418,16 @@ describe('Scheduler', () => {
 				maxOverlaps: 1,
 			})
 
-			// Should allow slots throughout the period since only 2 intervals overlap at most
-			expect(slots.length).toBeGreaterThan(3) // Should have slots across entire period
+			// Depth is 1 over 10:00-10:30 and 11:00-11:30 but 2 over 10:30-11:00, so K=1 frees
+			// 09:00-10:30 and 11:00-13:00 — three whole hours.
+			expect(slots.length).toBe(3)
 
-			// Check that we have slots in previously "blocked" time
-			const hasSlotInOverlap = slots.some(
+			const coversDoubleBooking = slots.some(
 				slot =>
-					slot.start.getTime() >= new Date('2024-01-01T10:00:00Z').getTime() &&
-					slot.end.getTime() <= new Date('2024-01-01T11:30:00Z').getTime()
+					slot.start.getTime() < new Date('2024-01-01T11:00:00Z').getTime() &&
+					slot.end.getTime() > new Date('2024-01-01T10:30:00Z').getTime()
 			)
-			expect(hasSlotInOverlap).toBe(true)
+			expect(coversDoubleBooking).toBe(false)
 		})
 
 		it('should handle multiple overlaps correctly', () => {
