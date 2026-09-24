@@ -23,16 +23,14 @@ jobs:
         with:
           bun-version: latest
 
+      # Node 24 for the npm it bundles: Trusted Publishing exchanges the job's OIDC
+      # token for a short-lived npm credential and needs npm >= 11.5.1, which Node 20
+      # does not ship. Installing npm@latest on top of Node 20 fails outright, since
+      # current npm refuses to run there at all.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-
-      # Trusted Publishing exchanges the job's OIDC token for a short-lived npm
-      # credential, so no NPM_TOKEN is needed. It requires npm >= 11.5.1, newer than
-      # the npm 10 that Node 20 above ships with.
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: bun install
