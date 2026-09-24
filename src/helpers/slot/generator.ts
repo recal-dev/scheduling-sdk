@@ -1,7 +1,6 @@
 import type { TimeSlot } from '../../types/scheduling.types'
 import { MS_PER_MINUTE } from '../../utils/constants'
 import { findNextSlotBoundary } from '../time/alignment'
-import { convertTimeStringToUTC } from '../time/timezone'
 
 export interface SlotGenerationOptions {
 	slotDurationMinutes: number
