@@ -4,7 +4,9 @@
 	"description": "Brought to you by Recal - A TypeScript SDK for scheduling functionality",
 	"author": "Recal",
 	"license": "MIT",
-	"contributors": ["tkoehlerlg"],
+	"contributors": [
+		"tkoehlerlg"
+	],
 	"type": "module",
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
@@ -21,7 +23,9 @@
 			}
 		}
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "bun run build:types && bun run build:esm && bun run build:cjs",
 		"build:types": "tsc --declaration --emitDeclarationOnly --outDir dist && cp dist/index.d.ts dist/index.d.cts",
@@ -49,9 +53,7 @@
 	"homepage": "https://github.com/recal-dev/scheduling-sdk#readme",
 	"devDependencies": {
 		"@types/bun": "latest",
-		"@biomejs/biome": "^2.1.2"
-	},
-	"peerDependencies": {
+		"@biomejs/biome": "^2.1.2",
 		"typescript": "^5"
 	},
 	"keywords": [
@@ -70,5 +72,13 @@
 		"date-time",
 		"slots",
 		"busy-time"
-	]
+	],
+	"sideEffects": false,
+	"engines": {
+		"node": ">=20"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	}
 }

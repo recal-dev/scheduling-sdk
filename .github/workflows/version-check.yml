@@ -8,8 +8,9 @@ on:
 
 jobs:
   check-version:
-    # Only run if PR title starts with 'v'
-    if: startsWith(github.event.pull_request.title, 'v')
+    # Every merge into main is released, so every PR must carry the bump. Gating on a title
+    # convention meant the check skipped itself on any PR that did not start with 'v' — which was
+    # every PR written to the commit convention, including the last three bug fixes.
     runs-on: ubuntu-latest
     
     steps:

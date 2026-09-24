@@ -1,11 +1,11 @@
 name: Publish to npm
 
+# A tagged GitHub Release fires both `release: published` and `push: tags`, so the workflow ran
+# twice and the loser failed on "version already published". The release is the single trigger;
+# the tag it carries is checked against package.json below.
 on:
   release:
     types: [published]
-  push:
-    tags:
-      - 'v*'
 
 permissions:
     id-token: write
@@ -46,6 +46,19 @@ jobs:
 
       - name: Run tests
         run: bun test
+
+      # Tag and version have drifted apart before — v0.5.0 points at package.json 0.5.1, and 0.5.1
+      # reached npm a minute before 0.5.0. A mismatch now fails the release instead of publishing
+      # something the tag does not describe.
+      - name: Check the tag matches package.json
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "Release tag $TAG does not match package.json $VERSION"
+            exit 1
+          fi
+          echo "Tag $TAG matches package.json"
 
       - name: Publish to npm
         run: npm publish
