@@ -3,16 +3,15 @@ import type { BusyTime } from '../../types/scheduling.types.ts'
 /**
  * Combines overlapping and adjacent busy times into one interval each.
  *
- * Returns fresh objects. Extending an end time in place would edit the caller's own busy
- * times, and `applyPadding` hands this the stored array itself when padding is zero — so a
- * merge would quietly rewrite the scheduler's state and every later read of it.
+ * Returns fresh objects: extending an end time in place would edit the caller's own busy
+ * times, and `applyPadding` hands this the stored array itself when padding is zero — so an
+ * in-place merge would quietly rewrite the scheduler's state and every later read of it.
  */
 export function mergeBusyTimes(busyTimes: BusyTime[]): BusyTime[] {
 	if (busyTimes.length <= 1) {
 		return busyTimes.slice()
 	}
 
-	// Sort by start time for optimal merging
 	const sorted = busyTimes.slice().sort((a, b) => a.start.getTime() - b.start.getTime())
 	const merged: BusyTime[] = [{ ...sorted[0]! }]
 
@@ -20,15 +19,10 @@ export function mergeBusyTimes(busyTimes: BusyTime[]): BusyTime[] {
 		const current = sorted[i]!
 		const lastMerged = merged[merged.length - 1]!
 
-		// Check if current overlaps or is adjacent to last merged
-		if (current.start.getTime() <= lastMerged.end.getTime()) {
-			// Merge by extending the end time if necessary
-			if (current.end.getTime() > lastMerged.end.getTime()) {
-				lastMerged.end = current.end
-			}
-		} else {
-			// No overlap, add as new busy time
+		if (current.start.getTime() > lastMerged.end.getTime()) {
 			merged.push({ ...current })
+		} else if (current.end.getTime() > lastMerged.end.getTime()) {
+			lastMerged.end = current.end
 		}
 	}
 

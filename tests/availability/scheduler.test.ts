@@ -273,8 +273,7 @@ describe('AvailabilityScheduler', () => {
 			// Should allow slots in period with single overlap
 			expect(slots.length).toBeGreaterThan(0)
 
-			// Depth reaches 2 over 14:30-15:00, so K=1 refuses any slot covering it while the
-			// singly covered time on either side stays offered.
+			// Depth reaches 2 over 14:30-15:00; the singly covered time from 15:00 stays offered.
 			const coversDoubleBooking = slots.some(
 				slot =>
 					slot.start.getTime() < new Date('2024-01-15T15:00:00Z').getTime() &&
@@ -438,8 +437,7 @@ describe('AvailabilityScheduler', () => {
 			// Should behave like core scheduler with K-overlaps
 			expect(slots.length).toBeGreaterThan(0)
 
-			// Same rule as the core scheduler: 10:30-11:00 carries two busy times, so K=1
-			// refuses it rather than treating the pair as one interval.
+			// 10:30-11:00 carries two busy times, the same rule the core scheduler applies.
 			const coversDoubleBooking = slots.some(
 				slot =>
 					slot.start.getTime() < new Date('2024-01-15T11:00:00Z').getTime() &&

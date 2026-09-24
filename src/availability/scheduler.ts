@@ -428,10 +428,8 @@ export class AvailabilityScheduler {
 		} = options
 
 		const paddedBusyTimes = applyPadding(allBusyTimes, padding)
-
 		const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, paddedBusyTimes, maxOverlaps!)
 
-		// Apply slot generation constraints to free periods
 		const result: TimeSlot[] = []
 		for (const freeSlot of freeSlots) {
 			const slots = generateSlots(freeSlot.start, freeSlot.end, {
@@ -445,7 +443,6 @@ export class AvailabilityScheduler {
 			result.push(...slots)
 		}
 
-		// Sort by start time and return
 		return result.sort((a, b) => a.start.getTime() - b.start.getTime())
 	}
 }

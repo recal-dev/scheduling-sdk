@@ -132,8 +132,7 @@ describe('Scheduling with timezone edge cases', () => {
 		expect(slotsK0.length).toBe(1)
 		expect(slotsK0[0]!.start.getUTCHours()).toBe(17)
 		expect(slotsK0[0]!.start.getUTCMinutes()).toBe(30)
-		// With K=1, depth is 2 across 16:30-17:00, so the free windows are 16:00-16:30 and
-		// 17:00-18:00 -> 3 slots
+		// With K=1, depth is 2 across 16:30-17:00, leaving 16:00-16:30 and 17:00-18:00 free -> 3 slots
 		expect(slotsK1.length).toBe(3)
 		expect(
 			slotsK1.map(
