@@ -1,6 +1,6 @@
 import { Scheduler } from '../core/scheduler'
 import { weeklyAvailabilityToBusyTimes } from '../helpers/availability/converter'
-import { findAvailableSlotsWithOverlaps } from '../helpers/busy-time/free-intervals'
+import { findAvailableSlotsWithOverlaps, intersectTimeSlots } from '../helpers/busy-time/free-intervals'
 import { applyPadding } from '../helpers/busy-time/padding'
 import { generateSlots } from '../helpers/slot/generator'
 import type { WeeklyAvailability } from '../types/availability.types'
@@ -288,7 +288,8 @@ export class AvailabilityScheduler {
 			return this.findSlotsWithOverlapsOptimized(
 				startTime,
 				endTime,
-				[...manualBusyTimes, ...availabilityBusyTimes],
+				manualBusyTimes,
+				availabilityBusyTimes,
 				normalizedOptions
 			)
 		}
@@ -400,20 +401,21 @@ export class AvailabilityScheduler {
 	}
 
 	/**
-	 * Optimized slot finding using K-overlaps algorithm directly.
-	 * Avoids creating temporary scheduler for better performance.
+	 * Finds slots by overlap depth, then keeps only the parts inside the availability pattern.
 	 *
-	 * @param startTime - Start of the search range
-	 * @param endTime - End of the search range
-	 * @param allBusyTimes - Combined manual and availability busy times
-	 * @param options - Scheduling options with maxOverlaps specified
-	 * @returns Array of available time slots
+	 * The two kinds of busy time answer different questions, so they cannot be counted
+	 * together. `maxOverlaps` asks how many *meetings* may share a moment; the pattern says
+	 * when bookings are possible at all. Counted together, an hour outside the pattern carries
+	 * depth one and any `maxOverlaps >= 1` offers it — a Monday 9-17 pattern answered with
+	 * slots around the clock.
+	 *
 	 * @private
 	 */
 	private findSlotsWithOverlapsOptimized(
 		startTime: Date,
 		endTime: Date,
-		allBusyTimes: BusyTime[],
+		manualBusyTimes: BusyTime[],
+		availabilityBusyTimes: BusyTime[],
 		options: SchedulingOptions
 	): TimeSlot[] {
 		const {
@@ -427,8 +429,19 @@ export class AvailabilityScheduler {
 			latestTime,
 		} = options
 
-		const paddedBusyTimes = applyPadding(allBusyTimes, padding)
-		const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, paddedBusyTimes, maxOverlaps!)
+		const withinDepth = findAvailableSlotsWithOverlaps(
+			startTime,
+			endTime,
+			applyPadding(manualBusyTimes, padding),
+			maxOverlaps!
+		)
+		const withinAvailability = findAvailableSlotsWithOverlaps(
+			startTime,
+			endTime,
+			applyPadding(availabilityBusyTimes, padding),
+			0
+		)
+		const freeSlots = intersectTimeSlots(withinDepth, withinAvailability)
 
 		const result: TimeSlot[] = []
 		for (const freeSlot of freeSlots) {

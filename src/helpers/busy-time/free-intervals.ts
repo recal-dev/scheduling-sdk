@@ -167,3 +167,30 @@ export function findAvailableSlotsWithOverlaps(
 
 	return intervalsToTimeSlots(freeIntervals)
 }
+
+/**
+ * Keeps only the time present in both lists of slots.
+ *
+ * Both inputs arrive sorted and non-overlapping from {@link findAvailableSlotsWithOverlaps},
+ * so a single pass over each is enough: emit the overlap wherever the two currently cover the
+ * same moment, then advance whichever ends first.
+ */
+export function intersectTimeSlots(left: TimeSlot[], right: TimeSlot[]): TimeSlot[] {
+	const result: TimeSlot[] = []
+	let leftIndex = 0
+	let rightIndex = 0
+
+	while (leftIndex < left.length && rightIndex < right.length) {
+		const a = left[leftIndex]!
+		const b = right[rightIndex]!
+		const start = Math.max(a.start.getTime(), b.start.getTime())
+		const end = Math.min(a.end.getTime(), b.end.getTime())
+
+		if (start < end) result.push({ start: new Date(start), end: new Date(end) })
+
+		if (a.end.getTime() <= b.end.getTime()) leftIndex++
+		else rightIndex++
+	}
+
+	return result
+}
