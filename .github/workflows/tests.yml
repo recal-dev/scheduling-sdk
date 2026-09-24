@@ -12,8 +12,23 @@ permissions:
 
 jobs:
     test:
-        name: Test Suite
+        # The library resolves wall-clock times into instants, so its answers must not depend on
+        # where it runs. A UTC-only leg hid that for a long time: the suite passed under TZ=UTC and
+        # failed hundreds of cases elsewhere. These four span the sign of the offset, a half-hour
+        # offset, and a southern-hemisphere DST calendar.
+        name: Test Suite (${{ matrix.tz }})
         runs-on: ubuntu-latest
+        # Non-UTC legs are advisory for now: they still fail, and the causes are known — the
+        # exported date utilities read the host clock by design, and DST offsets are resolved in a
+        # single pass. They report the number so it cannot quietly grow. Drop continue-on-error,
+        # and require these checks, once both are fixed.
+        continue-on-error: ${{ matrix.tz != 'UTC' }}
+        strategy:
+            fail-fast: false
+            matrix:
+                tz: [UTC, America/New_York, Asia/Kolkata, Pacific/Auckland]
+        env:
+            TZ: ${{ matrix.tz }}
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -39,9 +54,11 @@ jobs:
               run: bun test
 
             - name: Run tests with coverage
+              if: matrix.tz == 'UTC'
               run: bun run test:coverage
 
             - name: Upload coverage reports to Codecov
+              if: matrix.tz == 'UTC'
               uses: codecov/codecov-action@v5
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}

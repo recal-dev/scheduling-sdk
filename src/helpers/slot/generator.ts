@@ -1,7 +1,7 @@
 import type { TimeSlot } from '../../types/scheduling.types'
 import { MS_PER_MINUTE } from '../../utils/constants'
 import { findNextSlotBoundary } from '../time/alignment'
-import { convertTimeStringToUTC, createDateInTimezone } from '../time/timezone'
+import { convertTimeStringToUTC } from '../time/timezone'
 
 export interface SlotGenerationOptions {
 	slotDurationMinutes: number
@@ -33,33 +33,34 @@ function parseTimeInput(timeInput: string | number): number {
 	return hours * 60 + minutes
 }
 
+/**
+ * The slot's time of day, in minutes past local midnight in `timezone`.
+ *
+ * Read from the instant itself rather than reconstructed from a calendar date: the previous
+ * approach took the slot's **UTC** date and built the window for that date in the target zone,
+ * so any local day that straddles UTC midnight was tested against the neighbouring day's
+ * window. A 21:00 slot in New York was measured against the next day's window and dropped.
+ */
+function localMinutesOfDay(date: Date, timezone: string): number {
+	const parts = new Intl.DateTimeFormat('en-US', {
+		timeZone: timezone,
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: false,
+	}).formatToParts(date)
+	const read = (type: string): number => Number(parts.find(part => part.type === type)?.value ?? '0')
+	// Some ICU builds render midnight as hour 24 under hour12: false.
+	return (read('hour') % 24) * 60 + read('minute')
+}
+
 function isSlotWithinDailyTimeRange(
 	slot: TimeSlot,
 	earliestMinutes: number,
 	latestMinutes: number,
 	timezone: string
 ): boolean {
-	const slotDate = new Date(slot.start)
-	slotDate.setUTCHours(0, 0, 0, 0)
-
-	const earliestTimeUtc = createDateInTimezone(
-		slotDate,
-		Math.floor(earliestMinutes / 60),
-		earliestMinutes % 60,
-		timezone
-	)
-
-	// Handle 24:00 (end of day) by using next day's 00:00
-	let latestTimeUtc: Date
-	if (latestMinutes >= 24 * 60) {
-		const nextDay = new Date(slotDate)
-		nextDay.setUTCDate(nextDay.getUTCDate() + 1)
-		latestTimeUtc = createDateInTimezone(nextDay, 0, 0, timezone)
-	} else {
-		latestTimeUtc = createDateInTimezone(slotDate, Math.floor(latestMinutes / 60), latestMinutes % 60, timezone)
-	}
-
-	return slot.start.getTime() >= earliestTimeUtc.getTime() && slot.start.getTime() < latestTimeUtc.getTime()
+	const minutes = localMinutesOfDay(slot.start, timezone)
+	return minutes >= earliestMinutes && minutes < latestMinutes
 }
 
 export function generateSlots(startTime: Date, endTime: Date, options: SlotGenerationOptions): TimeSlot[] {

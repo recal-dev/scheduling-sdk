@@ -225,8 +225,8 @@ export function weeklyAvailabilityToBusyTimes(
 	weekStart: Date,
 	timezone?: string
 ): BusyTime[] {
-	if (weekStart.getDay() !== 1) {
-		throw new Error('weekStart must be a Monday (getDay() === 1)')
+	if (weekStart.getUTCDay() !== 1) {
+		throw new Error('weekStart must be a Monday (getUTCDay() === 1)')
 	}
 
 	// Use the provided timezone with fallbacks: provided > env var > UTC
