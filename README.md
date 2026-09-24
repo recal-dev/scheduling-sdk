@@ -97,6 +97,8 @@ const availableSlots = scheduler.findAvailableSlots(
 
 ### Managing Busy Times
 
+Busy times are validated on the way in: both boundaries must be real `Date`s and the interval must not end before it starts, or the call throws. They are copied, so mutating what you passed in — or what `getBusyTimes()` hands back — does not change the scheduler's answers.
+
 ```typescript
 import { Scheduler } from 'scheduling-sdk'
 
@@ -135,6 +137,8 @@ const currentBusyTimes = scheduler.getBusyTimes()
 ### Weekly Availability Scheduling
 
 **Business hours made easy ;)**
+
+A pattern names times on your clock, not instants: `09:00`–`17:00` is eight hours on the clock every week, which is seven or nine *elapsed* hours on the two days a year the zone changes offset — the same thing a recurring block does in Google Calendar or Outlook. A wall time the clock skips is simply not offered, and one it repeats is offered twice.
 
 ```typescript
 import { AvailabilityScheduler } from 'scheduling-sdk'
@@ -244,6 +248,7 @@ Notes:
 - If you use `AvailabilityScheduler`, you may omit `timezone` in `findAvailableSlots` when using `earliestTime`/`latestTime`; it will default to the scheduler’s timezone.
 - If you use the core `Scheduler`, providing `earliestTime`/`latestTime` without `timezone` will throw a validation error.
 - Daily windows filter by slot START time.
+- The window is measured on the caller's **local** day, so an evening window that crosses UTC midnight (say `20:00`–`24:00` in New York) keeps its slots.
 
 ### Allowing Overlaps (K-overlaps)
 
