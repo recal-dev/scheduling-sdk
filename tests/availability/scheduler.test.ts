@@ -308,16 +308,50 @@ describe('AvailabilityScheduler', () => {
 				expect(slot.start.getUTCHours()).toBeLessThan(22)
 			})
 
-			// For now, the K-overlaps optimization may not perfectly handle availability patterns
-			// This is a known limitation - K=1 should ideally respect availability but may include more slots
+			// maxOverlaps says how many meetings may share a moment; it does not widen the hours
+			// bookings are possible at all, so K=1 is bound by the pattern exactly as K=0 is.
 			slotsK1.forEach(slot => {
-				// More permissive check since K=1 allows more scheduling flexibility
-				expect(slot.start.getUTCHours()).toBeGreaterThanOrEqual(8)
-				expect(slot.start.getUTCHours()).toBeLessThan(23)
+				expect(slot.start.getUTCHours()).toBeGreaterThanOrEqual(14)
+				expect(slot.start.getUTCHours()).toBeLessThan(22)
 			})
 
 			// K=1 should allow more slots since it's more permissive
 			expect(slotsK1.length).toBeGreaterThanOrEqual(slotsTraditional.length)
+		})
+
+		test('keeps K=1 inside the availability pattern rather than offering the whole day', () => {
+			const patternScheduler = new AvailabilityScheduler({
+				schedules: [{ days: ['monday'] as DayOfWeek[], start: '09:00', end: '17:00' }],
+			})
+
+			const slots = patternScheduler.findAvailableSlots(
+				new Date('2024-01-15T00:00:00Z'),
+				new Date('2024-01-16T00:00:00Z'),
+				{ slotDuration: 60, maxOverlaps: 1 }
+			)
+
+			expect(slots.length).toBe(8)
+			expect(slots[0]!.start.toISOString()).toBe('2024-01-15T09:00:00.000Z')
+			expect(slots.at(-1)!.end.toISOString()).toBe('2024-01-15T17:00:00.000Z')
+		})
+
+		test('still allows one overlapping meeting inside the pattern when K=1', () => {
+			const patternScheduler = new AvailabilityScheduler({
+				schedules: [{ days: ['monday'] as DayOfWeek[], start: '09:00', end: '17:00' }],
+			})
+			patternScheduler.addBusyTimes([
+				{ start: new Date('2024-01-15T10:00:00Z'), end: new Date('2024-01-15T11:00:00Z') },
+			])
+
+			const slots = patternScheduler.findAvailableSlots(
+				new Date('2024-01-15T00:00:00Z'),
+				new Date('2024-01-16T00:00:00Z'),
+				{ slotDuration: 60, maxOverlaps: 1 }
+			)
+
+			const offersTheBusyHour = slots.some(slot => slot.start.toISOString() === '2024-01-15T10:00:00.000Z')
+			expect(offersTheBusyHour).toBe(true)
+			expect(slots.length).toBe(8)
 		})
 
 		test('should work with timezone and K-overlaps together', () => {
