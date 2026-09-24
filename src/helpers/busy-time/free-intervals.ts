@@ -144,7 +144,12 @@ export function intervalsToTimeSlots(intervals: Interval[]): TimeSlot[] {
 }
 
 /**
- * Finds available slots using K-overlaps algorithm instead of traditional filtering
+ * Finds available slots by overlap depth: a moment is free while at most `maxOverlaps` busy
+ * times cover it.
+ *
+ * `busyTimes` must NOT be merged. Merging rewrites two overlapping busy times as a single
+ * interval, so the depth counted here could never exceed one and any `maxOverlaps >= 1`
+ * would report the whole window free.
  */
 export function findAvailableSlotsWithOverlaps(
 	startTime: Date,

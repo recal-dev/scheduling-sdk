@@ -118,9 +118,6 @@ export class Scheduler {
 
 		// Use K-overlaps algorithm if maxOverlaps is specified
 		if (maxOverlaps !== undefined) {
-			// Deliberately unmerged: merging rewrites two overlapping busy times as one
-			// interval, so the depth this algorithm counts could never exceed 1 and every
-			// maxOverlaps >= 1 reported the whole window free.
 			const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, paddedBusyTimes, maxOverlaps)
 
 			// Apply slot generation constraints to free periods

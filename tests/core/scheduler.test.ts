@@ -334,6 +334,30 @@ describe('Scheduler', () => {
 			scheduler = new Scheduler()
 		})
 
+		it('leaves the stored busy times alone, so a traditional call cannot skew a later K=1 call', () => {
+			const busyTimes = [
+				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
+				{ start: new Date('2024-01-01T10:30:00Z'), end: new Date('2024-01-01T11:30:00Z') },
+			]
+			scheduler.addBusyTimes(busyTimes)
+			const startTime = new Date('2024-01-01T09:00:00Z')
+			const endTime = new Date('2024-01-01T13:00:00Z')
+
+			scheduler.findAvailableSlots(startTime, endTime, { slotDuration: 30 })
+
+			expect(scheduler.getBusyTimes().map(busy => busy.end.toISOString())).toEqual([
+				'2024-01-01T11:00:00.000Z',
+				'2024-01-01T11:30:00.000Z',
+			])
+			expect(busyTimes[0]!.end.toISOString()).toBe('2024-01-01T11:00:00.000Z')
+
+			const slots = scheduler.findAvailableSlots(startTime, endTime, { slotDuration: 30, maxOverlaps: 1 })
+			const offersSinglyCoveredTail = slots.some(
+				slot => slot.start.getTime() === new Date('2024-01-01T11:00:00Z').getTime()
+			)
+			expect(offersSinglyCoveredTail).toBe(true)
+		})
+
 		it('blocks a period two busy times cover when K=1, rather than merging them into one', () => {
 			scheduler.addBusyTimes([
 				{ start: new Date('2024-01-01T10:00:00Z'), end: new Date('2024-01-01T11:00:00Z') },
@@ -446,14 +470,15 @@ describe('Scheduler', () => {
 				maxOverlaps: 2,
 			})
 
-			// Period 10:45-11:15 has 3 overlaps, so should be excluded
-			// But periods with ≤2 overlaps should be available
-			const hasSlotInTripleOverlap = slots.some(
+			// 10:45-11:15 carries three busy times. No generated slot starts at 10:45, so asking
+			// whether one sits inside that window is vacuously false — ask whether any slot
+			// covers any part of it instead.
+			const coversTripleOverlap = slots.some(
 				slot =>
-					slot.start.getTime() >= new Date('2024-01-01T10:45:00Z').getTime() &&
-					slot.end.getTime() <= new Date('2024-01-01T11:15:00Z').getTime()
+					slot.start.getTime() < new Date('2024-01-01T11:15:00Z').getTime() &&
+					slot.end.getTime() > new Date('2024-01-01T10:45:00Z').getTime()
 			)
-			expect(hasSlotInTripleOverlap).toBe(false)
+			expect(coversTripleOverlap).toBe(false)
 
 			// Should have slots in areas with ≤2 overlaps
 			expect(slots.length).toBeGreaterThan(0)

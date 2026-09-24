@@ -429,8 +429,6 @@ export class AvailabilityScheduler {
 
 		const paddedBusyTimes = applyPadding(allBusyTimes, padding)
 
-		// Deliberately unmerged, as in the core scheduler: merging rewrites two overlapping
-		// busy times as one interval, which caps the counted depth at 1.
 		const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, paddedBusyTimes, maxOverlaps!)
 
 		// Apply slot generation constraints to free periods

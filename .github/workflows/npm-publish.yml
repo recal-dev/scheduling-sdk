@@ -29,8 +29,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       # Trusted Publishing exchanges the job's OIDC token for a short-lived npm
-      # credential, so no NPM_TOKEN is needed. It requires npm >= 11.5.1, which is
-      # newer than the version bundled with any current Node release.
+      # credential, so no NPM_TOKEN is needed. It requires npm >= 11.5.1, newer than
+      # the npm 10 that Node 20 above ships with.
       - name: Upgrade npm for trusted publishing
         run: npm install -g npm@latest
 
