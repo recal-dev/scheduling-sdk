@@ -1,6 +1,6 @@
 import type { DayOfWeek, WeeklyAvailability } from '../../types/availability.types'
 import type { BusyTime } from '../../types/scheduling.types'
-import { convertTimeStringToUTC } from '../time/timezone'
+import { resolveWallWindow } from '../time/timezone'
 
 // Weekday order aligned with DayOfWeek type (Monday first)
 const WEEK_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -57,29 +57,25 @@ function buildAvailabilityIntervalsUTC(
 				throw new Error(`Invalid time range: ${schedule.start} to ${schedule.end}. Start must be before end.`)
 			}
 
-			const startUTC = convertTimeStringToUTC(
-				`${String(startT.hours).padStart(2, '0')}:${String(startT.minutes).padStart(2, '0')}`,
-				dayLocalDate,
-				timezone
-			)
-			let endUTC: Date
-			const endIsEndOfDay =
+			const startMinutes = startT.hours * 60 + startT.minutes
+			// 23:59 has always meant the end of the day rather than a minute short of it, and now
+			// says so for every zone: the old form excepted the literal string 'UTC', so 'Etc/UTC'
+			// and 'UTC' disagreed about the same instant.
+			const endsAtMidnight =
 				(typeof schedule.end === 'string' && schedule.end === '23:59') ||
 				(typeof schedule.end === 'number' && schedule.end === 1439)
-			if (endIsEndOfDay && timezone !== 'UTC') {
-				// Treat 23:59 as exclusive at next day's midnight
-				const nextLocalDate = new Date(dayLocalDate)
-				nextLocalDate.setDate(nextLocalDate.getDate() + 1)
-				endUTC = convertTimeStringToUTC('00:00', nextLocalDate, timezone)
-			} else {
-				endUTC = convertTimeStringToUTC(
-					`${String(endT.hours).padStart(2, '0')}:${String(endT.minutes).padStart(2, '0')}`,
-					dayLocalDate,
+			const endMinutes = endsAtMidnight ? 1440 : endT.hours * 60 + endT.minutes
+
+			intervals.push(
+				...resolveWallWindow(
+					dayLocalDate.getFullYear(),
+					dayLocalDate.getMonth(),
+					dayLocalDate.getDate(),
+					startMinutes,
+					endMinutes,
 					timezone
 				)
-			}
-
-			intervals.push({ start: startUTC, end: endUTC })
+			)
 		}
 	}
 

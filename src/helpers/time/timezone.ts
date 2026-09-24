@@ -166,3 +166,103 @@ export function isValidTimezone(timezone: string): boolean {
 		return false
 	}
 }
+
+const MS_MINUTE = 60 * 1000
+const MS_HOUR = 60 * MS_MINUTE
+
+/**
+ * The spans of constant UTC offset covering `[from, to)`, each change located by bisection.
+ *
+ * Transitions land on a whole minute, so bisecting to the minute is exact rather than the
+ * approximation sampling at a fixed resolution would give.
+ */
+function offsetSegments(
+	from: number,
+	to: number,
+	timezone: string
+): Array<{ from: number; to: number; offset: number }> {
+	const segments: Array<{ from: number; to: number; offset: number }> = []
+	let segmentStart = from
+	let cursor = from
+	let offset = getTimezoneOffsetMinutes(new Date(cursor), timezone)
+
+	while (cursor < to) {
+		const probe = Math.min(cursor + MS_HOUR, to)
+		if (getTimezoneOffsetMinutes(new Date(probe), timezone) === offset) {
+			cursor = probe
+			continue
+		}
+
+		let low = cursor
+		let high = probe
+		while (high - low > MS_MINUTE) {
+			const mid = low + Math.floor((high - low) / 2)
+			if (getTimezoneOffsetMinutes(new Date(mid), timezone) === offset) low = mid
+			else high = mid
+		}
+		segments.push({ from: segmentStart, to: high, offset })
+		segmentStart = high
+		cursor = high
+		offset = getTimezoneOffsetMinutes(new Date(cursor), timezone)
+	}
+
+	segments.push({ from: segmentStart, to, offset })
+	return segments
+}
+
+/**
+ * The instants on a local date whose wall-clock time falls inside `[startMinutes, endMinutes)`.
+ *
+ * A weekly pattern names times on the host's clock, not instants, so a window is a *set* of
+ * moments rather than a pair of resolved endpoints. The difference shows only on the two days a
+ * year a zone changes offset, and there it is the whole point:
+ *
+ * - a wall time the clock skips is absent from the set, so a window containing a spring-forward
+ *   loses exactly the missing hour instead of running an hour past its stated end;
+ * - a wall time the clock repeats occurs twice, so such a window is returned as two intervals.
+ *
+ * Resolving two endpoints separately can express neither: it always yields one interval whose
+ * length is the wall duration, whatever the day actually held.
+ *
+ * `endMinutes` may be 1440, meaning midnight at the end of the local date.
+ *
+ * @throws {Error} when the timezone is not a valid IANA identifier
+ */
+export function resolveWallWindow(
+	year: number,
+	month: number,
+	day: number,
+	startMinutes: number,
+	endMinutes: number,
+	timezone: string
+): Array<{ start: Date; end: Date }> {
+	if (!isValidTimezone(timezone)) {
+		throw new Error(`Invalid timezone: ${timezone}. Must be a valid IANA timezone identifier.`)
+	}
+
+	const dayStartAsUTC = Date.UTC(year, month, day)
+	// Wide enough for any real offset, plus a transition on either side of the date.
+	const searchFrom = dayStartAsUTC - 26 * MS_HOUR
+	const searchTo = dayStartAsUTC + 50 * MS_HOUR
+
+	const found: Array<{ start: number; end: number }> = []
+	for (const segment of offsetSegments(searchFrom, searchTo, timezone)) {
+		// `offset` is the minutes to add to a wall time to reach UTC.
+		const start = Math.max(dayStartAsUTC + (startMinutes + segment.offset) * MS_MINUTE, segment.from)
+		const end = Math.min(dayStartAsUTC + (endMinutes + segment.offset) * MS_MINUTE, segment.to)
+		if (start < end) found.push({ start, end })
+	}
+
+	found.sort((a, b) => a.start - b.start)
+
+	const merged: Array<{ start: Date; end: Date }> = []
+	for (const interval of found) {
+		const last = merged[merged.length - 1]
+		if (last && interval.start <= last.end.getTime()) {
+			if (interval.end > last.end.getTime()) last.end = new Date(interval.end)
+		} else {
+			merged.push({ start: new Date(interval.start), end: new Date(interval.end) })
+		}
+	}
+	return merged
+}
