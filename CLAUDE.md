@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a TypeScript SDK for scheduling functionality, brought to you by Recal. It uses Bun as the runtime and build tool.
 
 **Package**: `scheduling-sdk`  
-**Version**: 0.1.2  
+**Version**: see `package.json`  
 **License**: MIT  
 **Repository**: [github.com/recal-dev/scheduling-sdk](https://github.com/recal-dev/scheduling-sdk)
 
@@ -24,8 +24,8 @@ This is a TypeScript SDK for scheduling functionality, brought to you by Recal. 
 - `bun test` - Run tests
 - `bun test:coverage` - Run tests with coverage reporting (lcov + text)
 - `bun run typecheck` - Type check without emitting files
-- `bun run lint` - Run ESLint on src and tests directories
-- `bun run prettier` - Format code with Prettier
+- `bun run lint` - Lint with Biome
+- `bun run format` - Format with Biome
 
 ### Publishing
 

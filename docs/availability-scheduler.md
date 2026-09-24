@@ -4,6 +4,12 @@ Back: [Core Concepts](core-concepts.md) • Next: [API Reference](api-reference.
 
 Define recurring weekly availability patterns (e.g., business hours) and find available slots that respect both those patterns and manually-added busy times. This guide covers the `AvailabilityScheduler` class and related helpers.
 
+
+> **Times are wall-clock.** A pattern names times on the configured timezone's clock, not instants,
+> so `09:00`–`17:00` is eight hours on the clock every week — seven or nine *elapsed* hours on the
+> two days a year the zone changes offset, exactly as a recurring block behaves in Google Calendar
+> or Outlook. A wall time the clock skips is not offered, and one it repeats is offered twice.
+
 ## Table of Contents
 
 - Core Concepts

@@ -66,7 +66,7 @@ interface SchedulingOptions {
 - `slotSplit` (optional): Interval between the start times of consecutive slots in minutes. Defaults to `slotDuration`. Must be positive.
 - `padding` (optional): Buffer time in minutes to add before and after each busy time. Defaults to 0. Must be non-negative.
 - `offset` (optional): Offset from standard time boundaries in minutes. Defaults to 0. Must be non-negative.
-- `maxOverlaps` (optional): Allow up to K overlapping busy intervals. If undefined, traditional behavior applies (any overlap blocks a slot).
+- `maxOverlaps` (optional): how many existing bookings may already cover a moment and still leave it bookable. It models capacity — with three people who can each take a meeting, set `maxOverlaps: 2`, and a moment stays offered until three bookings overlap it. Counted per moment and after padding, over bookings only: an availability pattern is not a booking, so it bounds the answer at every value. Omitted or `0` means a moment is offered only while nothing covers it.
 - `timezone` (optional): IANA timezone identifier used for daily window filtering. Required if `earliestTime`/`latestTime` are provided when using the core `Scheduler`.
 - `earliestTime`/`latestTime` (optional): Local daily time window for slot START times. Specify as `HH:mm` or minutes since midnight. `latestTime` accepts `"24:00"` or `1440` as end of day.
 
@@ -517,13 +517,16 @@ All methods perform input validation and will throw descriptive errors for inval
 
 ### Busy Time Handling
 
-1. Busy times are automatically merged if they overlap or are adjacent
-2. Padding is applied before merging
-3. Slots that conflict with (padded) busy times are excluded
+1. Padding is applied first, widening each busy time by `padding` minutes on both sides
+2. Without `maxOverlaps`, padded busy times are merged and any slot conflicting with one is excluded
+3. With `maxOverlaps`, they are **not** merged — the count is how many busy times cover a moment, and
+   merging two overlapping ones into a single interval would make that count unable to exceed one
+4. Busy times are validated on the way in: an unparseable `Date`, or an interval ending before it
+   starts, throws rather than being scheduled against
 
 ### Time Alignment
 
-- When `offset` is 0, slots align to `slotSplit` boundaries (e.g., every 15 minutes for `slotSplit: 15`)
+- When `offset` is 0, slots start at the beginning of the search range and continue every `slotSplit` minutes — they are not snapped to clock boundaries
 - When `offset` is specified, slots align to `(boundary + offset)` (e.g., 5, 20, 35, 50 for `slotSplit: 15, offset: 5`)
 
 ### Availability Behavior

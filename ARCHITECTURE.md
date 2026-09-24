@@ -9,7 +9,7 @@ A modular scheduling SDK that finds available time slots with configurable optio
 ### 1. Types (`src/types/`)
 
 - `scheduling.types.ts` - Core interfaces (TimeSlot, BusyTime, SchedulingOptions)
-- `internal.types.ts` - Internal helper types
+- `availability.types.ts` - Weekly availability pattern types (WeeklyAvailability, DaySchedule, DayOfWeek)
 
 ### 2. Helpers (`src/helpers/`)
 
@@ -60,7 +60,6 @@ A modular scheduling SDK that finds available time slots with configurable optio
 ### 5. Utils (`src/utils/`)
 
 - `constants.ts` - Shared constants (MS_PER_MINUTE, etc.)
-- `errors.ts` - Custom error classes
 
 ## Data Flow
 
