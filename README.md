@@ -247,7 +247,7 @@ Notes:
 
 ### Allowing Overlaps (K-overlaps)
 
-You can allow up to K overlapping busy intervals by setting `maxOverlaps` in options. This uses an optimized algorithm internally.
+You can allow up to K overlapping busy intervals by setting `maxOverlaps` in options. K is how many busy times may cover a moment before it stops being offered, counted after padding, so `maxOverlaps: 0` is the default behaviour and `maxOverlaps: 1` still refuses a moment two busy times cover. This uses an optimized algorithm internally.
 
 ```typescript
 const slots = scheduler.findAvailableSlots(

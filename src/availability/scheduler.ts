@@ -1,7 +1,6 @@
 import { Scheduler } from '../core/scheduler'
 import { weeklyAvailabilityToBusyTimes } from '../helpers/availability/converter'
 import { findAvailableSlotsWithOverlaps } from '../helpers/busy-time/free-intervals'
-import { mergeBusyTimes } from '../helpers/busy-time/merge'
 import { applyPadding } from '../helpers/busy-time/padding'
 import { generateSlots } from '../helpers/slot/generator'
 import type { WeeklyAvailability } from '../types/availability.types'
@@ -428,14 +427,9 @@ export class AvailabilityScheduler {
 			latestTime,
 		} = options
 
-		// Apply padding and merge busy times (same as core scheduler)
 		const paddedBusyTimes = applyPadding(allBusyTimes, padding)
-		const mergedBusyTimes = mergeBusyTimes(paddedBusyTimes)
+		const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, paddedBusyTimes, maxOverlaps!)
 
-		// Use K-overlaps algorithm to find free time periods
-		const freeSlots = findAvailableSlotsWithOverlaps(startTime, endTime, mergedBusyTimes, maxOverlaps!)
-
-		// Apply slot generation constraints to free periods
 		const result: TimeSlot[] = []
 		for (const freeSlot of freeSlots) {
 			const slots = generateSlots(freeSlot.start, freeSlot.end, {
@@ -449,7 +443,6 @@ export class AvailabilityScheduler {
 			result.push(...slots)
 		}
 
-		// Sort by start time and return
 		return result.sort((a, b) => a.start.getTime() - b.start.getTime())
 	}
 }

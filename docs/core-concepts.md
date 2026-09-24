@@ -64,7 +64,7 @@ Busy times are the **inverse** of availability:
 
 ### Behavior
 
-- **Automatic Merging**: Overlapping or adjacent busy times are automatically merged
+- **Automatic Merging**: Overlapping or adjacent busy times are automatically merged, except under `maxOverlaps`, which counts how many busy times cover each moment and so needs them unmerged
 - **Padding Application**: Padding extends busy times on both sides, creating a larger unavailable period
 - **Conflict Detection**: Any slot that would overlap with a busy time (including padding) is excluded from results
 
