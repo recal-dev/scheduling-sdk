@@ -8,44 +8,71 @@ on:
 
 jobs:
   check-version:
-    # Every merge into main is released, so every PR must carry the bump. Gating on a title
+    # A PR that changes what installers receive must carry the bump. Gating on a title
     # convention meant the check skipped itself on any PR that did not start with 'v' — which was
     # every PR written to the commit convention, including the last three bug fixes.
+    #
+    # It then over-corrected: demanding a bump from PRs that ship nothing produced 0.7.2, a version
+    # whose tarball is byte-identical to 0.7.1 because `files` is ["dist"] and only docs changed.
+    # The publishable-paths step below is what stops that happening again.
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      
+
+      - name: Does this PR change what npm installs?
+        id: publishable
+        run: |
+          # `files` is ["dist"], and npm always adds package.json, README.md and LICENSE. Nothing
+          # else in the repo reaches an installer, so nothing else can justify a version.
+          NOT_PUBLISHED='^(docs/|\.github/|\.claude/|tests/|ARCHITECTURE\.md|CLAUDE\.md|CONTRIBUTING\.md|CHANGELOG\.md|AGENTS\.md)'
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+          echo "Changed files:"
+          echo "$CHANGED" | sed 's/^/  /'
+
+          if echo "$CHANGED" | grep -qvE "$NOT_PUBLISHED"; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "→ ships to npm; a version bump is required"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "→ nothing here reaches the tarball; no bump required"
+          fi
+
       - name: Get current package version
+        if: steps.publishable.outputs.changed == 'true'
         id: current
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "Current version: $CURRENT_VERSION"
-      
+
       - name: Get latest npm version
+        if: steps.publishable.outputs.changed == 'true'
         id: npm
         run: |
           NPM_VERSION=$(npm view scheduling-sdk version 2>/dev/null || echo "0.0.0")
           echo "version=$NPM_VERSION" >> $GITHUB_OUTPUT
           echo "Latest npm version: $NPM_VERSION"
-      
+
       - name: Compare versions
+        if: steps.publishable.outputs.changed == 'true'
         run: |
           CURRENT="${{ steps.current.outputs.version }}"
           NPM="${{ steps.npm.outputs.version }}"
-          
+
           # Function to compare semver versions
           verlte() {
               [ "$1" = "$2" ] && return 0 || [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
           }
-          
+
           if verlte "$CURRENT" "$NPM"; then
             echo "❌ Package version ($CURRENT) must be higher than npm version ($NPM)"
             exit 1
