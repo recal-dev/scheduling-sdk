@@ -42,7 +42,7 @@ describe('AvailabilityScheduler', () => {
 			end: new Date('2024-01-01T11:00:00Z'),
 		}
 		scheduler.addBusyTime(busyTime)
-		expect(scheduler.getBusyTimes()).toContain(busyTime)
+		expect(scheduler.getBusyTimes()).toContainEqual(busyTime)
 	})
 
 	test('addBusyTimes', () => {

@@ -1,4 +1,4 @@
-import type { SchedulingOptions } from '../types/scheduling.types.ts'
+import type { SchedulingOptions } from '../types/scheduling.types'
 
 export function validateOptions(options: SchedulingOptions): void {
 	validateDuration(options.slotDuration)

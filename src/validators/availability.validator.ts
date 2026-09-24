@@ -1,4 +1,4 @@
-import type { DayOfWeek, WeeklyAvailability } from '../types/availability.types.ts'
+import type { DayOfWeek, WeeklyAvailability } from '../types/availability.types'
 
 const VALID_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
