@@ -66,6 +66,8 @@ function localDate(instant: Date, timezone: string): string {
 }
 
 describe('resolveWallWindow', () => {
+	// A sweep, not an example: it resolves every zone x date x window combination and probes
+	// inside each interval, which is thousands of offset lookups and well past the default limit.
 	test('returns only instants whose local clock reads inside the window', () => {
 		let probes = 0
 
@@ -97,7 +99,7 @@ describe('resolveWallWindow', () => {
 		}
 
 		expect(probes).toBeGreaterThan(1000)
-	})
+	}, 30_000)
 
 	test('loses exactly the skipped hour when the clock springs forward', () => {
 		const intervals = resolveWallWindow(2024, 2, 10, 60, 300, 'America/New_York')

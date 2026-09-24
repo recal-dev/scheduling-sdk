@@ -3,6 +3,10 @@
  * Uses native JavaScript Date API and Intl.DateTimeFormat for zero-dependency timezone support.
  */
 
+import type { BusyTime } from '../../types/scheduling.types'
+import { MS_PER_HOUR, MS_PER_MINUTE } from '../../utils/constants'
+import { mergeBusyTimes } from '../busy-time/merge'
+
 /**
  * Converts a time (string HH:mm or number of minutes) in a specific timezone to a UTC Date object for a given date.
  *
@@ -76,11 +80,18 @@ export function convertTimeStringToUTC(timeStr: string | number, date: Date, tim
  * Gets the timezone offset in minutes for a specific date and timezone.
  * Positive values mean the timezone is ahead of UTC, negative means behind.
  */
-function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
-	// Create two copies of the date: one in UTC, one in the target timezone
-	const utcTime = date.getTime()
+const offsetFormatters = new Map<string, Intl.DateTimeFormat>()
 
-	// Get the date/time components as they would appear in the target timezone
+/**
+ * One formatter per timezone, kept rather than rebuilt.
+ *
+ * Constructing an `Intl.DateTimeFormat` costs orders of magnitude more than using one, and
+ * resolving a window bisects for offset changes, so this runs thousands of times per week
+ * converted.
+ */
+function offsetFormatter(timezone: string): Intl.DateTimeFormat {
+	const cached = offsetFormatters.get(timezone)
+	if (cached) return cached
 	const formatter = new Intl.DateTimeFormat('en-CA', {
 		timeZone: timezone,
 		year: 'numeric',
@@ -91,8 +102,15 @@ function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
 		second: '2-digit',
 		hour12: false,
 	})
+	offsetFormatters.set(timezone, formatter)
+	return formatter
+}
 
-	const parts = formatter.formatToParts(date)
+function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
+	// Create two copies of the date: one in UTC, one in the target timezone
+	const utcTime = date.getTime()
+
+	const parts = offsetFormatter(timezone).formatToParts(date)
 	const year = parseInt(parts.find(p => p.type === 'year')?.value || '0')
 	const month = parseInt(parts.find(p => p.type === 'month')?.value || '1')
 	const day = parseInt(parts.find(p => p.type === 'day')?.value || '1')
@@ -167,9 +185,6 @@ export function isValidTimezone(timezone: string): boolean {
 	}
 }
 
-const MS_MINUTE = 60 * 1000
-const MS_HOUR = 60 * MS_MINUTE
-
 /**
  * The spans of constant UTC offset covering `[from, to)`, each change located by bisection.
  *
@@ -187,7 +202,7 @@ function offsetSegments(
 	let offset = getTimezoneOffsetMinutes(new Date(cursor), timezone)
 
 	while (cursor < to) {
-		const probe = Math.min(cursor + MS_HOUR, to)
+		const probe = Math.min(cursor + MS_PER_HOUR, to)
 		if (getTimezoneOffsetMinutes(new Date(probe), timezone) === offset) {
 			cursor = probe
 			continue
@@ -195,7 +210,7 @@ function offsetSegments(
 
 		let low = cursor
 		let high = probe
-		while (high - low > MS_MINUTE) {
+		while (high - low > MS_PER_MINUTE) {
 			const mid = low + Math.floor((high - low) / 2)
 			if (getTimezoneOffsetMinutes(new Date(mid), timezone) === offset) low = mid
 			else high = mid
@@ -235,34 +250,23 @@ export function resolveWallWindow(
 	startMinutes: number,
 	endMinutes: number,
 	timezone: string
-): Array<{ start: Date; end: Date }> {
+): BusyTime[] {
 	if (!isValidTimezone(timezone)) {
 		throw new Error(`Invalid timezone: ${timezone}. Must be a valid IANA timezone identifier.`)
 	}
 
 	const dayStartAsUTC = Date.UTC(year, month, day)
 	// Wide enough for any real offset, plus a transition on either side of the date.
-	const searchFrom = dayStartAsUTC - 26 * MS_HOUR
-	const searchTo = dayStartAsUTC + 50 * MS_HOUR
+	const searchFrom = dayStartAsUTC - 26 * MS_PER_HOUR
+	const searchTo = dayStartAsUTC + 50 * MS_PER_HOUR
 
-	const found: Array<{ start: number; end: number }> = []
+	const found: BusyTime[] = []
 	for (const segment of offsetSegments(searchFrom, searchTo, timezone)) {
 		// `offset` is the minutes to add to a wall time to reach UTC.
-		const start = Math.max(dayStartAsUTC + (startMinutes + segment.offset) * MS_MINUTE, segment.from)
-		const end = Math.min(dayStartAsUTC + (endMinutes + segment.offset) * MS_MINUTE, segment.to)
-		if (start < end) found.push({ start, end })
+		const start = Math.max(dayStartAsUTC + (startMinutes + segment.offset) * MS_PER_MINUTE, segment.from)
+		const end = Math.min(dayStartAsUTC + (endMinutes + segment.offset) * MS_PER_MINUTE, segment.to)
+		if (start < end) found.push({ start: new Date(start), end: new Date(end) })
 	}
 
-	found.sort((a, b) => a.start - b.start)
-
-	const merged: Array<{ start: Date; end: Date }> = []
-	for (const interval of found) {
-		const last = merged[merged.length - 1]
-		if (last && interval.start <= last.end.getTime()) {
-			if (interval.end > last.end.getTime()) last.end = new Date(interval.end)
-		} else {
-			merged.push({ start: new Date(interval.start), end: new Date(interval.end) })
-		}
-	}
-	return merged
+	return mergeBusyTimes(found)
 }

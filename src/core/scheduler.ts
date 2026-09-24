@@ -8,6 +8,40 @@ import { validateOptions } from '../validators/options.validator'
 import { validateTimeRange } from '../validators/time-range.validator'
 
 /**
+ * A busy-time boundary, copied, provided it is an instant the scheduler can compare.
+ *
+ * @throws {Error} when the value is not a valid `Date`
+ */
+function toStoredBoundary(value: unknown, name: 'start' | 'end'): Date {
+	if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+		throw new Error(`Invalid busy time: ${name} must be a valid Date, received ${String(value)}`)
+	}
+	return new Date(value.getTime())
+}
+
+/**
+ * Accepts a busy time only if it names a real interval, and stores it detached from the caller.
+ *
+ * An `Invalid Date` makes every comparison against it false, so the sort leaves the list
+ * unordered and the scan that assumes order can walk past a real meeting — the one failure worse
+ * than losing a slot. It is rejected here, where the caller can still see which input was wrong,
+ * rather than becoming undefined behaviour three layers down.
+ *
+ * The `Date`s are copied because the scheduler keeps them: a caller mutating its own object
+ * afterwards would otherwise silently change what this scheduler answers.
+ *
+ * @throws {Error} when a boundary is not a valid `Date`, or the interval ends before it starts
+ */
+function toStoredBusyTime(busyTime: BusyTime): BusyTime {
+	const start = toStoredBoundary(busyTime?.start, 'start')
+	const end = toStoredBoundary(busyTime?.end, 'end')
+	if (end < start) {
+		throw new Error(`Invalid busy time: end ${end.toISOString()} is before start ${start.toISOString()}`)
+	}
+	return { start, end }
+}
+
+/**
  * Core scheduling engine that finds available time slots by managing busy times and generating slots.
  * This is the foundation scheduler that handles basic slot generation and busy time management.
  *
@@ -28,34 +62,6 @@ import { validateTimeRange } from '../validators/time-range.validator'
  * )
  * ```
  */
-/**
- * Accepts a busy time only if it names a real interval, and stores it detached from the caller.
- *
- * An `Invalid Date` makes every comparison against it false, so the sort leaves the list
- * unordered and the scan that assumes order can walk past a real meeting — the one failure worse
- * than losing a slot. It is rejected here, where the caller can still see which input was wrong,
- * rather than becoming undefined behaviour three layers down.
- *
- * The `Date`s are copied because the scheduler keeps them: a caller mutating its own object
- * afterwards would otherwise silently change what this scheduler answers.
- *
- * @throws {Error} when a boundary is not a valid `Date`, or the interval ends before it starts
- */
-function toStoredBusyTime(busyTime: BusyTime): BusyTime {
-	const start = busyTime?.start
-	const end = busyTime?.end
-	if (!(start instanceof Date) || !Number.isFinite(start.getTime())) {
-		throw new Error(`Invalid busy time: start must be a valid Date, received ${String(start)}`)
-	}
-	if (!(end instanceof Date) || !Number.isFinite(end.getTime())) {
-		throw new Error(`Invalid busy time: end must be a valid Date, received ${String(end)}`)
-	}
-	if (end.getTime() < start.getTime()) {
-		throw new Error(`Invalid busy time: end ${end.toISOString()} is before start ${start.toISOString()}`)
-	}
-	return { start: new Date(start), end: new Date(end) }
-}
-
 export class Scheduler {
 	private busyTimes: BusyTime[]
 

@@ -52,16 +52,6 @@ function localMinutesOfDay(date: Date, timezone: string): number {
 	return (read('hour') % 24) * 60 + read('minute')
 }
 
-function isSlotWithinDailyTimeRange(
-	slot: TimeSlot,
-	earliestMinutes: number,
-	latestMinutes: number,
-	timezone: string
-): boolean {
-	const minutes = localMinutesOfDay(slot.start, timezone)
-	return minutes >= earliestMinutes && minutes < latestMinutes
-}
-
 export function generateSlots(startTime: Date, endTime: Date, options: SlotGenerationOptions): TimeSlot[] {
 	const {
 		slotDurationMinutes,
@@ -103,7 +93,10 @@ export function generateSlots(startTime: Date, endTime: Date, options: SlotGener
 		const earliestMinutes = earliestTime !== undefined ? parseTimeInput(earliestTime) : 0
 		const latestMinutes = latestTime !== undefined ? parseTimeInput(latestTime) : 24 * 60
 
-		return slots.filter(slot => isSlotWithinDailyTimeRange(slot, earliestMinutes, latestMinutes, timezone))
+		return slots.filter(slot => {
+			const minutes = localMinutesOfDay(slot.start, timezone)
+			return minutes >= earliestMinutes && minutes < latestMinutes
+		})
 	}
 
 	return slots

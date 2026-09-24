@@ -1,5 +1,6 @@
 import type { DayOfWeek, WeeklyAvailability } from '../../types/availability.types'
 import type { BusyTime } from '../../types/scheduling.types'
+import { mergeBusyTimes } from '../busy-time/merge'
 import { resolveWallWindow } from '../time/timezone'
 
 // Weekday order aligned with DayOfWeek type (Monday first)
@@ -8,17 +9,15 @@ const WEEK_DAYS: DayOfWeek[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'f
 const MS_DAY = 24 * 60 * 60 * 1000
 
 /**
- * Parses a time string in HH:mm format and returns hours and minutes as numbers.
+ * A schedule time as minutes from local midnight, accepting either "HH:mm" or minutes already.
  *
- * @param timeStr - Time string in HH:mm format (e.g., "09:00", "14:30")
- * @returns Object with hours and minutes as numbers
  * @throws {Error} If the time format is invalid
  *
  * @internal
  */
-function parseTime(time: string | number): { hours: number; minutes: number } {
+function parseTime(time: string | number): number {
 	if (typeof time === 'number') {
-		return { hours: Math.floor(time / 60), minutes: time % 60 }
+		return time
 	}
 	const [hoursStr, minutesStr] = time.split(':')
 	const hours = parseInt(hoursStr!, 10)
@@ -28,15 +27,15 @@ function parseTime(time: string | number): { hours: number; minutes: number } {
 		throw new Error(`Invalid time format: ${time}. Expected HH:mm or number of minutes (e.g., "09:00" or 540)`)
 	}
 
-	return { hours, minutes }
+	return hours * 60 + minutes
 }
 
 function buildAvailabilityIntervalsUTC(
 	availability: WeeklyAvailability,
 	weekStartUTC: Date,
 	timezone: string
-): Array<{ start: Date; end: Date }> {
-	const intervals: Array<{ start: Date; end: Date }> = []
+): BusyTime[] {
+	const intervals: BusyTime[] = []
 
 	const baseY = weekStartUTC.getUTCFullYear()
 	const baseM = weekStartUTC.getUTCMonth()
@@ -50,21 +49,17 @@ function buildAvailabilityIntervalsUTC(
 		for (const schedule of availability.schedules) {
 			if (!schedule.days.includes(dayName)) continue
 
-			const startT = parseTime(schedule.start)
-			const endT = parseTime(schedule.end)
+			const startMinutes = parseTime(schedule.start)
+			const endMinutes = parseTime(schedule.end)
 
-			if (startT.hours > endT.hours || (startT.hours === endT.hours && startT.minutes >= endT.minutes)) {
+			if (startMinutes >= endMinutes) {
 				throw new Error(`Invalid time range: ${schedule.start} to ${schedule.end}. Start must be before end.`)
 			}
 
-			const startMinutes = startT.hours * 60 + startT.minutes
 			// 23:59 has always meant the end of the day rather than a minute short of it, and now
 			// says so for every zone: the old form excepted the literal string 'UTC', so 'Etc/UTC'
 			// and 'UTC' disagreed about the same instant.
-			const endsAtMidnight =
-				(typeof schedule.end === 'string' && schedule.end === '23:59') ||
-				(typeof schedule.end === 'number' && schedule.end === 1439)
-			const endMinutes = endsAtMidnight ? 1440 : endT.hours * 60 + endT.minutes
+			const endsAtMidnight = schedule.end === '23:59' || schedule.end === 1439
 
 			intervals.push(
 				...resolveWallWindow(
@@ -72,24 +67,14 @@ function buildAvailabilityIntervalsUTC(
 					dayLocalDate.getMonth(),
 					dayLocalDate.getDate(),
 					startMinutes,
-					endMinutes,
+					endsAtMidnight ? 1440 : endMinutes,
 					timezone
 				)
 			)
 		}
 	}
 
-	intervals.sort((a, b) => a.start.getTime() - b.start.getTime())
-	const merged: Array<{ start: Date; end: Date }> = []
-	for (const itv of intervals) {
-		const last = merged[merged.length - 1]
-		if (last && itv.start.getTime() <= last.end.getTime()) {
-			if (itv.end.getTime() > last.end.getTime()) last.end = itv.end
-		} else {
-			merged.push({ start: new Date(itv.start), end: new Date(itv.end) })
-		}
-	}
-	return merged
+	return mergeBusyTimes(intervals)
 }
 
 function complementToBusy(
