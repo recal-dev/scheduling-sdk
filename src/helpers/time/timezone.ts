@@ -201,6 +201,13 @@ function offsetSegments(
 	let cursor = from
 	let offset = getTimezoneOffsetMinutes(new Date(cursor), timezone)
 
+	// Almost every span is a single segment: two transitions cannot fall inside one, so equal
+	// offsets at both ends mean nothing changed between them. Checking that first turns the
+	// common day into two lookups rather than one per hour of the span.
+	if (getTimezoneOffsetMinutes(new Date(to), timezone) === offset) {
+		return [{ from, to, offset }]
+	}
+
 	while (cursor < to) {
 		const probe = Math.min(cursor + MS_PER_HOUR, to)
 		if (getTimezoneOffsetMinutes(new Date(probe), timezone) === offset) {
