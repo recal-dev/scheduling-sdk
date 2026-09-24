@@ -69,15 +69,11 @@ describe('weeklyAvailabilityToBusyTimes', () => {
 
 		const busyTimes = weeklyAvailabilityToBusyTimes(availability, mondayStart)
 
-		// Should have busy times for Tuesday-Sunday (6 days) + 1 minute at end of Monday
-		// (No previous day spillover for UTC timezone)
-		expect(busyTimes).toHaveLength(7)
-
-		// One tiny busy time for Monday (23:59-24:00)
-		const mondayBusy = busyTimes.filter(bt => bt.start.getDay() === 1)
-		expect(mondayBusy).toHaveLength(1)
-		expect(mondayBusy[0]!.start.getHours()).toBe(23)
-		expect(mondayBusy[0]!.start.getMinutes()).toBe(59)
+		// Tuesday through Sunday, and nothing on Monday: 23:59 names the end of the day in every
+		// zone now. It used to mean that everywhere except the literal string 'UTC', which was
+		// left with a one-minute unavailable sliver that 'Etc/UTC' did not have.
+		expect(busyTimes).toHaveLength(6)
+		expect(busyTimes.filter(bt => bt.start.getUTCDay() === 1)).toHaveLength(0)
 	})
 
 	test('handles no availability (all days busy)', () => {

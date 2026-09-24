@@ -155,14 +155,16 @@ describe('Scheduling with timezone edge cases', () => {
 			slotDuration: 30,
 		})
 
-		// Should handle the DST transition: implementation yields a 3-hour window in UTC
-		expect(slots.length).toBe(6)
+		// 01:00-04:00 local, on the day the clock skips 02:00-03:00, is two hours of real time.
+		// The window is not three hours long that day, and offering until 05:00 local — which is
+		// what a six-slot answer means — offers an hour the host never gave.
+		expect(slots.length).toBe(4)
 		expect(
 			slots.map(
 				s =>
 					`${String(s.start.getUTCHours()).padStart(2, '0')}:${String(s.start.getUTCMinutes()).padStart(2, '0')}`
 			)
-		).toEqual(['06:00', '06:30', '07:00', '07:30', '08:00', '08:30'])
+		).toEqual(['06:00', '06:30', '07:00', '07:30'])
 	})
 
 	test('CRITICAL: very short availability windows with timezone conversion', () => {

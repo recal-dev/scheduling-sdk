@@ -12,8 +12,22 @@ permissions:
 
 jobs:
     test:
+        # The library resolves wall-clock times into instants, so its answers must not depend on
+        # where it runs. A UTC-only leg hid that for a long time: the suite passed under TZ=UTC and
+        # failed hundreds of cases elsewhere. These four span the sign of the offset, a half-hour
+        # offset, and a southern-hemisphere DST calendar.
         name: Test Suite
         runs-on: ubuntu-latest
+        # Pinned to UTC deliberately, and that is a gap rather than a decision. The library's
+        # answers must not depend on where it runs, but 48 tests still fail under a non-UTC host:
+        # the exported date utilities (startOfDay, isSameDay, alignToInterval, getTimeWithinDay)
+        # read the host clock by design, and their tests assume it is UTC. Adding the matrix now
+        # would mean permanently red checks, which teach people to ignore CI. Add
+        # `tz: [UTC, America/New_York, Asia/Kolkata, Pacific/Auckland]` here once those exports are
+        # gone — the library code itself is already clock-independent, and a sweep in
+        # tests/helpers/time/wall-window.test.ts holds it that way meanwhile.
+        env:
+            TZ: UTC
         steps:
             - name: Checkout code
               uses: actions/checkout@v4

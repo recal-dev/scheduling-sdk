@@ -351,10 +351,13 @@ export class AvailabilityScheduler {
 		const lastWeekStart = this.getMonday(endTime)
 		const allBusyTimes: BusyTime[] = []
 
+		// Advanced in UTC: a local calendar add lands an hour early or late across a DST
+		// transition, and the converter then reads that instant as the previous week, shifting
+		// the whole pattern by a day until the next transition undoes it.
 		for (
 			let weekStart = new Date(firstWeekStart);
 			weekStart <= lastWeekStart;
-			weekStart.setDate(weekStart.getDate() + 7)
+			weekStart.setUTCDate(weekStart.getUTCDate() + 7)
 		) {
 			const weekBusyTimes = weeklyAvailabilityToBusyTimes(this.availability!, new Date(weekStart), this.timezone)
 

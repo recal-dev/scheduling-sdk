@@ -1,4 +1,4 @@
-import type { BusyTime } from '../../types/scheduling.types.ts'
+import type { BusyTime } from '../../types/scheduling.types'
 
 /**
  * Combines overlapping and adjacent busy times into one interval each.

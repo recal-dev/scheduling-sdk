@@ -3,6 +3,10 @@
  * Uses native JavaScript Date API and Intl.DateTimeFormat for zero-dependency timezone support.
  */
 
+import type { BusyTime } from '../../types/scheduling.types'
+import { MS_PER_HOUR, MS_PER_MINUTE } from '../../utils/constants'
+import { mergeBusyTimes } from '../busy-time/merge'
+
 /**
  * Converts a time (string HH:mm or number of minutes) in a specific timezone to a UTC Date object for a given date.
  *
@@ -76,11 +80,18 @@ export function convertTimeStringToUTC(timeStr: string | number, date: Date, tim
  * Gets the timezone offset in minutes for a specific date and timezone.
  * Positive values mean the timezone is ahead of UTC, negative means behind.
  */
-function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
-	// Create two copies of the date: one in UTC, one in the target timezone
-	const utcTime = date.getTime()
+const offsetFormatters = new Map<string, Intl.DateTimeFormat>()
 
-	// Get the date/time components as they would appear in the target timezone
+/**
+ * One formatter per timezone, kept rather than rebuilt.
+ *
+ * Constructing an `Intl.DateTimeFormat` costs orders of magnitude more than using one, and
+ * resolving a window bisects for offset changes, so this runs thousands of times per week
+ * converted.
+ */
+function offsetFormatter(timezone: string): Intl.DateTimeFormat {
+	const cached = offsetFormatters.get(timezone)
+	if (cached) return cached
 	const formatter = new Intl.DateTimeFormat('en-CA', {
 		timeZone: timezone,
 		year: 'numeric',
@@ -91,8 +102,15 @@ function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
 		second: '2-digit',
 		hour12: false,
 	})
+	offsetFormatters.set(timezone, formatter)
+	return formatter
+}
 
-	const parts = formatter.formatToParts(date)
+function getTimezoneOffsetMinutes(date: Date, timezone: string): number {
+	// Create two copies of the date: one in UTC, one in the target timezone
+	const utcTime = date.getTime()
+
+	const parts = offsetFormatter(timezone).formatToParts(date)
 	const year = parseInt(parts.find(p => p.type === 'year')?.value || '0')
 	const month = parseInt(parts.find(p => p.type === 'month')?.value || '1')
 	const day = parseInt(parts.find(p => p.type === 'day')?.value || '1')
@@ -165,4 +183,97 @@ export function isValidTimezone(timezone: string): boolean {
 	} catch {
 		return false
 	}
+}
+
+/**
+ * The spans of constant UTC offset covering `[from, to)`, each change located by bisection.
+ *
+ * Transitions land on a whole minute, so bisecting to the minute is exact rather than the
+ * approximation sampling at a fixed resolution would give.
+ */
+function offsetSegments(
+	from: number,
+	to: number,
+	timezone: string
+): Array<{ from: number; to: number; offset: number }> {
+	const segments: Array<{ from: number; to: number; offset: number }> = []
+	let segmentStart = from
+	let cursor = from
+	let offset = getTimezoneOffsetMinutes(new Date(cursor), timezone)
+
+	// Almost every span is a single segment: two transitions cannot fall inside one, so equal
+	// offsets at both ends mean nothing changed between them. Checking that first turns the
+	// common day into two lookups rather than one per hour of the span.
+	if (getTimezoneOffsetMinutes(new Date(to), timezone) === offset) {
+		return [{ from, to, offset }]
+	}
+
+	while (cursor < to) {
+		const probe = Math.min(cursor + MS_PER_HOUR, to)
+		if (getTimezoneOffsetMinutes(new Date(probe), timezone) === offset) {
+			cursor = probe
+			continue
+		}
+
+		let low = cursor
+		let high = probe
+		while (high - low > MS_PER_MINUTE) {
+			const mid = low + Math.floor((high - low) / 2)
+			if (getTimezoneOffsetMinutes(new Date(mid), timezone) === offset) low = mid
+			else high = mid
+		}
+		segments.push({ from: segmentStart, to: high, offset })
+		segmentStart = high
+		cursor = high
+		offset = getTimezoneOffsetMinutes(new Date(cursor), timezone)
+	}
+
+	segments.push({ from: segmentStart, to, offset })
+	return segments
+}
+
+/**
+ * The instants on a local date whose wall-clock time falls inside `[startMinutes, endMinutes)`.
+ *
+ * A weekly pattern names times on the host's clock, not instants, so a window is a *set* of
+ * moments rather than a pair of resolved endpoints. The difference shows only on the two days a
+ * year a zone changes offset, and there it is the whole point:
+ *
+ * - a wall time the clock skips is absent from the set, so a window containing a spring-forward
+ *   loses exactly the missing hour instead of running an hour past its stated end;
+ * - a wall time the clock repeats occurs twice, so such a window is returned as two intervals.
+ *
+ * Resolving two endpoints separately can express neither: it always yields one interval whose
+ * length is the wall duration, whatever the day actually held.
+ *
+ * `endMinutes` may be 1440, meaning midnight at the end of the local date.
+ *
+ * @throws {Error} when the timezone is not a valid IANA identifier
+ */
+export function resolveWallWindow(
+	year: number,
+	month: number,
+	day: number,
+	startMinutes: number,
+	endMinutes: number,
+	timezone: string
+): BusyTime[] {
+	if (!isValidTimezone(timezone)) {
+		throw new Error(`Invalid timezone: ${timezone}. Must be a valid IANA timezone identifier.`)
+	}
+
+	const dayStartAsUTC = Date.UTC(year, month, day)
+	// Wide enough for any real offset, plus a transition on either side of the date.
+	const searchFrom = dayStartAsUTC - 26 * MS_PER_HOUR
+	const searchTo = dayStartAsUTC + 50 * MS_PER_HOUR
+
+	const found: BusyTime[] = []
+	for (const segment of offsetSegments(searchFrom, searchTo, timezone)) {
+		// `offset` is the minutes to add to a wall time to reach UTC.
+		const start = Math.max(dayStartAsUTC + (startMinutes + segment.offset) * MS_PER_MINUTE, segment.from)
+		const end = Math.min(dayStartAsUTC + (endMinutes + segment.offset) * MS_PER_MINUTE, segment.to)
+		if (start < end) found.push({ start: new Date(start), end: new Date(end) })
+	}
+
+	return mergeBusyTimes(found)
 }

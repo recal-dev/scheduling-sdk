@@ -1,4 +1,4 @@
-import type { BusyTime, TimeSlot } from '../../types/scheduling.types.ts'
+import type { BusyTime, TimeSlot } from '../../types/scheduling.types'
 
 export function hasOverlap(slot: TimeSlot, busyTime: BusyTime): boolean {
 	// Zero-duration busy times (start === end) should not overlap with slots
